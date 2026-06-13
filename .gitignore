@@ -1,0 +1,9 @@
+# auto-generated private runtime
+wx-video-account-notes/.runtime/
+
+# python cache
+__pycache__/
+*.pyc
+
+# temporary test outputs
+tmp_*/

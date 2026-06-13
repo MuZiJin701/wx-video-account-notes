@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "name": "ffmpeg",
+      "required": true,
+      "install_policy": "required",
+      "target_subdir": "tools/ffmpeg",
+      "archive_name": "ffmpeg-master-latest-win64-gpl.zip",
+      "urls": [
+        "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-win64-gpl.zip"
+      ],
+      "sha256": "",
+      "extract": true,
+      "expected_glob": "**/bin/ffmpeg.exe"
+    },
+    {
+      "name": "whisper-tiny",
+      "required": true,
+      "install_policy": "required",
+      "target_subdir": "models/whisper",
+      "archive_name": "faster-whisper-tiny",
+      "repo_id": "Systran/faster-whisper-tiny",
+      "sha256": "",
+      "extract": false,
+      "expected_glob": "**/config.json"
+    }
+  ]
+}
