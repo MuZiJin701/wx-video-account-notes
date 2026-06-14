@@ -33,7 +33,7 @@
 推荐按 GitHub 仓库方式安装。先注册 marketplace source：
 
 ```powershell
-claude plugins marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git --sparse plugins/wx-video-account-notes
+claude plugins marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git
 ```
 
 然后从该 marketplace 安装插件：
@@ -41,6 +41,8 @@ claude plugins marketplace add https://github.com/MuZiJin701/wx-video-account-no
 ```powershell
 claude plugins install wx-video-account-notes@wx-video-account-notes-dev
 ```
+
+当前仓库根提供 Claude marketplace 清单，实际插件根仍位于 `plugins/wx-video-account-notes/`。
 
 ### Codex
 
