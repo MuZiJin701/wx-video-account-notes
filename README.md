@@ -20,25 +20,40 @@
 
 ## 安装指南
 
-这个仓库现在采用公开插件仓库结构：
+这个仓库采用 Codex-first 单源插件结构：
 
-- Codex 插件元数据：`.codex-plugin/`
-- Claude Code 插件元数据：`.claude-plugin/`
-- 实际 skill 内容：`skills/wx-video-account-notes/`
+- Codex marketplace 清单：`.agents/plugins/marketplace.json`
+- 实际插件根：`plugins/wx-video-account-notes/`
+- skill 真源：`plugins/wx-video-account-notes/skills/wx-video-account-notes/`
 
-### Codex 安装
+也就是说，`plugins/wx-video-account-notes/skills/wx-video-account-notes/` 是唯一需要维护的 skill 内容目录；Claude Code 和 Codex 都围绕这个插件根工作，其他 agent 通过 `cc-switch` 直接消费这份 skill。
 
-如果你的 Codex 支持直接从本地插件仓库安装，使用仓库根目录作为插件根。
+### Claude Code
 
-当前仓库的插件根是：`D:\data\projects\practice\wx-video-account-notes`
+可以直接把当前仓库作为插件目录加载：
 
-具体安装命令取决于你本机的 Codex 插件安装方式，但插件源码本身已经按 root-level plugin 结构整理完成。
+```powershell
+claude --plugin-dir D:\data\projects\practice\wx-video-account-notes\plugins\wx-video-account-notes
+```
+
+如果你的 Claude Code 安装流程支持 marketplace，也可以利用 `plugins/wx-video-account-notes/.claude-plugin/marketplace.json` 作为插件来源描述。
+
+### Codex
+
+当前仓库根是一个 Codex marketplace 仓库，插件根位于 `plugins/wx-video-account-notes/`。
+
+Codex 安装步骤：
+
+```powershell
+codex plugin marketplace add D:\data\projects\practice\wx-video-account-notes
+codex plugin add wx-video-account-notes@wx-video-account-notes-dev
+```
 
 ### 其他方式
 
-- 如果你的 Claude Code 安装流程参考 `superpowers` 风格，也可以直接使用仓库根下的 `.claude-plugin/`
-- 如果你通过 `cc-switch` 管理 skill，可以直接使用仓库中的 `skills/wx-video-account-notes/`
-- 如果你的 agent 支持手工本地 skill，也可以直接引用 `skills/wx-video-account-notes/`
+- 如果你通过 `cc-switch` 管理 skill，直接使用 `plugins/wx-video-account-notes/skills/wx-video-account-notes/`
+- 其他 agent 如 OpenCode、Cursor、Trae，如果通过 `cc-switch` 消费 skill，也同样使用这份路径
+- 如果某个 agent 支持手工本地 skill，也可以直接引用 `plugins/wx-video-account-notes/skills/wx-video-account-notes/`
 
 正常使用时，用户不需要手动运行脚本或处理运行时细节。首次执行会自动准备私有运行时，所以第一次通常更慢。
 
@@ -120,7 +135,7 @@
 - `CHANGELOG.md`：变更历史
 - `目录说明.md`：目录结构说明
 - `ocr-asr-evaluation.md`：OCR / ASR 方案和实测记录
-- `skills/wx-video-account-notes/SKILL.md`：skill 主说明
+- `plugins/wx-video-account-notes/skills/wx-video-account-notes/SKILL.md`：skill 主说明
 
 ## 贡献指南
 
