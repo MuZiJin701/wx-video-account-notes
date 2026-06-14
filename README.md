@@ -30,22 +30,26 @@
 
 ### Claude Code
 
-可以直接把当前仓库作为插件目录加载：
+推荐按 GitHub 仓库方式安装。先注册 marketplace source：
 
 ```powershell
-claude --plugin-dir D:\data\projects\practice\wx-video-account-notes\plugins\wx-video-account-notes
+claude plugins marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git --sparse plugins/wx-video-account-notes
 ```
 
-如果你的 Claude Code 安装流程支持 marketplace，也可以利用 `plugins/wx-video-account-notes/.claude-plugin/marketplace.json` 作为插件来源描述。
+然后从该 marketplace 安装插件：
+
+```powershell
+claude plugins install wx-video-account-notes@wx-video-account-notes-dev
+```
 
 ### Codex
 
-当前仓库根是一个 Codex marketplace 仓库，插件根位于 `plugins/wx-video-account-notes/`。
+当前 GitHub 仓库根是一个 Codex marketplace 仓库，插件根位于 `plugins/wx-video-account-notes/`。
 
 Codex 安装步骤：
 
 ```powershell
-codex plugin marketplace add D:\data\projects\practice\wx-video-account-notes
+codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git
 codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 ```
 
