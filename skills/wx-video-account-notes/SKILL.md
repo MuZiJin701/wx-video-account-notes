@@ -17,8 +17,8 @@ description: 处理微信视频号分享链接，例如 https://weixin.qq.com/sp
 
 ## 固定流程
 
-1. 先运行：`pwsh -File "wx-video-account-notes/scripts/bootstrap.ps1"`
-2. 再运行：`pwsh -File "wx-video-account-notes/scripts/invoke_pipeline.ps1" -ShareUrl "https://weixin.qq.com/sph/..."`
+1. 先运行：`pwsh -File "scripts/bootstrap.ps1"`
+2. 再运行：`pwsh -File "scripts/invoke_pipeline.ps1" -ShareUrl "https://weixin.qq.com/sph/..."`
 3. pipeline 负责下载视频、抽帧、OCR、ASR，生成 `note_materials.json`
 4. 当前 agent / model 基于 `note_materials.json` 写最终 `<slug>.md`
 5. 如果用户明确说不要笔记，跳过最终 `<slug>.md`

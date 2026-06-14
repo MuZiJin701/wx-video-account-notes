@@ -20,23 +20,25 @@
 
 ## 安装指南
 
-这个 skill 适用于多种支持 skill / plugin 机制的 agent，例如：
+这个仓库现在采用公开插件仓库结构：
 
-- OpenCode
-- Claude Code
-- Codex
-- 其他支持插件市场、本地 skill 或 `cc-switch` 的 agent
+- Codex 插件元数据：`.codex-plugin/`
+- Claude Code 插件元数据：`.claude-plugin/`
+- 实际 skill 内容：`skills/wx-video-account-notes/`
 
-可通过以下方式安装：
+### Codex 安装
 
-1. 插件市场
-如果你的 agent 支持插件市场，直接安装 `wx-video-account-notes` 即可。
+如果你的 Codex 支持直接从本地插件仓库安装，使用仓库根目录作为插件根。
 
-2. `cc-switch`
-如果你通过 `cc-switch` 管理 skill，可以把这个仓库作为来源导入，再切换启用。
+当前仓库的插件根是：`D:\data\projects\practice\wx-video-account-notes`
 
-3. 手动安装
-如果你的 agent 支持本地 skill / plugin 配置，也可以直接使用本仓库进行安装。
+具体安装命令取决于你本机的 Codex 插件安装方式，但插件源码本身已经按 root-level plugin 结构整理完成。
+
+### 其他方式
+
+- 如果你的 Claude Code 支持从插件仓库根读取元数据，也可以直接使用仓库根下的 `.claude-plugin/`
+- 如果你通过 `cc-switch` 管理 skill，可以直接使用仓库中的 `skills/wx-video-account-notes/`
+- 如果你的 agent 支持手工本地 skill，也可以直接引用 `skills/wx-video-account-notes/`
 
 正常使用时，用户不需要手动运行脚本或处理运行时细节。首次执行会自动准备私有运行时，所以第一次通常更慢。
 
@@ -118,7 +120,7 @@
 - `CHANGELOG.md`：变更历史
 - `目录说明.md`：目录结构说明
 - `ocr-asr-evaluation.md`：OCR / ASR 方案和实测记录
-- `wx-video-account-notes/SKILL.md`：skill 主说明
+- `skills/wx-video-account-notes/SKILL.md`：skill 主说明
 
 ## 贡献指南
 

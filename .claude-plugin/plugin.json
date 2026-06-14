@@ -1,0 +1,20 @@
+{
+  "name": "wx-video-account-notes",
+  "description": "WeChat Channels processing skill for Claude Code: resolve share links, download video, extract OCR/ASR, and prepare note materials.",
+  "version": "0.2.3",
+  "author": {
+    "name": "chenjinchi",
+    "email": "muzijin702@gmail.com"
+  },
+  "homepage": "https://github.com/MuZiJin701/wx-video-account-notes",
+  "repository": "https://github.com/MuZiJin701/wx-video-account-notes",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "wechat",
+    "video-channel",
+    "ocr",
+    "asr",
+    "notes"
+  ]
+}

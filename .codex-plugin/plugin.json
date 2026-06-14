@@ -1,0 +1,39 @@
+{
+  "name": "wx-video-account-notes",
+  "version": "0.2.3",
+  "description": "Download WeChat Channels videos and assemble OCR/ASR note materials.",
+  "author": {
+    "name": "chenjinchi",
+    "email": "muzijin702@gmail.com",
+    "url": "https://github.com/MuZiJin701"
+  },
+  "homepage": "https://github.com/MuZiJin701/wx-video-account-notes",
+  "repository": "https://github.com/MuZiJin701/wx-video-account-notes",
+  "license": "MIT",
+  "keywords": [
+    "wechat",
+    "video-channel",
+    "ocr",
+    "asr",
+    "notes"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "wx-video-account-notes",
+    "shortDescription": "Process WeChat Channels share links into OCR/ASR note materials.",
+    "longDescription": "A local Codex plugin for resolving WeChat Channels share links, downloading the source video, extracting OCR and ASR materials, and preparing structured note inputs.",
+    "developerName": "chenjinchi",
+    "category": "Productivity",
+    "capabilities": [
+      "Write",
+      "Automation"
+    ],
+    "websiteURL": "https://github.com/MuZiJin701/wx-video-account-notes",
+    "defaultPrompt": [
+      "处理这个视频号链接并生成笔记：https://weixin.qq.com/sph/...",
+      "下载这个视频号链接并输出 OCR 与 ASR 材料：https://weixin.qq.com/sph/...",
+      "把这个视频号链接整理到指定目录：https://weixin.qq.com/sph/..."
+    ],
+    "brandColor": "#2F855A"
+  }
+}
