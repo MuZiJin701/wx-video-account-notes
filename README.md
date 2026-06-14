@@ -36,7 +36,7 @@
 
 ### 其他方式
 
-- 如果你的 Claude Code 支持从插件仓库根读取元数据，也可以直接使用仓库根下的 `.claude-plugin/`
+- 如果你的 Claude Code 安装流程参考 `superpowers` 风格，也可以直接使用仓库根下的 `.claude-plugin/`
 - 如果你通过 `cc-switch` 管理 skill，可以直接使用仓库中的 `skills/wx-video-account-notes/`
 - 如果你的 agent 支持手工本地 skill，也可以直接引用 `skills/wx-video-account-notes/`
 
