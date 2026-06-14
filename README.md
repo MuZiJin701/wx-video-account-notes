@@ -61,6 +61,28 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 
 正常使用时，用户不需要手动运行脚本或处理运行时细节。首次执行会自动准备私有运行时，所以第一次通常更慢。
 
+### 安装验证
+
+#### Claude Code
+
+安装完成后，可以先查看插件列表：
+
+```powershell
+claude plugins list
+```
+
+如果列表里能看到 `wx-video-account-notes`，再开一个新会话，给 Claude Code 一个视频号分享链接，要求它下载并整理材料或生成笔记。
+
+#### Codex
+
+Codex 安装命令成功时会返回 `pluginId`、`version` 和 `installedPath`。如果你想再次确认，可以重复执行：
+
+```powershell
+codex plugin add wx-video-account-notes@wx-video-account-notes-dev --json
+```
+
+只要返回插件元数据且没有报错，说明安装链路是通的。随后建议开一个新线程，让 Codex 直接处理一个视频号分享链接，确认 skill 能被实际调用。
+
 ## 快速开始
 
 在 agent 中直接输入视频号链接，并说明你要做什么，例如：
