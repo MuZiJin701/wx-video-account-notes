@@ -3,7 +3,7 @@
 ## 0.2.3
 
 - 删除 Claude Code 插件分发元数据，保留 Codex 插件入口
-- README 和目录说明改为推荐使用 Vercel Labs `skills` CLI 安装、更新和移除 skill
+- README 和目录说明改为首推 Vercel Labs `skills` CLI 全局安装，同时保留 Codex 插件市场和 `cc-switch` 方式
 - OCR 性能优化：绕过临时文件磁盘 I/O + JPEG 解码缓存 + 裁切候选 5→3 个，ANA06rMHMf 基准 204s→142s（-30%）
 - OCR 预处理放大倍数从 2x 调整到 1.5x，ANA06rMHMf 进一步从 142s→133s（再降约 6%）
 - OCR 裁切提前退出阈值从 5 个中文字符放宽到 4 个，ANA06rMHMf 从 132s→111s、case2 从 17.4s→16.3s，CPU 占用基本不变

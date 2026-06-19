@@ -1,6 +1,6 @@
 # wx-video-account-notes
 
-一个用于 Codex 的微信视频号处理 skill。给它一个视频号分享链接，它会自动下载视频、提取 OCR / ASR、整理结构化材料，并默认继续生成 Markdown 笔记。
+一个微信视频号处理 skill。给它一个视频号分享链接，它会自动下载视频、提取 OCR / ASR、整理结构化材料，并默认继续生成 Markdown 笔记。
 
 ## 功能特性
 
@@ -20,17 +20,17 @@
 
 ## 安装指南
 
-这个仓库采用 Codex-only 单源插件结构：
+这个仓库采用单源 skill 结构：
 
-- Codex marketplace 清单：`.agents/plugins/marketplace.json`
-- 实际插件根：`plugins/wx-video-account-notes/`
 - skill 真源：`plugins/wx-video-account-notes/skills/wx-video-account-notes/`
+- Codex 插件根：`plugins/wx-video-account-notes/`
+- Codex marketplace 清单：`.agents/plugins/marketplace.json`
 
-也就是说，`plugins/wx-video-account-notes/skills/wx-video-account-notes/` 是唯一需要维护的 skill 内容目录；Codex 通过插件清单暴露这份 skill。
+也就是说，只需要维护这一份 skill 内容目录。推荐用 `skills` 全局安装，Codex 也可以走插件市场，已有 `cc-switch` 工作流的用户可以直接消费同一个 skill 目录。
 
-### Codex
+### 推荐：skills 全局安装
 
-推荐优先使用 Vercel Labs 的 `skills` CLI 安装和管理这份 skill：
+优先使用 Vercel Labs 的 `skills` CLI 全局安装。这样安装后，支持该 skill 目录的 agent 都可以复用同一份 skill。
 
 ```powershell
 npm install -g skills
@@ -53,20 +53,30 @@ skills remove wx-video-account-notes
 
 `skills` CLI 的 Codex 全局安装目标是 `~/.codex/skills/`；安装完成后重启 Codex 以加载新 skill。
 
-如果你希望按 Codex 插件方式安装，当前 GitHub 仓库根也是一个 Codex marketplace 仓库，插件根位于 `plugins/wx-video-account-notes/`。
+### 可选：Codex 插件市场
 
-Codex 安装步骤：
+当前 GitHub 仓库根也是一个 Codex marketplace 仓库，插件根位于 `plugins/wx-video-account-notes/`。
 
 ```powershell
 codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git
 codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 ```
 
+### 可选：cc-switch
+
+如果你通过 `cc-switch` 管理 skill，直接指向这份目录：
+
+```text
+plugins/wx-video-account-notes/skills/wx-video-account-notes/
+```
+
 正常使用时，用户不需要手动运行脚本或处理运行时细节。首次执行会自动准备私有运行时，所以第一次通常更慢。
 
 ### 安装验证
 
-Codex 安装命令成功时会返回 `pluginId`、`version` 和 `installedPath`。如果你想再次确认，可以重复执行：
+安装完成后，开一个新会话，直接让 agent 处理一个视频号分享链接即可验证 skill 是否被加载。
+
+如果使用 Codex 插件市场安装，命令成功时会返回 `pluginId`、`version` 和 `installedPath`。也可以重复执行：
 
 ```powershell
 codex plugin add wx-video-account-notes@wx-video-account-notes-dev --json
