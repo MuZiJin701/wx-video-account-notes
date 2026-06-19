@@ -1,6 +1,6 @@
 # wx-video-account-notes
 
-一个可用于多种 agent 的微信视频号处理 skill。给它一个视频号分享链接，它会自动下载视频、提取 OCR / ASR、整理结构化材料，并默认继续生成 Markdown 笔记。
+一个用于 Codex 的微信视频号处理 skill。给它一个视频号分享链接，它会自动下载视频、提取 OCR / ASR、整理结构化材料，并默认继续生成 Markdown 笔记。
 
 ## 功能特性
 
@@ -20,33 +20,40 @@
 
 ## 安装指南
 
-这个仓库采用 Codex-first 单源插件结构：
+这个仓库采用 Codex-only 单源插件结构：
 
 - Codex marketplace 清单：`.agents/plugins/marketplace.json`
 - 实际插件根：`plugins/wx-video-account-notes/`
 - skill 真源：`plugins/wx-video-account-notes/skills/wx-video-account-notes/`
 
-也就是说，`plugins/wx-video-account-notes/skills/wx-video-account-notes/` 是唯一需要维护的 skill 内容目录；Claude Code 和 Codex 都围绕这个插件根工作，其他 agent 通过 `cc-switch` 直接消费这份 skill。
-
-### Claude Code
-
-推荐按 GitHub 仓库方式安装。先注册 marketplace source：
-
-```powershell
-claude plugins marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git
-```
-
-然后从该 marketplace 安装插件：
-
-```powershell
-claude plugins install wx-video-account-notes@wx-video-account-notes-dev
-```
-
-当前仓库根提供 Claude marketplace 清单，实际插件根仍位于 `plugins/wx-video-account-notes/`。
+也就是说，`plugins/wx-video-account-notes/skills/wx-video-account-notes/` 是唯一需要维护的 skill 内容目录；Codex 通过插件清单暴露这份 skill。
 
 ### Codex
 
-当前 GitHub 仓库根是一个 Codex marketplace 仓库，插件根位于 `plugins/wx-video-account-notes/`。
+推荐优先使用 Vercel Labs 的 `skills` CLI 安装和管理这份 skill：
+
+```powershell
+npm install -g skills
+skills add https://github.com/MuZiJin701/wx-video-account-notes/tree/main/plugins/wx-video-account-notes/skills/wx-video-account-notes -a codex -g
+```
+
+如果不想全局安装 CLI，也可以用 `npx`：
+
+```powershell
+npx skills add https://github.com/MuZiJin701/wx-video-account-notes/tree/main/plugins/wx-video-account-notes/skills/wx-video-account-notes -a codex -g
+```
+
+常用管理命令：
+
+```powershell
+skills list
+skills update wx-video-account-notes
+skills remove wx-video-account-notes
+```
+
+`skills` CLI 的 Codex 全局安装目标是 `~/.codex/skills/`；安装完成后重启 Codex 以加载新 skill。
+
+如果你希望按 Codex 插件方式安装，当前 GitHub 仓库根也是一个 Codex marketplace 仓库，插件根位于 `plugins/wx-video-account-notes/`。
 
 Codex 安装步骤：
 
@@ -55,27 +62,9 @@ codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-note
 codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 ```
 
-### 其他方式
-
-- 如果你通过 `cc-switch` 管理 skill，直接使用 `plugins/wx-video-account-notes/skills/wx-video-account-notes/`
-- 其他 agent 如 OpenCode、Cursor、Trae，如果通过 `cc-switch` 消费 skill，也同样使用这份路径
-- 如果某个 agent 支持手工本地 skill，也可以直接引用 `plugins/wx-video-account-notes/skills/wx-video-account-notes/`
-
 正常使用时，用户不需要手动运行脚本或处理运行时细节。首次执行会自动准备私有运行时，所以第一次通常更慢。
 
 ### 安装验证
-
-#### Claude Code
-
-安装完成后，可以先查看插件列表：
-
-```powershell
-claude plugins list
-```
-
-如果列表里能看到 `wx-video-account-notes`，再开一个新会话，给 Claude Code 一个视频号分享链接，要求它下载并整理材料或生成笔记。
-
-#### Codex
 
 Codex 安装命令成功时会返回 `pluginId`、`version` 和 `installedPath`。如果你想再次确认，可以重复执行：
 
