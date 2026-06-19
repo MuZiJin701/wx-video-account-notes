@@ -3,7 +3,7 @@
 ## 0.2.3
 
 - 删除 Claude Code 插件分发元数据，保留 Codex 插件入口
-- README 和目录说明改为首推 Vercel Labs `skills` CLI 全局安装，同时保留 Codex 插件市场和 `cc-switch` 方式
+- README 和目录说明改为首推仓库地址级 `skills` 全局安装，补充环境要求和 skill 优势，同时保留 Codex 插件市场和 `cc-switch` 方式
 - OCR 性能优化：绕过临时文件磁盘 I/O + JPEG 解码缓存 + 裁切候选 5→3 个，ANA06rMHMf 基准 204s→142s（-30%）
 - OCR 预处理放大倍数从 2x 调整到 1.5x，ANA06rMHMf 进一步从 142s→133s（再降约 6%）
 - OCR 裁切提前退出阈值从 5 个中文字符放宽到 4 个，ANA06rMHMf 从 132s→111s、case2 从 17.4s→16.3s，CPU 占用基本不变
@@ -45,7 +45,7 @@
 
 ## 0.1.1
 
-- 精简 skill 文档，SKILL.md 成为最小执行真源
+- 精简 skill 文档，SKILL.md 成为主要执行说明
 - 减少 README.md、目录说明.md、model-note-template.md 之间的重叠
 - 缩短生成的 NEXT_STEP.md 指令
 - 更新测试用例文档以匹配"材料 + agent 整理笔记"工作流
@@ -54,5 +54,5 @@
 ## 0.1.0
 
 - Windows 优先的可移植 skill 脚手架
-- 基于 uv 和 venv 的私有运行时自举
+- 基于 uv 和 venv 的项目内 `.runtime` 环境自举
 - 微信视频号解析、下载、OCR、ASR、Markdown 笔记流水线

@@ -63,6 +63,6 @@ description: 处理微信视频号分享链接，例如 https://weixin.qq.com/sp
 
 ## 实施要求
 
-- 优先使用 skill 私有运行时，不依赖系统 PATH
+- 优先使用 skill 目录下的 `.runtime` 环境，不依赖系统 PATH
 - 低层下载、抽帧、抽音频、OCR、ASR 由脚本和 Python 完成
 - 当前 agent / model 只负责基于材料整理最终 `<slug>.md`
