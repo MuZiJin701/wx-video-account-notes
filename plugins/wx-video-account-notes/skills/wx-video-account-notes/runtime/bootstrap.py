@@ -119,8 +119,6 @@ def ensure_asset(runtime_root: Path, cache_root: Path, asset: dict) -> None:
         snapshot_download(
             repo_id=asset["repo_id"],
             local_dir=local_dir,
-            local_dir_use_symlinks=False,
-            resume_download=True,
         )
         if not asset_present(target_root, asset["expected_glob"]):
             raise RuntimeError(f"Asset {asset['name']} is still missing after snapshot download")

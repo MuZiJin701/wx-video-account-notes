@@ -27,15 +27,36 @@ function Write-Info {
     "[wx-video-account-notes] $Message"
 }
 
+function Get-TargetUvVersion {
+    return '0.11.25'
+}
+
+function Get-TargetPythonVersion {
+    return '3.13.14'
+}
+
+function Get-CommandVersionText {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath
+    )
+
+    if (-not (Test-Path -LiteralPath $FilePath)) {
+        return $null
+    }
+
+    $output = & $FilePath --version 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        return $null
+    }
+
+    return ($output -join "`n")
+}
+
 function Get-UvCommand {
     $runtimeUv = Join-Path (Get-RuntimeRoot) 'uv\uv.exe'
     if (Test-Path -LiteralPath $runtimeUv) {
-        return $runtimeUv
-    }
-
-    $systemUv = Get-Command uv -ErrorAction SilentlyContinue
-    if ($systemUv) {
-        return $systemUv.Source
+        return (Resolve-Path -LiteralPath $runtimeUv).Path
     }
 
     return $null
@@ -45,6 +66,17 @@ function Get-PrivatePython {
     $runtimePythonRoot = Join-Path (Get-RuntimeRoot) 'python'
     if (-not (Test-Path -LiteralPath $runtimePythonRoot)) {
         return $null
+    }
+
+    $targetVersion = Get-TargetPythonVersion
+    $matchingCandidate = Get-ChildItem -LiteralPath $runtimePythonRoot -Filter 'python.exe' -Recurse -ErrorAction SilentlyContinue |
+        Where-Object {
+            $versionText = Get-CommandVersionText -FilePath $_.FullName
+            $versionText -and $versionText.Contains($targetVersion)
+        } |
+        Select-Object -First 1
+    if ($matchingCandidate) {
+        return $matchingCandidate.FullName
     }
 
     $rootPython = Join-Path $runtimePythonRoot 'python.exe'

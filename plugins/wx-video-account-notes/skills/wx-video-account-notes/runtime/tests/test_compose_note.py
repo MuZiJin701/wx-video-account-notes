@@ -268,7 +268,7 @@ class ComposeMarkdownNoteTests(unittest.TestCase):
         self.assertIn("visual_frames", materials)
         self.assertEqual(len(materials["visual_frames"]), 5)
 
-    def test_visual_frames_absent_for_rich_voice_video(self) -> None:
+    def test_visual_frames_present_for_rich_voice_video(self) -> None:
         from pathlib import Path
 
         materials = build_note_materials(
@@ -282,7 +282,8 @@ class ComposeMarkdownNoteTests(unittest.TestCase):
             frame_paths=[Path(f"frame_{i:03d}.jpg") for i in range(1, 11)],
         )
 
-        self.assertNotIn("visual_frames", materials)
+        self.assertIn("visual_frames", materials)
+        self.assertEqual(len(materials["visual_frames"]), 5)
 
     def test_visual_frames_for_short_voice_below_50_chars(self) -> None:
         from pathlib import Path

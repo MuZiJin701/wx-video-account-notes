@@ -22,7 +22,7 @@
       "repo_id": "Systran/faster-whisper-tiny",
       "sha256": "",
       "extract": false,
-      "expected_glob": "**/config.json"
+      "expected_glob": "**/model.bin"
     }
   ]
 }

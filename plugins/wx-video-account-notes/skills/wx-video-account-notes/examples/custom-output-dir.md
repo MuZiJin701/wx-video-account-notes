@@ -7,4 +7,5 @@
 期望结果：
 
 - 输出目录使用 `D:\notes\wx`
-- 视频与 Markdown 笔记在同一目录
+- 视频或图文动态素材与 Markdown 笔记在同一目录
+- `note_materials.json` 中的 `visual_frames` 可供有识图能力的模型辅助成稿

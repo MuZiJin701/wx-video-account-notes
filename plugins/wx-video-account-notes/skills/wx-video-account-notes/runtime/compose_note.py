@@ -93,7 +93,7 @@ def build_note_materials(
     reusable_lines = asr_lines if asr_lines else ocr_lines
 
     visual_frames: list[str] = []
-    if frame_paths and (not asr_lines or sum(len(line) for line in asr_lines) < 50):
+    if frame_paths:
         step = max(1, len(frame_paths) // 5)
         selected = frame_paths[::step][:5]
         visual_frames = [str(p) for p in selected]

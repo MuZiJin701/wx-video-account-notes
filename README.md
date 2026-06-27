@@ -1,21 +1,24 @@
 # wx-video-account-notes
 
-一个微信视频号处理 skill。给它一个视频号分享链接，它会自动下载视频、提取 OCR / ASR、整理结构化材料，并默认继续生成 Markdown 笔记。
+一个微信视频号处理 skill。给它一个视频号分享链接，它会自动处理视频或图文动态，提取 OCR / ASR、整理结构化材料，并默认继续生成 Markdown 笔记。
 
 ## 功能特性
 
 - 处理 `https://weixin.qq.com/sph/...` 视频号分享链接
-- 自动下载视频并抽取画面与音频内容
-- OCR 提取画面文字
-- ASR 提取口播文案
+- 自动下载视频，或下载图文动态中的原始图片
+- OCR 使用字幕区域小图提取画面文字，并自动预选字幕裁剪区、跳过相似字幕帧
+- 视频动态会抽取少量完整 `visual_frames`，图文动态会把原始图片作为 `visual_frames`，供有识图能力的模型辅助理解画面
+- ASR 提取视频口播文案；图文动态会跳过 ASR，并在状态中标记为 `图文动态无音频`
 - 生成结构化材料，便于 agent 后续整理
 - 默认继续输出同目录 Markdown 笔记
 - 首次运行自动准备 `.runtime` 目录，后续可重复复用
 
 ## 优势
 
-- 项目内 `.runtime` 目录保存 Python、依赖、ffmpeg 和模型，不污染系统环境
+- 项目内 `.runtime` 目录保存私有 uv、Python、锁定依赖、ffmpeg 和模型，不污染系统环境
 - 默认 CPU-only，不要求本机有 GPU、CUDA 或手工配置的 Python 环境
+- 运行时只使用 skill 私有 uv 和 Python；不会查找或复用系统 PATH 中的 uv / Python
+- Python 项目由 skill 目录内的 `pyproject.toml`、`.python-version` 和 `uv.lock` 管理
 - 运行资产集中在 skill 目录下，便于复制、分发和清理
 - 首次初始化后可复用，后续处理更快
 
@@ -87,6 +90,25 @@ https://github.com/MuZiJin701/wx-video-account-notes.git
 
 正常使用时，用户不需要手动运行脚本或处理环境细节。首次执行会自动准备 `.runtime` 目录，所以第一次通常更慢。
 
+### 开发与验证
+
+Python 运行时依赖由 skill 目录内的 uv project 管理，依赖锁定在 `uv.lock` 中。修改依赖后，在 skill 目录运行私有 uv 重新锁定并验证：
+
+```powershell
+cd plugins\wx-video-account-notes\skills\wx-video-account-notes
+$env:UV_PROJECT_ENVIRONMENT='.runtime\.venv'
+.\.runtime\uv\uv.exe lock
+.\.runtime\uv\uv.exe sync --locked
+.\.runtime\uv\uv.exe run --locked python -m unittest discover -s runtime\tests
+```
+
+正常 pipeline 入口仍由脚本包装：
+
+```powershell
+pwsh -File scripts\bootstrap.ps1
+pwsh -File scripts\invoke_pipeline.ps1 -ShareUrl "https://weixin.qq.com/sph/..."
+```
+
 ### 安装验证
 
 安装完成后，开一个新会话，直接让 agent 处理一个视频号分享链接即可验证 skill 是否被加载。
@@ -116,8 +138,8 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev --json
 正常情况下，agent 会自动完成：
 
 - 首次初始化 `.runtime` 目录
-- 下载视频
-- 抽帧和抽音频
+- 下载视频，或下载图文动态图片
+- 视频动态抽取 OCR 专用字幕帧、少量完整参考帧和音频；图文动态直接使用原始图片
 - OCR / ASR 提取
 - 生成结构化材料
 - 整理最终 Markdown 笔记
@@ -128,11 +150,12 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev --json
 
 ```text
 <output-dir>/
-  <slug>.mp4
+  <slug>.mp4        # 视频动态才有
   note_materials.json
   raw.json
   ocr.txt
   asr.txt
+  ocr_frames/
   frames/
   audio/
   <slug>.md
@@ -142,8 +165,10 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev --json
 
 - `raw.json`：解析接口原始结果
 - `ocr.txt`：OCR 原始文本
-- `asr.txt`：ASR 原始文本
-- `note_materials.json`：供模型整理的结构化材料
+- `asr.txt`：ASR 原始文本；图文动态通常为空
+- `ocr_frames/`：视频动态的 OCR 专用字幕区域小图；图文动态通常为空
+- `frames/`：视频动态的少量完整参考帧，或图文动态下载到的原始图片
+- `note_materials.json`：供模型整理的结构化材料；包含 `visual_frames` 时，有识图能力的模型应读取这些图片辅助理解
 - `<slug>.md`：最终笔记成品
 
 如果用户明确说不要笔记，可以跳过最终 Markdown 文件。
@@ -152,7 +177,7 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev --json
 
 ### 为什么第一次运行更慢？
 
-第一次运行会自动下载 Python、依赖、ffmpeg 和模型文件，并放在 skill 目录下的 `.runtime` 中，所以初始化时间会明显长于后续运行。
+第一次运行会自动下载 skill 私有 uv、Python、uv 锁定依赖、ffmpeg 和模型文件，并放在 skill 目录下的 `.runtime` 中，所以初始化时间会明显长于后续运行。
 
 ### 为什么仓库里没有 `.runtime/`？
 
@@ -178,6 +203,9 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev --json
 - `目录说明.md`：目录结构说明
 - `ocr-asr-evaluation.md`：OCR / ASR 方案和实测记录
 - `plugins/wx-video-account-notes/skills/wx-video-account-notes/SKILL.md`：skill 主说明
+- `plugins/wx-video-account-notes/skills/wx-video-account-notes/pyproject.toml`：Python 运行依赖声明
+- `plugins/wx-video-account-notes/skills/wx-video-account-notes/.python-version`：Python 版本固定为 `3.13.14`
+- `plugins/wx-video-account-notes/skills/wx-video-account-notes/uv.lock`：完整 Python 依赖锁定文件
 
 ## 贡献指南
 

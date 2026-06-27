@@ -24,12 +24,34 @@ def _pick_video_url(payload: dict) -> str:
     raise RuntimeError("No downloadable video URL found in worker response")
 
 
+def _pick_image_urls(payload: dict) -> list[str]:
+    feed_info = payload.get("data", {}).get("feedInfo", {})
+    urls: list[str] = []
+    for item in feed_info.get("picInfo") or []:
+        if isinstance(item, dict) and item.get("url"):
+            urls.append(item["url"])
+    cover_url = feed_info.get("coverUrl")
+    if cover_url and cover_url not in urls:
+        urls.append(cover_url)
+    return urls
+
+
 def parse_worker_payload(payload: dict) -> dict:
-    video_url = _pick_video_url(payload)
     author_info = payload.get("data", {}).get("authorInfo", {})
     feed_info = payload.get("data", {}).get("feedInfo", {})
+    image_urls = _pick_image_urls(payload)
+    try:
+        video_url = _pick_video_url(payload)
+        media_type = "video"
+    except RuntimeError:
+        if not image_urls:
+            raise
+        video_url = ""
+        media_type = "image"
     return {
         "video_url": video_url,
+        "image_urls": image_urls,
+        "media_type": media_type,
         "author": author_info.get("nickname") or feed_info.get("nickname") or feed_info.get("authorName") or "",
         "title": feed_info.get("description") or feed_info.get("desc") or feed_info.get("title") or "",
         "raw_text": json.dumps(payload, ensure_ascii=False, indent=2),
