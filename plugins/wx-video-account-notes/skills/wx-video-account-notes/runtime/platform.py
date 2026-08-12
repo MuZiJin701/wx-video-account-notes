@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-import platform as host_platform
+import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -19,8 +20,19 @@ class PlatformInfo:
 
 
 def detect_platform(system: str | None = None, machine: str | None = None) -> PlatformInfo:
-    system_name = (system or host_platform.system()).lower()
-    machine_name = (machine or host_platform.machine()).lower().replace("amd64", "x86_64")
+    host_system = (
+        "Windows" if sys.platform.startswith("win")
+        else "Darwin" if sys.platform == "darwin"
+        else "Linux" if sys.platform.startswith("linux")
+        else sys.platform
+    )
+    host_machine = (
+        os.environ.get("PROCESSOR_ARCHITEW6432")
+        or os.environ.get("PROCESSOR_ARCHITECTURE")
+        or (os.uname().machine if hasattr(os, "uname") else "")
+    )
+    system_name = (system or host_system).lower()
+    machine_name = (machine or host_machine).lower().replace("amd64", "x86_64")
     if machine_name not in {"x86_64", "x64"}:
         raise RuntimeError(
             f"Unsupported architecture: {machine_name}. Supported architecture: x64."

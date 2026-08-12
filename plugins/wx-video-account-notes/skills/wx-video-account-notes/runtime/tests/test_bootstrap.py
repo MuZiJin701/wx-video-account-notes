@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -164,6 +166,28 @@ class BootstrapTests(unittest.TestCase):
             script_text = (scripts_root / script_name).read_text(encoding="utf-8")
             self.assertIn("runtime", script_text)
             self.assertNotIn("ffmpeg-master-latest", script_text)
+
+    def test_powershell_info_does_not_pollute_command_return_value(self) -> None:
+        powershell = shutil.which("pwsh") or shutil.which("powershell")
+        if not powershell:
+            self.skipTest("PowerShell is not installed")
+
+        common_script = Path(__file__).resolve().parents[2] / "scripts" / "common.ps1"
+        result = subprocess.run(
+            [
+                powershell,
+                "-NoProfile",
+                "-Command",
+                f". '{common_script}'; $value = Write-Info 'bootstrap progress'; Write-Output ('value=' + [string]$value)",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "value=")
+        self.assertTrue("bootstrap progress" in result.stdout or "bootstrap progress" in result.stderr)
 
     def test_skill_tells_vision_models_to_read_visual_frames(self) -> None:
         skill_root = Path(__file__).resolve().parents[2]

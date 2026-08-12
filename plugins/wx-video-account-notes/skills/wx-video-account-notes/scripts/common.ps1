@@ -85,4 +85,4 @@ function Invoke-NativeCommand([string]$FilePath, [string[]]$Arguments = @()) {
     if ($LASTEXITCODE -ne 0) { throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $($Arguments -join ' ')" }
 }
 
-function Write-Info([string]$Message) { Write-Output "[wx-video-account-notes] $Message" }
+function Write-Info([string]$Message) { [Console]::Error.WriteLine("[wx-video-account-notes] $Message") }

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,6 +15,26 @@ class PlatformContractTests(unittest.TestCase):
         self.assertEqual(detect_platform("Windows", "AMD64").id, "windows-x64")
         self.assertEqual(detect_platform("Darwin", "x86_64").id, "macos-x64")
         self.assertEqual(detect_platform("Linux", "x86_64").id, "linux-x64")
+
+    def test_detects_host_when_runtime_directory_is_on_script_path(self) -> None:
+        runtime_dir = Path(__file__).resolve().parents[1]
+        skill_root = runtime_dir.parent
+        environment = os.environ.copy()
+        environment["PYTHONPATH"] = str(skill_root)
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "from runtime.platform import detect_platform; assert detect_platform().id",
+            ],
+            cwd=runtime_dir,
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_rejects_unsupported_platforms(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "Supported architecture: x64"):
