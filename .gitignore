@@ -7,3 +7,6 @@ __pycache__/
 
 # temporary test outputs
 tmp_*/
+
+# local promotional assets
+assets/
