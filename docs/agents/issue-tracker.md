@@ -1,5 +1,7 @@
 # Issue tracker: GitHub
 
+需求、规格和问题统一记录在 GitHub Issues。Requirements, specs, and bugs live in GitHub Issues.
+
 Issues and specs for this repo live as GitHub Issues. Use the `gh` CLI for all operations。
 
 本仓库的 issue 和规格说明存放在 GitHub Issues 中，所有相关操作使用 `gh` CLI。

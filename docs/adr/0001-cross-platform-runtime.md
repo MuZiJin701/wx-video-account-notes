@@ -2,6 +2,8 @@
 
 本项目将 Python 作为运行时业务逻辑的唯一规范入口，支持 Windows、macOS 和 Linux x64；保留极薄的平台启动器以解决首次运行时尚未安装 Python/uv 的引导问题。运行时资产按 OS 与架构隔离在 `.runtime/<os>-<arch>/` 下，首次运行下载并校验私有 uv、Python、FFmpeg 和模型；不复用系统 Python 或 FFmpeg。Windows 保留 PowerShell 兼容层，macOS/Linux 使用 POSIX `sh` 启动器，启动器只负责平台识别、获取 uv 和转发到 Python。
 
+Decision summary: Python owns runtime orchestration. Platform launchers only bootstrap uv and forward commands, while each supported OS receives an isolated, verified runtime.
+
 ## Considered Options
 
 - **全部改成可直接运行的 Python**：不可行，因为首次运行时可能没有 Python 解释器。

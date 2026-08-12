@@ -1,5 +1,7 @@
 # Agent Instructions / Agent 协作说明
 
+本文件定义仓库级代理协作规则；面向项目使用者的说明见 `README.md`。This file defines repository-wide agent rules; see `README.md` for user-facing documentation.
+
 本文件记录本仓库对编码代理的通用约定。This file records repository-wide guidance for coding agents.
 
 ## Agent skills

@@ -1,3 +1,8 @@
+# 指定输出目录 | Custom output directory
+
+让 agent 将媒体材料和最终笔记写入指定目录。
+Ask the agent to write media materials and the final note to a chosen directory.
+
 输入示例：
 
 ```text

@@ -1,9 +1,11 @@
 ---
 name: wx-video-account-notes
-description: 处理微信视频号分享链接，例如 https://weixin.qq.com/sph/... 。当用户提供视频号分享链接，并要求解析链接、下载视频或图文动态图片、提取 OCR 或 ASR、整理结构化材料、或输出与媒体同目录的 Markdown 笔记时，务必使用这个 skill。
+description: 中文：处理微信视频号分享链接，提取 OCR/ASR 笔记材料并生成 Markdown 笔记。English: Process WeChat Channels share links into OCR/ASR note materials and Markdown notes.
 ---
 
-# 微信视频号下载与笔记整理
+# 微信视频号下载与笔记整理 | WeChat Channels notes
+
+处理一个视频号分享链接，生成可供 agent 继续整理的结构化笔记材料。Process one WeChat Channels share link and prepare structured materials for an agent.
 
 ## 触发条件
 
@@ -23,7 +25,7 @@ description: 处理微信视频号分享链接，例如 https://weixin.qq.com/sp
 4. 当前 agent / model 基于 `note_materials.json` 写最终 `<slug>.md`
 5. 如果用户明确说不要笔记，跳过最终 `<slug>.md`
 
-## 固定输出
+## 固定输出 | Output contract
 
 输出目录中应包含：
 
@@ -48,7 +50,7 @@ description: 处理微信视频号分享链接，例如 https://weixin.qq.com/sp
 
 如果用户明确说不要笔记，跳过该文件。
 
-## 成稿规则
+## 成稿规则 | Note-writing rules
 
 - 以 `note_materials.json` 为主
 - 必要时对照 `raw.json`、`ocr.txt`、`asr.txt`

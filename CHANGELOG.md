@@ -1,5 +1,16 @@
 # 更新日志
 
+## Unreleased
+
+- 完成 Windows x64、macOS Intel x64 和 Linux x64 的跨平台运行时支持
+- 统一使用 Python runtime 编排初始化、资产校验和媒体处理
+- 增加平台隔离运行时、SHA256 校验、运行时验证和三平台 CI
+- 重写 README，补充中英双语安装、输出和开发说明
+
+## Changelog
+
+The unreleased changes add cross-platform runtime support, private asset validation, platform verification, and a shorter bilingual README.
+
 ## 0.2.3
 
 - 删除 Claude Code 插件分发元数据，保留 Codex 插件入口

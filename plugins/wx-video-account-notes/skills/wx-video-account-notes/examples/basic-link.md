@@ -1,3 +1,8 @@
+# 基础用法 | Basic usage
+
+把一个视频号分享链接交给 agent，默认生成笔记材料和同目录 Markdown 笔记。
+Give the agent one WeChat Channels share link to create note materials and a Markdown note in the same output directory.
+
 输入示例：
 
 ```text

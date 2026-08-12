@@ -1,5 +1,7 @@
 # Domain Docs / 领域文档
 
+本目录说明代理如何读取和使用领域术语与架构决策。This directory explains how agents consume domain terms and architecture decisions.
+
 How engineering skills should consume this repo's domain documentation。
 工程 skill 探索本仓库时应遵循以下领域文档约定。
 

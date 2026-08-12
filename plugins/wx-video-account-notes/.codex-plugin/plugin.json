@@ -1,7 +1,7 @@
 {
   "name": "wx-video-account-notes",
   "version": "0.2.3",
-  "description": "Download WeChat Channels videos and assemble OCR/ASR note materials.",
+  "description": "中文：将微信视频号分享链接转换为 OCR/ASR 笔记材料与 Markdown 笔记。English: Convert WeChat Channels share links into OCR/ASR note materials and Markdown notes.",
   "author": {
     "name": "chenjinchi",
     "email": "muzijin702@gmail.com",
@@ -20,8 +20,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "wx-video-account-notes",
-    "shortDescription": "Process WeChat Channels share links into OCR/ASR note materials.",
-    "longDescription": "A local Codex plugin for resolving WeChat Channels share links, downloading the source video, extracting OCR and ASR materials, and preparing structured note inputs.",
+    "shortDescription": "中文：处理视频号链接并生成 OCR/ASR 笔记材料。 English: Process WeChat Channels links into OCR/ASR note materials.",
+    "longDescription": "中文：解析视频号分享链接，处理视频或图文动态，提取 OCR、ASR 和视觉材料，并生成结构化笔记输入。 English: Resolve WeChat Channels share links, process video or image posts, extract OCR, ASR, and visual materials, and prepare structured note inputs.",
     "developerName": "chenjinchi",
     "category": "Productivity",
     "capabilities": [

@@ -1,5 +1,7 @@
 # OCR / ASR Evaluation
 
+本记录总结当前 OCR/ASR 方案、性能取舍和历史验证结果。This record summarizes the current OCR/ASR stack, trade-offs, and validation history.
+
 ## Current Stack
 
 | 组件 | Provider | 模型 | 配置 |

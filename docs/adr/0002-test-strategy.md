@@ -2,6 +2,8 @@
 
 本项目采用三层测试策略：快速单元测试验证 Python 业务规则与平台路径契约；CI 集成测试在锁定的 uv/Python 3.13.14 环境中运行完整 `unittest`，但不访问外部下载服务；受控 smoke test 验证真实 bootstrap、FFmpeg、模型下载和端到端处理。测试策略的目标是让跨平台代码可重复验证，同时不让网络和大模型资源成为每次提交的隐性依赖。
 
+Test summary: unit tests stay offline, CI covers the three supported x64 targets, and manual smoke tests cover real bootstrap and end-to-end processing.
+
 ## Status
 
 Accepted.

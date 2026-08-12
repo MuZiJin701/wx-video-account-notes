@@ -1,4 +1,4 @@
-# Manual smoke test checklist
+# Manual smoke test checklist | 手动 smoke test 清单
 
 本文件是发布前的人工 smoke test 清单，不是 `unittest` 自动测试入口。自动测试使用锁定的 uv 环境运行，且不访问外部下载服务。
 

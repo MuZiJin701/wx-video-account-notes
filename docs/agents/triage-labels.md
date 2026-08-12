@@ -1,5 +1,7 @@
 # Triage Labels / Triage 标签
 
+Use one category role and one state role for every triaged issue. 每个完成 triage 的 issue 使用一个类别角色和一个状态角色。
+
 The skills use five canonical triage roles. This repo uses the same label strings。
 相关 skill 使用五个标准 triage 角色；本仓库直接使用相同的标签字符串。
 

@@ -2,6 +2,8 @@
 
 本项目把微信视频号分享内容转换为可供 agent 整理的结构化笔记材料。This glossary defines the project's domain language; implementation choices belong in ADRs.
 
+当前支持 Windows x64、macOS Intel x64 和 Linux x64，运行时资产按 `.runtime/<os>-<arch>/` 隔离。The supported runtime targets are Windows x64, Intel macOS x64, and Linux x64, with assets isolated under `.runtime/<os>-<arch>/`.
+
 ## 内容对象
 
 **视频号分享链接**：指向微信视频号内容的用户分享链接，是处理流程的输入。

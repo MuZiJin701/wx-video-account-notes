@@ -1,4 +1,6 @@
-# 模型成稿模板
+# 模型成稿模板 | Note template
+
+本模板帮助 agent 从结构化笔记材料生成可读的 Markdown 笔记。This template helps an agent turn structured materials into a readable Markdown note.
 
 ## 成稿原则
 
