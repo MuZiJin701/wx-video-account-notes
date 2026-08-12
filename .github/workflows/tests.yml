@@ -1,0 +1,24 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-13, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: plugins/wx-video-account-notes/skills/wx-video-account-notes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.11.25
+      - run: uv python install 3.13.14
+      - run: uv sync --locked --python 3.13.14
+      - run: uv run --locked python -m unittest discover -s runtime/tests

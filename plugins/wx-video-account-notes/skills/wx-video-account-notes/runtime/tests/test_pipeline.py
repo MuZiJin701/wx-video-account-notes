@@ -6,20 +6,29 @@ from pathlib import Path
 from unittest.mock import patch
 
 from runtime import pipeline
+from runtime.platform import detect_platform, runtime_root
 
 
 class PipelineTests(unittest.TestCase):
+    def test_slugify_truncates_long_titles_with_hash_suffix(self) -> None:
+        slug = pipeline.slugify("很长的标题" * 30)
+
+        self.assertLessEqual(len(slug), 80)
+        self.assertRegex(slug, r"_[0-9a-f]{8}$")
+
     def test_pipeline_writes_note_materials_for_agent_handoff(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             skill_root = root / "skill"
             output_dir = root / "output"
-            ffmpeg_dir = skill_root / ".runtime" / "tools" / "ffmpeg" / "bin"
-            model_dir = skill_root / ".runtime" / "models" / "whisper" / "tiny"
+            platform_runtime_root = runtime_root(skill_root)
+            ffmpeg_dir = platform_runtime_root / "tools" / "ffmpeg" / "bin"
+            model_dir = platform_runtime_root / "models" / "whisper" / "tiny"
             ffmpeg_dir.mkdir(parents=True)
             model_dir.mkdir(parents=True)
-            (ffmpeg_dir / "ffmpeg.exe").write_text("", encoding="utf-8")
-            (ffmpeg_dir / "ffprobe.exe").write_text("", encoding="utf-8")
+            info = detect_platform()
+            (ffmpeg_dir / info.ffmpeg_binary).write_text("", encoding="utf-8")
+            (ffmpeg_dir / info.ffprobe_binary).write_text("", encoding="utf-8")
             (model_dir / "config.json").write_text("{}", encoding="utf-8")
 
             materials = {

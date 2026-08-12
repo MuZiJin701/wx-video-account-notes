@@ -26,4 +26,4 @@ def retry_call(action: Callable[[], T], *, description: str = "", max_retries: i
             label = f" ({description})" if description else ""
             _log_retry(f"attempt={attempt}/{max_retries} failed, retrying in {delay:.1f}s{label}")
             time.sleep(delay)
-    raise RuntimeError(f"All {max_retries} retries exhausted") from last_error
+    raise RuntimeError(f"All {max_retries} retries exhausted: {last_error}") from last_error

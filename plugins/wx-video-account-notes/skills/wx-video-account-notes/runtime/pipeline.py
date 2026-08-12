@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 from pathlib import Path
 import json
 import time
@@ -12,11 +13,15 @@ from runtime.media_extract import extract_ocr_frames, extract_visual_frames, ext
 from runtime.ocr_runner import run_ocr
 from runtime.asr_runner import resolve_asr_model_dir, run_asr
 from runtime.compose_note import build_note_materials
+from runtime.platform import find_ffmpeg_tools, runtime_root
 
 
 def slugify(value: str) -> str:
     cleaned = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in value.strip())
     cleaned = "_".join(part for part in cleaned.split("_") if part)
+    if len(cleaned) > 80:
+        suffix = hashlib.sha1(cleaned.encode("utf-8")).hexdigest()[:8]
+        cleaned = f"{cleaned[:71].rstrip('_')}_{suffix}"
     return cleaned or "wx_channels_video"
 
 
@@ -28,7 +33,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     skill_root = Path(args.skill_root).resolve()
-    runtime_root = skill_root / ".runtime"
+    runtime_path = runtime_root(skill_root)
 
     resolved = resolve_share_link(args.share_url)
     title = resolved.get("title") or resolved.get("author") or "wx_channels_video"
@@ -60,15 +65,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     ocr_frames_error = ""
     if media_type == "video":
-        ffmpeg_root = runtime_root / "tools" / "ffmpeg"
-        try:
-            ffmpeg_path = next(ffmpeg_root.glob("**/bin/ffmpeg.exe"))
-            ffprobe_path = next(ffmpeg_root.glob("**/bin/ffprobe.exe"))
-        except StopIteration:
-            raise RuntimeError(
-                "ffmpeg/ffprobe not found in .runtime/tools/ffmpeg/. "
-                "Run scripts/bootstrap.ps1 first to download runtime assets."
-            ) from None
+        ffmpeg_path, ffprobe_path = find_ffmpeg_tools(runtime_path)
 
         print("[pipeline] [2/5] extracting OCR and visual frames ...")
         t0 = time.time()
@@ -129,7 +126,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("[pipeline] [5/5] running ASR ...")
         t0 = time.time()
         try:
-            model_path = resolve_asr_model_dir(runtime_root, "faster-whisper")
+            model_path = resolve_asr_model_dir(runtime_path, "faster-whisper")
             asr_text = run_asr(audio_path, model_path)
             if not asr_text.strip():
                 asr_error = "ASR produced no text"

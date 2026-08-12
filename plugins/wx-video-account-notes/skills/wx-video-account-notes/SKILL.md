@@ -17,8 +17,8 @@ description: 处理微信视频号分享链接，例如 https://weixin.qq.com/sp
 
 ## 固定流程
 
-1. 先运行：`pwsh -File "scripts/bootstrap.ps1"`
-2. 再运行：`pwsh -File "scripts/invoke_pipeline.ps1" -ShareUrl "https://weixin.qq.com/sph/..."`
+1. Windows 运行 `pwsh -File "scripts/bootstrap.ps1"`；macOS/Linux 运行 `sh scripts/bootstrap.sh`
+2. Windows 运行 `pwsh -File "scripts/invoke_pipeline.ps1" -ShareUrl "https://weixin.qq.com/sph/..."`；macOS/Linux 运行 `sh scripts/invoke_pipeline.sh --share-url "https://weixin.qq.com/sph/..."`
 3. pipeline 负责下载视频或图文动态图片、抽帧、OCR、ASR，生成 `note_materials.json`
 4. 当前 agent / model 基于 `note_materials.json` 写最终 `<slug>.md`
 5. 如果用户明确说不要笔记，跳过最终 `<slug>.md`
@@ -65,7 +65,7 @@ description: 处理微信视频号分享链接，例如 https://weixin.qq.com/sp
 
 ## 实施要求
 
-- 优先使用 skill 目录下的 `.runtime` 环境，不依赖系统 PATH
+- 优先使用 skill 目录下当前平台的 `.runtime/<os>-<arch>/` 环境，不依赖系统 PATH
 - 低层下载、抽帧、抽音频、OCR、ASR 由脚本和 Python 完成
 - 视频动态中，`ocr_frames/` 存放 ffmpeg 直接裁出的字幕区域小图，供 OCR 使用；`frames/` 只保留少量完整参考帧，供 `visual_frames` 使用
 - 图文动态中，`frames/` 存放下载到的原始图片，供 OCR 和 `visual_frames` 使用；该类动态跳过 ASR

@@ -1,0 +1,53 @@
+name: Manual smoke test
+
+on:
+  workflow_dispatch:
+    inputs:
+      share_url:
+        description: Video account share URL to process
+        required: true
+        type: string
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-13, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: plugins/wx-video-account-notes/skills/wx-video-account-notes
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap Windows runtime
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          SHARE_URL: ${{ inputs.share_url }}
+        run: |
+          pwsh -File scripts/bootstrap.ps1
+          pwsh -File scripts/verify_runtime.ps1
+          New-Item -ItemType File -Force -Path '.runtime/windows-x64/cache/interrupted.tmp' | Out-Null
+          pwsh -File scripts/bootstrap.ps1 -PruneCache
+          if (Test-Path '.runtime/windows-x64/cache/interrupted.tmp') { throw 'temporary file was not cleaned' }
+          pwsh -File scripts/invoke_pipeline.ps1 -ShareUrl $env:SHARE_URL -OutputDir "$PWD/smoke-output"
+          pwsh -File scripts/verify_runtime.ps1
+          & "$PWD/.runtime/windows-x64/.venv/Scripts/python.exe" -c "import platform; from runtime.platform import detect_platform; print(detect_platform().id, platform.machine()); detect_platform('FreeBSD', 'x86_64')"
+          if ($LASTEXITCODE -eq 0) { throw 'unsupported-platform detection unexpectedly succeeded' }
+      - name: Bootstrap POSIX runtime
+        if: runner.os != 'Windows'
+        shell: sh
+        env:
+          SHARE_URL: ${{ inputs.share_url }}
+        run: |
+          sh scripts/bootstrap.sh
+          sh scripts/verify_runtime.sh
+          case "$(uname -s)" in Darwin) runtime_id=macos-x64 ;; Linux) runtime_id=linux-x64 ;; esac
+          mkdir -p ".runtime/$runtime_id/cache"
+          touch ".runtime/$runtime_id/cache/interrupted.tmp"
+          sh scripts/bootstrap.sh --prune-cache
+          test ! -e ".runtime/$runtime_id/cache/interrupted.tmp"
+          sh scripts/invoke_pipeline.sh --share-url "$SHARE_URL" --output-dir "$PWD/smoke-output"
+          sh scripts/verify_runtime.sh
+          "$PWD/.runtime/$runtime_id/.venv/bin/python" -c 'import platform; from runtime.platform import detect_platform; print(detect_platform().id, platform.machine()); detect_platform("FreeBSD", "x86_64")' && exit 1 || test $? -eq 1

@@ -1,17 +1,71 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import tempfile
 import unittest
-import json
 from pathlib import Path
+from unittest.mock import patch
 
 from runtime.bootstrap import (
+    download_file,
     prune_runtime_cache,
+    select_platform_asset,
     select_assets,
 )
 
 
 class BootstrapTests(unittest.TestCase):
+    def test_download_file_replaces_destination_only_after_checksum_passes(self) -> None:
+        class Response:
+            headers = {"content-length": "3"}
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def raise_for_status(self) -> None:
+                return None
+
+            def iter_bytes(self):
+                yield b"abc"
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            destination = Path(temp_dir) / "asset.bin"
+            expected = hashlib.sha256(b"abc").hexdigest()
+            with patch("httpx.stream", return_value=Response()):
+                download_file(["https://example.invalid/asset.bin"], destination, sha256=expected)
+
+            self.assertEqual(destination.read_bytes(), b"abc")
+            self.assertFalse((destination.with_suffix(".bin.tmp")).exists())
+
+    def test_download_file_removes_temporary_file_after_checksum_failure(self) -> None:
+        class Response:
+            headers = {}
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def raise_for_status(self) -> None:
+                return None
+
+            def iter_bytes(self):
+                yield b"abc"
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            destination = Path(temp_dir) / "asset.bin"
+            with patch("httpx.stream", return_value=Response()), patch("runtime._retry.time.sleep"):
+                with self.assertRaisesRegex(RuntimeError, "SHA256 verification failed"):
+                    download_file(["https://example.invalid/asset.bin"], destination, sha256="0" * 64)
+
+            self.assertFalse(destination.exists())
+            self.assertFalse((destination.with_suffix(".bin.tmp")).exists())
+
     def test_select_assets_returns_all_required_assets(self) -> None:
         manifest_assets = [
             {
@@ -65,37 +119,51 @@ class BootstrapTests(unittest.TestCase):
 
             self.assertFalse(cache_root.exists())
 
-    def test_whisper_manifest_requires_model_weights(self) -> None:
+    def test_select_platform_asset_returns_supported_variant(self) -> None:
+        asset = {
+            "name": "ffmpeg",
+            "platforms": {
+                "windows-x64": {"archive_name": "windows.zip"},
+                "linux-x64": {"archive_name": "linux.tar.xz"},
+            },
+        }
+
+        selected = select_platform_asset(asset, "linux-x64")
+
+        self.assertEqual(selected["archive_name"], "linux.tar.xz")
+        self.assertEqual(selected["name"], "ffmpeg")
+
+    def test_select_platform_asset_rejects_unsupported_variant(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "does not support macos-x64"):
+            select_platform_asset(
+                {"name": "ffmpeg", "platforms": {"windows-x64": {}}},
+                "macos-x64",
+            )
+
+    def test_whisper_manifest_requires_model_weights_for_each_platform(self) -> None:
         manifest_path = Path(__file__).resolve().parents[1] / "assets_manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         whisper_asset = next(asset for asset in manifest["assets"] if asset["name"] == "whisper-tiny")
 
-        self.assertEqual(whisper_asset["expected_glob"], "**/model.bin")
+        for platform_asset in whisper_asset["platforms"].values():
+            self.assertEqual(platform_asset["expected_glob"], "**/model.bin")
+            self.assertRegex(platform_asset["file_sha256"], r"^[0-9a-f]{64}$")
 
-    def test_bootstrap_script_sets_pythonpath_before_running_runtime_bootstrap(self) -> None:
-        script_path = Path(__file__).resolve().parents[2] / "scripts" / "bootstrap.ps1"
-        script_text = script_path.read_text(encoding="utf-8")
+    def test_manifest_archives_have_sha256_pins(self) -> None:
+        manifest_path = Path(__file__).resolve().parents[1] / "assets_manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        ffmpeg_asset = next(asset for asset in manifest["assets"] if asset["name"] == "ffmpeg")
 
-        self.assertIn('$env:PYTHONPATH = $skillRoot', script_text)
+        for platform_asset in ffmpeg_asset["platforms"].values():
+            for archive in platform_asset["archives"]:
+                self.assertRegex(archive["sha256"], r"^[0-9a-f]{64}$")
 
-    def test_runtime_scripts_use_only_private_uv_and_locked_python_project(self) -> None:
+    def test_script_contracts_are_thin_forwarders(self) -> None:
         scripts_root = Path(__file__).resolve().parents[2] / "scripts"
-        skill_root = scripts_root.parent
-        common_text = (scripts_root / "common.ps1").read_text(encoding="utf-8")
-        bootstrap_text = (scripts_root / "bootstrap.ps1").read_text(encoding="utf-8")
-        invoke_text = (scripts_root / "invoke_pipeline.ps1").read_text(encoding="utf-8")
-
-        self.assertIn("return '0.11.25'", common_text)
-        self.assertIn("return '3.13.14'", common_text)
-        self.assertNotIn("Get-Command uv", common_text)
-        self.assertIn("releases/download/$targetUvVersion", bootstrap_text)
-        self.assertIn("'python', 'install', $targetPythonVersion", bootstrap_text)
-        self.assertIn("'sync', '--locked'", bootstrap_text)
-        self.assertNotIn("'pip', 'install'", bootstrap_text)
-        self.assertIn("'run', '--locked'", invoke_text)
-        self.assertTrue((skill_root / ".python-version").exists())
-        self.assertTrue((skill_root / "pyproject.toml").exists())
-        self.assertTrue((skill_root / "uv.lock").exists())
+        for script_name in ("bootstrap.ps1", "bootstrap.sh", "invoke_pipeline.ps1", "invoke_pipeline.sh"):
+            script_text = (scripts_root / script_name).read_text(encoding="utf-8")
+            self.assertIn("runtime", script_text)
+            self.assertNotIn("ffmpeg-master-latest", script_text)
 
     def test_skill_tells_vision_models_to_read_visual_frames(self) -> None:
         skill_root = Path(__file__).resolve().parents[2]

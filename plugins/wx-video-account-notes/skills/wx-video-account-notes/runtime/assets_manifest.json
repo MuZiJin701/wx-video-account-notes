@@ -4,25 +4,77 @@
       "name": "ffmpeg",
       "required": true,
       "install_policy": "required",
-      "target_subdir": "tools/ffmpeg",
-      "archive_name": "ffmpeg-master-latest-win64-gpl.zip",
-      "urls": [
-        "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-win64-gpl.zip"
-      ],
-      "sha256": "",
-      "extract": true,
-      "expected_glob": "**/bin/ffmpeg.exe"
+      "platforms": {
+        "windows-x64": {
+          "target_subdir": "tools/ffmpeg",
+          "archives": [{
+            "archive_name": "ffmpeg-N-126060-g03dc244a69-win64-gpl.zip",
+            "urls": ["https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-11-13-11/ffmpeg-N-126060-g03dc244a69-win64-gpl.zip"],
+            "sha256": "1b9d8a1baca40eb4745520448d545adffb1ffad3559d552afc5ad5d90d204613",
+            "extract": true
+          }],
+          "expected_globs": ["**/ffmpeg.exe", "**/ffprobe.exe"]
+        },
+        "linux-x64": {
+          "target_subdir": "tools/ffmpeg",
+          "archives": [{
+            "archive_name": "ffmpeg-N-126060-g03dc244a69-linux64-gpl.tar.xz",
+            "urls": ["https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-11-13-11/ffmpeg-N-126060-g03dc244a69-linux64-gpl.tar.xz"],
+            "sha256": "5fc1c36b59ccd350977f534aba94b1d67142cf0910924b23ccbcb98d73b52dfb",
+            "extract": true
+          }],
+          "expected_globs": ["**/ffmpeg", "**/ffprobe"]
+        },
+        "macos-x64": {
+          "target_subdir": "tools/ffmpeg",
+          "archives": [
+            {
+              "archive_name": "ffmpeg-latest-macos.zip",
+              "urls": ["https://evermeet.cx/ffmpeg/getrelease/zip"],
+              "sha256": "b1bd0cbaa0c889a08589dc1d14e4a08eebf425b8726c31a7e270e08552d0f271",
+              "extract": true
+            },
+            {
+              "archive_name": "ffprobe-latest-macos.zip",
+              "urls": ["https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip"],
+              "sha256": "66a5102de63ce1c6a203d05a463ac836100eba9403d16968674366de17452da6",
+              "extract": true
+            }
+          ],
+          "expected_globs": ["**/ffmpeg", "**/ffprobe"]
+        }
+      }
     },
     {
       "name": "whisper-tiny",
       "required": true,
       "install_policy": "required",
-      "target_subdir": "models/whisper",
-      "archive_name": "faster-whisper-tiny",
-      "repo_id": "Systran/faster-whisper-tiny",
-      "sha256": "",
-      "extract": false,
-      "expected_glob": "**/model.bin"
+      "platforms": {
+        "windows-x64": {
+          "target_subdir": "models/whisper",
+          "archive_name": "faster-whisper-tiny",
+          "repo_id": "Systran/faster-whisper-tiny",
+          "file_sha256": "dcb76c6586fc06cbdac6dd21f14cfd129cc4cdd9dce19bf4ffa62e59cbe6e6d1",
+          "extract": false,
+          "expected_glob": "**/model.bin"
+        },
+        "linux-x64": {
+          "target_subdir": "models/whisper",
+          "archive_name": "faster-whisper-tiny",
+          "repo_id": "Systran/faster-whisper-tiny",
+          "file_sha256": "dcb76c6586fc06cbdac6dd21f14cfd129cc4cdd9dce19bf4ffa62e59cbe6e6d1",
+          "extract": false,
+          "expected_glob": "**/model.bin"
+        },
+        "macos-x64": {
+          "target_subdir": "models/whisper",
+          "archive_name": "faster-whisper-tiny",
+          "repo_id": "Systran/faster-whisper-tiny",
+          "file_sha256": "dcb76c6586fc06cbdac6dd21f14cfd129cc4cdd9dce19bf4ffa62e59cbe6e6d1",
+          "extract": false,
+          "expected_glob": "**/model.bin"
+        }
+      }
     }
   ]
 }
