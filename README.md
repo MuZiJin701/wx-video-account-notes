@@ -23,6 +23,17 @@ skills add https://github.com/MuZiJin701/wx-video-account-notes.git -g -y
 
 首次运行会下载当前平台的私有运行时、锁定依赖、FFmpeg 和模型，请预留网络访问权限与磁盘空间。
 
+### Codex 插件（可选）
+
+也可以通过 Codex 插件市场安装：
+
+```sh
+codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git
+codex plugin add wx-video-account-notes@wx-video-account-notes-dev
+```
+
+如果使用 `cc-switch`，直接输入仓库地址即可。
+
 ### 处理链接
 
 把下面的请求和真实链接交给 agent：

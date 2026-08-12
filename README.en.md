@@ -23,6 +23,17 @@ skills add https://github.com/MuZiJin701/wx-video-account-notes.git -g -y
 
 The first run downloads the private runtime, locked dependencies, FFmpeg, and model for the current platform. Allow network access and enough disk space.
 
+### Codex plugin (optional)
+
+You can also install it through the Codex plugin marketplace:
+
+```sh
+codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git
+codex plugin add wx-video-account-notes@wx-video-account-notes-dev
+```
+
+With `cc-switch`, paste the repository URL directly.
+
 ### Process a link
 
 Send this request with a real share link to your agent:
