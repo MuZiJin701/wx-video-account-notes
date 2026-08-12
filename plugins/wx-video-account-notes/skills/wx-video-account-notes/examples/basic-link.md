@@ -1,17 +1,16 @@
-# 基础用法 | Basic usage
+# 基础用法
 
 把一个视频号分享链接交给 agent，默认生成笔记材料和同目录 Markdown 笔记。
-Give the agent one WeChat Channels share link to create note materials and a Markdown note in the same output directory.
 
-输入示例：
+## 输入示例
 
 ```text
 帮我处理这个视频号分享链接：https://weixin.qq.com/sph/AClgYpX4KB
 ```
 
-期望结果：
+## 期望结果
 
-- 自动初始化当前平台的 `.runtime/<os>-<arch>/` 目录
-- 下载视频或图文动态图片
-- 生成 `note_materials.json`、`ocr.txt`、`asr.txt`、`frames/`，视频动态还会生成 `ocr_frames/` 和音频
-- 生成同目录 Markdown 笔记
+- 自动初始化当前平台的 `.runtime/<os>-<arch>/` 目录。
+- 下载视频或图文动态图片。
+- 生成 `note_materials.json`、`ocr.txt`、`asr.txt`、`frames/`；视频动态还会生成 `ocr_frames/` 和音频。
+- 生成同目录 Markdown 笔记。

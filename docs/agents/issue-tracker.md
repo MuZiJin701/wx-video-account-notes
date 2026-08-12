@@ -1,32 +1,22 @@
 # Issue tracker: GitHub
 
-需求、规格和问题统一记录在 GitHub Issues。Requirements, specs, and bugs live in GitHub Issues.
+Requirements, specifications, and bugs for this repository live in GitHub Issues. Use the `gh` CLI for all issue operations.
 
-Issues and specs for this repo live as GitHub Issues. Use the `gh` CLI for all operations。
+## Conventions
 
-本仓库的 issue 和规格说明存放在 GitHub Issues 中，所有相关操作使用 `gh` CLI。
+- Create an issue: `gh issue create --title "..." --body "..."`
+- Read an issue: `gh issue view <number> --comments`
+- List issues: `gh issue list --state open --json number,title,body,labels,comments`
+- Apply or remove labels: `gh issue edit <number> --add-label "..."` or `--remove-label "..."`
+- Comment on an issue: `gh issue comment <number> --body "..."`
+- Close an issue: `gh issue close <number> --comment "..."`
 
-## Conventions / 约定
+Infer the repository from `git remote -v`; `gh` does this automatically inside this clone.
 
-- Create an issue / 创建 issue: `gh issue create --title "..." --body "..."`
-- Read an issue / 读取 issue: `gh issue view <number> --comments`
-- List issues / 列出 issue: `gh issue list --state open --json number,title,body,labels,comments`
-- Comment on an issue / 评论 issue: `gh issue comment <number> --body "..."`
-- Apply or remove labels / 添加或移除标签: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
-- Close an issue / 关闭 issue: `gh issue close <number> --comment "..."`
+## Pull requests
 
-Infer the repository from `git remote -v`; `gh` does this automatically inside this clone。
+Pull requests are not a request surface for repository triage.
 
-## Pull requests as a triage surface / PR 是否进入 triage
+## Skill instructions
 
-**PRs as a request surface: no.**
-
-外部 Pull Request 不作为本项目的 triage 请求入口。
-
-## When a skill says “publish to the issue tracker” / 发布到 issue tracker
-
-Create a GitHub issue / 创建 GitHub issue。
-
-## When a skill says “fetch the relevant ticket” / 获取相关 ticket
-
-Run `gh issue view <number> --comments` / 执行 `gh issue view <number> --comments`。
+When a skill says to publish to the issue tracker, create a GitHub issue. When it says to fetch a relevant ticket, run `gh issue view <number> --comments`.

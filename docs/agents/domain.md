@@ -1,22 +1,19 @@
-# Domain Docs / 领域文档
+# Domain documentation
 
-本目录说明代理如何读取和使用领域术语与架构决策。This directory explains how agents consume domain terms and architecture decisions.
+This directory explains how engineering agents consume the domain glossary and architecture decisions.
 
-How engineering skills should consume this repo's domain documentation。
-工程 skill 探索本仓库时应遵循以下领域文档约定。
+## Before exploring
 
-## Before exploring, read these / 探索前读取
+Read:
 
-- `CONTEXT.md` at the repo root, if it exists / 根目录的 `CONTEXT.md`（如存在）
-- Relevant ADRs under `docs/adr/`, if they exist / `docs/adr/` 下相关 ADR（如存在）
+- `CONTEXT.md` at the repository root, if it exists.
+- Relevant ADRs under `docs/adr/`, if they exist.
 
-If these files do not exist, proceed silently. Do not create them upfront; create them when domain decisions or terminology are actually established。
+If these files do not exist, proceed without creating placeholders. Create them only when a domain term or architectural decision is actually established.
 
-如果这些文件不存在，直接继续，不要提前创建占位文件；只有在确立领域决策或术语时再创建。
+## File structure
 
-## File structure / 文件结构
-
-This is a single-context repo / 本仓库采用单上下文结构：
+This repository has one context:
 
 ```text
 /
@@ -27,16 +24,10 @@ This is a single-context repo / 本仓库采用单上下文结构：
 └── plugins/
 ```
 
-## Use the glossary's vocabulary / 使用术语表
+## Vocabulary rules
 
-When naming a domain concept in an issue, proposal, refactor, or test, use the term defined in `CONTEXT.md`。在 issue、提案、重构或测试中命名领域概念时，使用 `CONTEXT.md` 定义的术语。
+When naming a domain concept in an issue, proposal, refactor, or test, use the term defined in `CONTEXT.md`. If a concept is not defined, reconsider inventing a synonym and record the gap through the domain-modeling process.
 
-If the concept is not defined yet, reconsider inventing a synonym and record the gap for domain modeling。
+## ADR conflicts
 
-如果术语尚未定义，先确认是否真的需要新增概念，并将缺口交给 domain modeling 流程。
-
-## Flag ADR conflicts / 标记 ADR 冲突
-
-If proposed work contradicts an existing ADR, surface the conflict explicitly instead of silently overriding it。
-
-如果提议的工作与现有 ADR 冲突，必须明确指出，不要静默覆盖既有决策。
+If proposed work contradicts an existing ADR, surface the conflict explicitly instead of silently overriding the decision.

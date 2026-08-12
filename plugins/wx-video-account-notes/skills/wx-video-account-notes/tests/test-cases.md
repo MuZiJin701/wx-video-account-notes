@@ -1,23 +1,23 @@
-# Manual smoke test checklist | 手动 smoke test 清单
+# Manual smoke test checklist
 
-本文件是发布前的人工 smoke test 清单，不是 `unittest` 自动测试入口。自动测试使用锁定的 uv 环境运行，且不访问外部下载服务。
+This is the release checklist for real bootstrap and end-to-end processing. It is not the automated `unittest` entry point. Automated tests run in the locked uv environment and do not contact external download services.
 
-## 前置条件
+## Prerequisites
 
-- 在 Windows x64、macOS Intel x64 或 Linux x64 上执行。
-- 当前系统可访问视频号解析接口、GitHub Releases 和 Hugging Face。
-- 使用全新 skill 目录，或先备份并删除对应平台的 `.runtime/<os>-<arch>/`。
+- Run on Windows x64, Intel macOS x64, or Linux x64.
+- Allow access to the WeChat Channels resolver, GitHub Releases, and Hugging Face.
+- Use a fresh skill directory, or back up and remove the platform-specific `.runtime/<os>-<arch>/` before testing first-run behavior.
 
 ## Cases
 
-1. 视频动态默认输出目录：使用 `https://weixin.qq.com/sph/AybwTXRwkt`，确认输出包含 `<slug>.mp4`、`note_materials.json`、`raw.json`、`ocr.txt`、`asr.txt`、`ocr_frames/`、`frames/` 和 `audio/`；确认 `note_materials.json` 包含 `visual_frames`。
-2. 图文动态默认输出目录：使用 `https://weixin.qq.com/sph/AeGgo9k3KL`，确认图片写入 `frames/`，跳过视频、音频和 ASR，生成空 `asr.txt`，并标记 `图文动态无音频`。
-3. 指定输出目录：确认所有笔记材料写入用户指定目录，并可供 agent 生成同目录最终 `<slug>.md`。
-4. 首次 bootstrap：确认创建当前平台的 `.runtime/<os>-<arch>/`，下载并校验私有 uv、Python、FFmpeg 和模型，然后完成锁定依赖同步。
-5. 重复 bootstrap：确认已完成且校验通过的资产会复用，不重复下载；不同平台目录互不复用。
-6. 失败恢复：模拟资产下载、校验或解压失败，确认命令返回非零状态、错误包含资产名称、`.tmp` 文件被清理，已完成资产保留，且不报告初始化成功。
-7. 不支持平台：在不支持的 OS 或架构上执行，确认命令直接失败，并显示检测到的 OS/架构及支持范围。
+1. **Video post, default output**: use `https://weixin.qq.com/sph/AybwTXRwkt`. Confirm the output contains `<slug>.mp4`, `note_materials.json`, `raw.json`, `ocr.txt`, `asr.txt`, `ocr_frames/`, `frames/`, and `audio/`; confirm that `note_materials.json` contains `visual_frames`.
+2. **Image post, default output**: use `https://weixin.qq.com/sph/AeGgo9k3KL`. Confirm images are written to `frames/`, video/audio/ASR are skipped, `asr.txt` is empty, and the result records that the image post has no audio.
+3. **Custom output directory**: confirm all note materials are written to the requested directory and the agent can create the final `<slug>.md` beside them.
+4. **First bootstrap**: confirm creation of `.runtime/<os>-<arch>/`, download and verification of private uv, Python, FFmpeg, and model, followed by locked dependency sync.
+5. **Repeat bootstrap**: confirm verified assets are reused rather than downloaded again and different platform directories are not reused.
+6. **Failure recovery**: simulate an asset download, verification, or extraction failure. Confirm a non-zero exit, an error naming the asset, cleanup of `.tmp` files, preservation of completed assets, and no success report.
+7. **Unsupported platform**: run on an unsupported OS or architecture. Confirm immediate failure with the detected OS/architecture and supported scope.
 
 ## Record
 
-记录执行日期、平台、架构、Python 版本、bootstrap 结果、pipeline 结果和失败日志摘要；不要提交下载的运行时资产、用户媒体或敏感日志。
+Record the date, platform, architecture, Python version, bootstrap result, pipeline result, and a short failure summary. Do not commit downloaded runtime assets, user media, or sensitive logs.

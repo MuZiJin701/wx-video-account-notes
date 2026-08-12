@@ -15,7 +15,7 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Productivity",
-      "description": "中文：视频号链接转 OCR/ASR 笔记材料。 English: WeChat Channels links to OCR/ASR note materials."
+      "description": "将微信视频号链接转换为 OCR/ASR 笔记材料。 Turn WeChat Channels links into OCR/ASR note materials."
     }
   ]
 }

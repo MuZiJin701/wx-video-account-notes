@@ -1,15 +1,15 @@
-# 模型成稿模板 | Note template
+# 模型成稿模板
 
-本模板帮助 agent 从结构化笔记材料生成可读的 Markdown 笔记。This template helps an agent turn structured materials into a readable Markdown note.
+本模板帮助 agent 从结构化笔记材料生成可读的 Markdown 笔记。
 
 ## 成稿原则
 
-- 只基于已有材料整理，不要编造内容
-- 优先参考 `note_materials.json`
-- 必要时对照 `raw.json`、`ocr.txt`、`asr.txt`
-- 如果 `note_materials.json` 包含 `visual_frames` 字段，且当前模型有识图能力，应读取这些图片理解画面内容，用图片信息补足 OCR / ASR 无法表达的版式、界面、图表、人物动作或视觉上下文
-- 保留"提取到的文案"和"转写文案"的区别
-- 输出应自然、可读，不要堆叠原始识别结果
+- 只基于已有材料整理，不要编造内容。
+- 优先参考 `note_materials.json`。
+- 必要时对照 `raw.json`、`ocr.txt`、`asr.txt`。
+- 如果 `note_materials.json` 包含 `visual_frames` 字段，且当前模型有识图能力，应读取这些图片理解画面内容，用图片信息补足 OCR / ASR 无法表达的版式、界面、图表、人物动作或视觉上下文。
+- 保留“提取到的文案”和“转写文案”的区别。
+- 输出应自然、可读，不要堆叠原始识别结果。
 
 ## 推荐结构
 
@@ -47,5 +47,5 @@
 
 ## 约束提醒
 
-- 这个 skill 不预设固定业务场景，不要因为当前样例像影视解说，就对文本做垂类专用纠错
-- 遇到存疑词句时，宁可保留不确定性，也不要强行替换成你以为更合理的词
+- 这个 skill 不预设固定业务场景，不要因为当前样例像影视解说，就对文本做垂类专用纠错。
+- 遇到存疑词句时，宁可保留不确定性，也不要强行替换成你以为更合理的词。

@@ -1,25 +1,24 @@
-# Agent Instructions / Agent 协作说明
+# Agent instructions
 
-本文件定义仓库级代理协作规则；面向项目使用者的说明见 `README.md`。This file defines repository-wide agent rules; see `README.md` for user-facing documentation.
+This file defines repository-wide guidance for coding agents. User-facing documentation is in `README.md`.
 
-本文件记录本仓库对编码代理的通用约定。This file records repository-wide guidance for coding agents.
+## Issue tracker
 
-## Agent skills
+Issues for this repository live in GitHub Issues and are managed with `gh`. See `docs/agents/issue-tracker.md`.
 
-### Issue tracker
-
-Issues for this repo live in GitHub Issues and are managed with `gh`. See `docs/agents/issue-tracker.md`.
-
-本项目使用 GitHub Issues 管理需求与问题，代理应通过 `gh` CLI 操作。详见 `docs/agents/issue-tracker.md`。
-
-### Triage labels
+## Triage labels
 
 Use the canonical triage labels mapped in `docs/agents/triage-labels.md`.
 
-使用 `docs/agents/triage-labels.md` 中映射的标准 triage 标签。
+## Domain docs
 
-### Domain docs
+This repository has a single context. Read `CONTEXT.md` and relevant ADRs under `docs/adr/` before exploring the code. See `docs/agents/domain.md`.
 
-This is a single-context repo. Read `CONTEXT.md` and relevant ADRs under `docs/adr/`. See `docs/agents/domain.md`.
+## Change policy
 
-这是单上下文仓库。工作前读取根目录 `CONTEXT.md` 以及 `docs/adr/` 下相关 ADR。详见 `docs/agents/domain.md`。
+- Preserve unrelated user changes.
+- Reuse existing code and project conventions before adding abstractions.
+- Keep implementation, tests, and documentation aligned.
+- Do not expose passwords, tokens, API keys, personal data, or sensitive logs.
+- Do not push code, send messages, modify permissions, delete important data, or affect production resources without explicit authorization.
+- Run tests, type checks, builds, or manual checks appropriate to the risk of the change.

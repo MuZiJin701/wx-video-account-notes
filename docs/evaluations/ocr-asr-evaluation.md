@@ -1,38 +1,38 @@
-# OCR / ASR Evaluation
+# OCR / ASR evaluation
 
-本记录总结当前 OCR/ASR 方案、性能取舍和历史验证结果。This record summarizes the current OCR/ASR stack, trade-offs, and validation history.
+This record summarizes the current OCR/ASR stack, performance trade-offs, and validation history.
 
-## Current Stack
+## Current stack
 
-| 组件 | Provider | 模型 | 配置 |
-|---|---|---|---|
-| OCR | RapidOCR | onnxruntime CPU | 1.5x upscale, 4-char crop early exit |
-| ASR | faster-whisper | tiny (150MB) | CPU-only, adaptive `cpu_threads` + `num_workers` |
+| Component | Provider | Model | Configuration |
+| --- | --- | --- | --- |
+| OCR | RapidOCR | onnxruntime CPU | 1.5x upscale, 4-character crop early exit |
+| ASR | faster-whisper | tiny (150 MB) | CPU-only, adaptive `cpu_threads` and `num_workers` |
 
-## OCR Optimizations
+## OCR optimizations
 
-| 优化 | 说明 |
-|---|---|
-| 跳过无变化帧 | 像素比对字幕区域，不变则复用 |
-| 裁切区提前退出 | 任一候选区 ≥4 中文字符即停止 |
-| 跳过全帧 OCR | 裁切区有好结果时不再跑整帧 |
+| Optimization | Description |
+| --- | --- |
+| Skip unchanged frames | Compare subtitle-region pixels and reuse the previous result when unchanged. |
+| Crop early exit | Stop when any candidate crop reaches at least four Chinese characters. |
+| Skip full-frame OCR | Do not run full-frame OCR when a crop already produced a good result. |
 
 ## ASR
 
-- 模型：`Systran/faster-whisper-tiny`
-- 底层运行时：CTranslate2 (int8 量化)
-- 输出：按 segment 分段，无标点
-- 特点：所有测试视频均可靠产出文本，从不空白
+- Model: `Systran/faster-whisper-tiny`
+- Runtime: CTranslate2 with int8 quantization
+- Output: segment-based text without punctuation
+- Result: all tested videos produced non-empty text reliably
 
 ## History
 
 | Date | Change |
-|---|---|
-| 2026-06-12 | 初始：faster-whisper tiny + GPU |
-| 2026-06-12 | 试验：SenseVoice GPU → 放弃（CUDA 不匹配） |
-| 2026-06-12 | 切到 SenseVoice CPU → 2/3 视频失败 |
-| 2026-06-12 | 回退 faster-whisper CPU → 3/3 稳定 |
-| 2026-06-12 | OCR 优化：跳帧+提前退出+跳过全帧 |
-| 2026-06-12 | ASR 优化：cpu_threads + num_workers |
-| 2026-06-13 | OCR 优化：去磁盘 I/O、单次解码复用、3 个 crop、1.5x 放大、4 字提前退出 |
-| 2026-06-13 | ASR 默认并发改为自适应策略 |
+| --- | --- |
+| 2026-06-12 | Started with faster-whisper tiny plus GPU. |
+| 2026-06-12 | Tried SenseVoice GPU and dropped it because of CUDA mismatch. |
+| 2026-06-12 | Tried SenseVoice CPU; 2 of 3 videos failed. |
+| 2026-06-12 | Returned to faster-whisper CPU; 3 of 3 videos were stable. |
+| 2026-06-12 | Added OCR frame skipping, early exit, and full-frame bypass. |
+| 2026-06-12 | Added adaptive ASR `cpu_threads` and `num_workers`. |
+| 2026-06-13 | Optimized OCR with no disk I/O, shared decode, three crops, 1.5x upscale, and four-character early exit. |
+| 2026-06-13 | Changed default ASR concurrency to an adaptive strategy. |

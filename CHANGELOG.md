@@ -1,69 +1,64 @@
-# 更新日志
+# Changelog
 
 ## Unreleased
 
-- 完成 Windows x64、macOS Intel x64 和 Linux x64 的跨平台运行时支持
-- 统一使用 Python runtime 编排初始化、资产校验和媒体处理
-- 增加平台隔离运行时、SHA256 校验、运行时验证和三平台 CI
-- 重写 README，补充中英双语安装、输出和开发说明
-
-## Changelog
-
-The unreleased changes add cross-platform runtime support, private asset validation, platform verification, and a shorter bilingual README.
+- Added cross-platform runtime support for Windows x64, Intel macOS x64, and Linux x64.
+- Unified runtime initialization, asset verification, and media processing under Python.
+- Added platform-isolated runtimes, SHA256 verification, runtime checks, and three-platform CI.
+- Split the README into concise Chinese and English entry points.
+- Updated documentation to use one primary language per file and corrected the global `skills` CLI command.
 
 ## 0.2.3
 
-- 删除 Claude Code 插件分发元数据，保留 Codex 插件入口
-- README 和目录说明改为首推仓库地址级 `skills` 全局安装，补充环境要求和 skill 优势，同时保留 Codex 插件市场和 `cc-switch` 方式
-- OCR 性能优化：绕过临时文件磁盘 I/O + JPEG 解码缓存 + 裁切候选 5→3 个，ANA06rMHMf 基准 204s→142s（-30%）
-- OCR 预处理放大倍数从 2x 调整到 1.5x，ANA06rMHMf 进一步从 142s→133s（再降约 6%）
-- OCR 裁切提前退出阈值从 5 个中文字符放宽到 4 个，ANA06rMHMf 从 132s→111s、case2 从 17.4s→16.3s，CPU 占用基本不变
-- ASR 默认并发策略改为按 CPU 数量自适应分配：`cpu_threads=cpu_count//2`、`num_workers` 在低核机器用 1，高于等于 4 核机器用 2，避免默认占满整机
-- 清理 `OMP_NUM_THREADS`/`OMP_WAIT_POLICY` 死代码（实测对 onnxruntime 无效果）
-- 清理 `low_signal_exact` 永远为空的噪声过滤分支
-- 删除 `resolved["raw"]` 未使用的完整 payload 引用
-- 改进 ffmpeg 未找到时的错误提示（明确提示运行 bootstrap）
-- 添加 `visual_frames` 单测覆盖
-- 删除重复的 `.runtime/python/` 旧版安装（~75MB）
-- 新增 `.gitignore`，evals.json 使用真实测试链接，CHANGELOG 全中文化
+- Removed Claude Code distribution metadata and kept the Codex plugin entry point.
+- Made repository-level global `skills` installation the primary installation path while retaining Codex marketplace and `cc-switch` options.
+- Improved OCR performance by bypassing temporary disk I/O, caching JPEG decoding, reducing crop candidates from five to three, and reducing the ANA06rMHMf benchmark from 204s to 142s.
+- Reduced OCR preprocessing upscale from 2x to 1.5x, reducing ANA06rMHMf from 142s to 133s.
+- Relaxed OCR crop early exit from five to four Chinese characters, reducing ANA06rMHMf from 132s to 111s and case2 from 17.4s to 16.3s without materially changing CPU usage.
+- Made ASR concurrency adaptive: `cpu_threads=cpu_count//2`, with one worker on low-core machines and two workers on machines with at least four cores.
+- Removed ineffective `OMP_NUM_THREADS`/`OMP_WAIT_POLICY` code and the permanently empty `low_signal_exact` filter branch.
+- Removed the unused `resolved["raw"]` payload reference.
+- Improved the missing-FFmpeg error to point users to bootstrap.
+- Added unit coverage for `visual_frames`.
+- Removed the duplicate `.runtime/python/` installation (about 75 MB).
+- Added `.gitignore` and real test links in `evals.json`.
 
 ## 0.2.2
 
-- 无语音视频支持视觉帧：`note_materials.json` 自动嵌入最多 5 个均匀采样帧供 agent 看图理解
-- 清理死代码：移除 GPU 参数、空噪声过滤器、无用函数参数
-- 删除残留的 `.runtime/models/sensevoice/` 运行时数据
-- 更新文档：README、目录说明、test-cases、SKILL、model-note-template
+- Added up to five evenly sampled `visual_frames` to `note_materials.json` for videos without speech.
+- Removed dead GPU parameters, the empty noise filter, and unused function parameters.
+- Removed leftover `.runtime/models/sensevoice/` assets.
+- Updated README, repository map, test cases, skill instructions, and note template.
 
 ## 0.2.1
 
-- ASR 从 SenseVoice 切换为 faster-whisper tiny（跨视频更稳定可靠）
-- 删除 NEXT_STEP.md 生成（与 SKILL.md 指令重复）
-- 添加 faster-whisper `cpu_threads` 和 `num_workers` 参数提升 CPU 利用率
-- 同步更新所有文档
+- Switched ASR from SenseVoice to faster-whisper tiny for more reliable cross-video behavior.
+- Removed `NEXT_STEP.md` generation because the instructions duplicated `SKILL.md`.
+- Added `cpu_threads` and `num_workers` to improve CPU utilization.
+- Synchronized all documentation with the new workflow.
 
 ## 0.2.0
 
-- SenseVoice CPU（sherpa-onnx）尝试并放弃：3 个视频仅 1 个成功，不稳定
-- 保留 faster-whisper 并删除全部 GPU 相关代码：CUDA 检测、DLL 注入、NVIDIA 运行时资产
-- 删除 `-IncludeOptionalGpu` / `-PruneOptionalGpu` bootstrap 参数
-- 删除 `-AsrDevice` / `-AsrProvider` pipeline 参数
-- OCR 优化：跳帧（像素比对）、裁切候选提前退出、跳过全帧 OCR
-- ASR `num_threads` 自动检测 CPU 核心数
-- Bootstrap 完成后自动删除缓存
-- 简化 bootstrap.py、pipeline.py、invoke_pipeline.ps1
-- Skill 运行时体积：~1.3GB → ~700MB（不含 ffmpeg）
-- 全部测试重写（35 项）
+- Tried and dropped SenseVoice CPU because only one of three videos succeeded.
+- Kept faster-whisper and removed all GPU-related code, including CUDA detection, DLL injection, and NVIDIA runtime assets.
+- Removed `-IncludeOptionalGpu`, `-PruneOptionalGpu`, `-AsrDevice`, and `-AsrProvider` options.
+- Optimized OCR with frame skipping, crop early exit, and full-frame bypass.
+- Added automatic CPU thread detection for ASR.
+- Made bootstrap remove its cache after completion.
+- Simplified `bootstrap.py`, `pipeline.py`, and `invoke_pipeline.ps1`.
+- Reduced skill runtime size from about 1.3 GB to about 700 MB, excluding FFmpeg.
+- Rewrote all tests (35 cases).
 
 ## 0.1.1
 
-- 精简 skill 文档，SKILL.md 成为主要执行说明
-- 减少 README.md、目录说明.md、model-note-template.md 之间的重叠
-- 缩短生成的 NEXT_STEP.md 指令
-- 更新测试用例文档以匹配"材料 + agent 整理笔记"工作流
-- 添加运行时瘦身控制和可选 GPU 资产、可重建缓存的文档
+- Shortened the skill documentation and made `SKILL.md` the primary execution guide.
+- Reduced overlap among README, repository map, and note template.
+- Shortened generated next-step instructions.
+- Updated test cases for the materials-plus-agent-note workflow.
+- Documented runtime slimming, optional GPU assets, and rebuildable caches.
 
 ## 0.1.0
 
-- Windows 优先的可移植 skill 脚手架
-- 基于 uv 和 venv 的项目内 `.runtime` 环境自举
-- 微信视频号解析、下载、OCR、ASR、Markdown 笔记流水线
+- Added a portable, Windows-first skill scaffold.
+- Added a project-local `.runtime` environment using uv and venv.
+- Added WeChat Channels link resolution, download, OCR, ASR, and Markdown note processing.
