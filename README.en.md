@@ -12,6 +12,10 @@ Turn one WeChat Channels share link into structured note materials for an agent,
 - **Cross-platform and CPU-first**: supports Windows x64, Intel macOS x64, and Linux x64 without GPU, CUDA, or system FFmpeg setup.
 - **Self-contained runtime**: private Python, uv, FFmpeg, and models are cached per platform and reused after bootstrap.
 
+## Current resolver status
+
+As of 2026-09-29, the default resolver returns `401 unauthorized` for share links, so a successful installation does not yet mean the link-to-note flow works. The resolver is rejecting access; this does not establish that the share link is invalid. The shared self-hosted resolver and local end-to-end acceptance test are still planned in [spec issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4).
+
 ## Quick start
 
 ### Install
@@ -107,6 +111,8 @@ sh scripts/invoke_pipeline.sh --share-url "https://weixin.qq.com/sph/your_share_
 - [Repository map](目录说明.md)
 - [Domain glossary](CONTEXT.md)
 - [Architecture decisions](docs/adr/)
+- [WeChat Channels acquisition architecture](docs/research/wx-channels-architecture.md)
+- [Self-hosted resolver spec and acceptance criteria](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)
 - [Tests and evaluation](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)
 - [Changelog](CHANGELOG.md)
 

@@ -12,6 +12,10 @@
 - **跨平台且 CPU 优先**：支持 Windows x64、macOS Intel x64 和 Linux x64，不要求 GPU、CUDA 或系统 FFmpeg。
 - **环境隔离**：项目私有 Python、uv、FFmpeg 和模型按平台缓存，初始化后可重复使用。
 
+## 当前解析状态
+
+截至 2026-09-29，默认解析服务对分享链接返回 `401 unauthorized`，因此安装成功也暂时无法跑通从链接到笔记的完整流程。这是解析服务拒绝访问，不能据此判断分享链接失效。自建共享解析服务和本机端到端验收尚未实施，方案见 [规格 issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)。
+
 ## 快速开始
 
 ### 安装
@@ -107,6 +111,8 @@ sh scripts/invoke_pipeline.sh --share-url "https://weixin.qq.com/sph/your_share_
 - [目录地图](目录说明.md)
 - [领域术语](CONTEXT.md)
 - [架构决策](docs/adr/)
+- [视频号获取原理](docs/research/wx-channels-architecture.md)
+- [自建解析服务规格与验收标准](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)
 - [测试与评估](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)
 - [变更日志](CHANGELOG.md)
 

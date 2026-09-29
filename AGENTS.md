@@ -14,6 +14,8 @@ Use the canonical triage labels mapped in `docs/agents/triage-labels.md`.
 
 This repository has a single context. Read `CONTEXT.md` and relevant ADRs under `docs/adr/` before exploring the code. See `docs/agents/domain.md`.
 
+For WeChat Channels share-link resolution work, read `docs/research/wx-channels-architecture.md` and `docs/research/wx-channels-upstream.md` before changing the resolver.
+
 ## Change policy
 
 - Preserve unrelated user changes.

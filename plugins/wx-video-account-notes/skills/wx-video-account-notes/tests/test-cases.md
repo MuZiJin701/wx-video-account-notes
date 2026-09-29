@@ -2,6 +2,8 @@
 
 This is the release checklist for real bootstrap and end-to-end processing. It is not the automated `unittest` entry point. Automated tests run in the locked uv environment and do not contact external download services.
 
+The default resolver currently returns `401 unauthorized`. The self-hosted resolver is planned in [issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4); its delivery gate is one complete run from the maintainer's machine through the public HTTP endpoint, not a server-only parse or a second-machine installation test.
+
 ## Prerequisites
 
 - Run on Windows x64, Intel macOS x64, or Linux x64.
