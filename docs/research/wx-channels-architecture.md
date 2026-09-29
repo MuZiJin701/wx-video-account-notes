@@ -40,8 +40,8 @@ flowchart LR
 
 ## 与本项目 Skill 的关系
 
-本项目的 [`resolve_link.py`](../../plugins/wx-video-account-notes/skills/wx-video-account-notes/runtime/resolve_link.py) 采用第二条路径：把分享链接交给默认 Worker，读取返回的媒体地址和元数据，再由 [`pipeline.py`](../../plugins/wx-video-account-notes/skills/wx-video-account-notes/runtime/pipeline.py) 下载、抽帧、OCR、ASR 并生成笔记材料。它没有启动桌面代理，也没有发送 Worker 访问凭证。因此默认 Worker 要求认证后，Skill 会在媒体下载之前得到 `401`；这不能证明分享链接失效或元宝 Cookie 过期。详见[解析实现调查](wx-channels-upstream.md)。
+此前的 [`resolve_link.py`](../../plugins/wx-video-account-notes/skills/wx-video-account-notes/runtime/resolve_link.py) 采用第二条路径中的上游 Worker，因缺少 Worker 访问凭证而在媒体下载之前得到 `401`；这不能证明分享链接失效或元宝 Cookie 过期。本版本改为访问自建服务，再由 [`pipeline.py`](../../plugins/wx-video-account-notes/skills/wx-video-account-notes/runtime/pipeline.py) 在本机下载、抽帧、OCR、ASR 并生成笔记材料。详见[解析实现调查](wx-channels-upstream.md)和[部署说明](../resolver-deployment.md)。
 
 若要继续采用分享链接路径，需要自己可访问的解析端及其凭证，并区分 Worker 认证失败、元宝登录态失败、内容不可播放等错误。媒体地址可能带临时令牌；日志及 `raw.json` 应避免泄露这些地址和任何 Cookie 或访问凭证。
 
-后续实施方向已记录在[规格 issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)：自有服务器运行 Go 解析服务，分发的 Skill 通过公网 HTTP 访问，媒体处理仍在调用者本机完成。该服务及 Skill 适配尚未实施；此文上述 Worker 路径描述的是现有实现与上游原理。
+[规格 issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)的服务和 Skill 适配已部署，并于 2026 年 9 月 29 日通过真实 Cookie 的公网解析和完整 Skill 验收。当前服务由 root 手动启动，每次解析请求从服务器文件读取 Cookie；维护方式见[部署说明](../resolver-deployment.md)。此文上述 Worker 路径描述的是此前实现与上游原理。

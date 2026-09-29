@@ -14,7 +14,7 @@ Turn one WeChat Channels share link into structured note materials for an agent,
 
 ## Current resolver status
 
-As of 2026-09-29, the default resolver returns `401 unauthorized` for share links, so a successful installation does not yet mean the link-to-note flow works. The resolver is rejecting access; this does not establish that the share link is invalid. The shared self-hosted resolver and local end-to-end acceptance test are still planned in [spec issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4).
+This version of the Skill calls a maintainer-hosted public resolver. On September 29, 2026, the maintainer's machine completed a real link-to-note run through the public HTTP endpoint, including media download, OCR, ASR, and a Markdown note. Public HTTP sends the share link, shared access key, and resolver response in plaintext; the key ships with the public Skill and is not secret. When the Yuanbao login expires, the maintainer updates the server's Cookie file without restarting the resolver. The file can be edited directly, or a script can validate and replace it. See the [resolver deployment guide](docs/resolver-deployment.md).
 
 ## Quick start
 
@@ -79,7 +79,7 @@ Image posts skip video, audio, and ASR. Source images go to `frames/` and may be
 | Python | 3.13.14, private project runtime |
 | Inference | CPU-only, faster-whisper tiny |
 | Input | `https://weixin.qq.com/sph/...` share links |
-| Services | WeChat Channels resolver, GitHub Releases, Hugging Face |
+| Services | Maintainer-hosted HTTP resolver, GitHub Releases, Hugging Face |
 
 ARM64, GPU inference, and offline first-time bootstrap are not currently supported.
 
@@ -112,6 +112,7 @@ sh scripts/invoke_pipeline.sh --share-url "https://weixin.qq.com/sph/your_share_
 - [Domain glossary](CONTEXT.md)
 - [Architecture decisions](docs/adr/)
 - [WeChat Channels acquisition architecture](docs/research/wx-channels-architecture.md)
+- [Resolver deployment and maintenance](docs/resolver-deployment.md)
 - [Self-hosted resolver spec and acceptance criteria](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)
 - [Tests and evaluation](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)
 - [Changelog](CHANGELOG.md)
