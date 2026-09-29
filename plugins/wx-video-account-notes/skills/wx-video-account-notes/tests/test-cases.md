@@ -2,7 +2,7 @@
 
 This is the release checklist for real bootstrap and end-to-end processing. It is not the automated `unittest` entry point. Automated tests run in the locked uv environment and do not contact external download services.
 
-The default resolver currently returns `401 unauthorized`. The self-hosted resolver is planned in [issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4); its delivery gate is one complete run from the maintainer's machine through the public HTTP endpoint, not a server-only parse or a second-machine installation test.
+The self-hosted resolver is specified in [issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4). Its delivery gate is one complete run from the maintainer's machine through the public HTTP endpoint, not a server-only parse or a second-machine installation test.
 
 ## Prerequisites
 
@@ -19,7 +19,12 @@ The default resolver currently returns `401 unauthorized`. The self-hosted resol
 5. **Repeat bootstrap**: confirm verified assets are reused rather than downloaded again and different platform directories are not reused.
 6. **Failure recovery**: simulate an asset download, verification, or extraction failure. Confirm a non-zero exit, an error naming the asset, cleanup of `.tmp` files, preservation of completed assets, and no success report.
 7. **Unsupported platform**: run on an unsupported OS or architecture. Confirm immediate failure with the detected OS/architecture and supported scope.
+8. **Public resolver**: from the maintainer's machine, check that a missing Cookie produces `LOGIN_REQUIRED`, a wrong access key produces `UNAUTHORIZED`, and a working Cookie resolves a valid share link. Confirm unrelated routes return 404 and repeated requests hit the rate limit. Do not record response bodies or tokens.
+9. **Full Skill acceptance**: use `https://weixin.qq.com/sph/AHhuzPE3Pi` from the maintainer's machine through the public HTTP endpoint. Confirm media download, `note_materials.json`, OCR/ASR status and final `<slug>.md`. If the media is unavailable, use another valid link and record only the reason for substitution.
+10. **Cookie update**: with a temporary file and placeholder Cookies, confirm no echo, successful replacement, non-zero exit and preservation of the old file after a failed verification.
 
 ## Record
 
-Record the date, platform, architecture, Python version, bootstrap result, pipeline result, and a short failure summary. Do not commit downloaded runtime assets, user media, or sensitive logs.
+Record the date, platform, architecture, Python version, bootstrap result, HTTP/business status, pipeline result, artifact existence and a short error category. Do not commit downloaded runtime assets, user media, Yuanbao Cookies, full media URLs or sensitive logs. The shared access key in the public Skill is intentionally distributed and must not be treated as secret.
+
+2026-09-29 acceptance: Windows x64, Python 3.13.14. The maintainer's machine received HTTP 200 / `OK` from the public resolver and completed the video pipeline: media, `note_materials.json`, OCR, ASR, and final Markdown present. Runtime verification passed with previously installed local FFmpeg and a model whose SHA-256 matched the manifest. A clean download of the newly pinned FFmpeg archive was not completed on this network. ASR produced low-quality text for this sample; the final note marks it as unreliable.

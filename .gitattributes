@@ -1,0 +1,3 @@
+server/*.patch text eol=lf whitespace=-space-before-tab,-trailing-space
+server/*.sh text eol=lf
+server/*.service text eol=lf

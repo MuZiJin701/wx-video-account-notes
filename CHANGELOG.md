@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added the self-hosted single-route HTTP resolver, client response adaptation, shared-key/rate-limit gateway, and optional no-echo Cookie validation script; the Cookie file can also be edited directly without restarting the resolver. Completed a real public-HTTP link-to-note acceptance run on Windows x64.
+- Pinned FFmpeg to a retained monthly build after the previous daily release was pruned.
+- Consolidated resolver programs, configuration, Cookie, PID files, and logs under `/root/projects/wx-video-account-notes/`; switched to manual startup.
 - Added cross-platform runtime support for Windows x64, Intel macOS x64, and Linux x64.
 - Unified runtime initialization, asset verification, and media processing under Python.
 - Added platform-isolated runtimes, SHA256 verification, runtime checks, and three-platform CI.

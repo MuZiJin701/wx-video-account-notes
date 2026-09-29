@@ -22,3 +22,5 @@ jobs:
       - run: uv python install 3.13.14
       - run: uv sync --locked --python 3.13.14
       - run: uv run --locked python -m unittest discover -s runtime/tests
+      - if: runner.os == 'Linux'
+        run: uv run --locked python -m unittest discover -s ../../../../server -p 'test_*.py'

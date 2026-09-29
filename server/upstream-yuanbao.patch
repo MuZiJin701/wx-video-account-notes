@@ -1,0 +1,24 @@
+diff --git a/pkg/scraper/wxchannels/yuanbao.go b/pkg/scraper/wxchannels/yuanbao.go
+index 03b0e07..5c518ff 100644
+--- a/pkg/scraper/wxchannels/yuanbao.go
++++ b/pkg/scraper/wxchannels/yuanbao.go
+@@ -148,6 +148,9 @@ func ParseShareUrl(share_url string, cookie string) (*ParseResponse, error) {
+ 		return nil, err
+ 	}
+ 	defer resp.Body.Close()
++	if resp.StatusCode != http.StatusOK {
++		return nil, fmt.Errorf("yuanbao HTTP %d", resp.StatusCode)
++	}
+ 
+ 	body_text, err := io.ReadAll(resp.Body)
+ 	if err != nil {
+@@ -159,6 +162,9 @@ func ParseShareUrl(share_url string, cookie string) (*ParseResponse, error) {
+ 		log.Println("[parseShareUrl] unmarshal failed:", err)
+ 		return nil, err
+ 	}
++	if result.Code != 0 || result.Data.WxExportId == "" || result.Data.PlayableUrl == "" {
++		return nil, errors.New("yuanbao response lacks usable share data")
++	}
+ 	log.Println("[parseShareUrl] success, exportId:", result.Data.WxExportId)
+ 	return &result, nil
+ }

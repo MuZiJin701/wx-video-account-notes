@@ -8,9 +8,9 @@
         "windows-x64": {
           "target_subdir": "tools/ffmpeg",
           "archives": [{
-            "archive_name": "ffmpeg-N-126060-g03dc244a69-win64-gpl.zip",
-            "urls": ["https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-11-13-11/ffmpeg-N-126060-g03dc244a69-win64-gpl.zip"],
-            "sha256": "1b9d8a1baca40eb4745520448d545adffb1ffad3559d552afc5ad5d90d204613",
+            "archive_name": "ffmpeg-N-126342-gf88b741dbf-win64-gpl.zip",
+            "urls": ["https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-31-13-27/ffmpeg-N-126342-gf88b741dbf-win64-gpl.zip"],
+            "sha256": "b4da332540eaebc6939181b59e267f163dd57407ef6596f7f3452845921d1d91",
             "extract": true
           }],
           "expected_globs": ["**/ffmpeg.exe", "**/ffprobe.exe"]
@@ -18,9 +18,9 @@
         "linux-x64": {
           "target_subdir": "tools/ffmpeg",
           "archives": [{
-            "archive_name": "ffmpeg-N-126060-g03dc244a69-linux64-gpl.tar.xz",
-            "urls": ["https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-11-13-11/ffmpeg-N-126060-g03dc244a69-linux64-gpl.tar.xz"],
-            "sha256": "5fc1c36b59ccd350977f534aba94b1d67142cf0910924b23ccbcb98d73b52dfb",
+            "archive_name": "ffmpeg-N-126342-gf88b741dbf-linux64-gpl.tar.xz",
+            "urls": ["https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-31-13-27/ffmpeg-N-126342-gf88b741dbf-linux64-gpl.tar.xz"],
+            "sha256": "d1cf19f669510448f18a4cffcdbd8fa9592ee7c15c92feb5b96ad7e9ccc30114",
             "extract": true
           }],
           "expected_globs": ["**/ffmpeg", "**/ffprobe"]

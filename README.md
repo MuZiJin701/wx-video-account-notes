@@ -14,7 +14,7 @@
 
 ## 当前解析状态
 
-截至 2026-09-29，默认解析服务对分享链接返回 `401 unauthorized`，因此安装成功也暂时无法跑通从链接到笔记的完整流程。这是解析服务拒绝访问，不能据此判断分享链接失效。自建共享解析服务和本机端到端验收尚未实施，方案见 [规格 issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)。
+本版本的 Skill 请求维护者自建的公网解析服务。2026 年 9 月 29 日，维护者本机已通过公网 HTTP 对真实链接完成解析、视频下载、OCR、ASR 和 Markdown 笔记验收。接口使用公网 HTTP，分享链接、共用凭证和解析响应均明文传输；共用凭证随公开 Skill 分发，不具备保密性。元宝登录态失效时需由维护者更新服务器上的 Cookie 文件，更新后无需重启；可直接编辑，也可用脚本先验证再替换。部署和维护方式见[解析服务说明](docs/resolver-deployment.md)。
 
 ## 快速开始
 
@@ -79,7 +79,7 @@ https://weixin.qq.com/sph/your_share_id_here
 | Python | 3.13.14，项目私有环境 |
 | 推理 | CPU-only，faster-whisper tiny |
 | 输入 | `https://weixin.qq.com/sph/...` 分享链接 |
-| 外部服务 | 视频号解析接口、GitHub Releases、Hugging Face |
+| 外部服务 | 维护者的公网 HTTP 解析接口、GitHub Releases、Hugging Face |
 
 ARM64、GPU 推理和离线首次初始化暂不支持。
 
@@ -112,6 +112,7 @@ sh scripts/invoke_pipeline.sh --share-url "https://weixin.qq.com/sph/your_share_
 - [领域术语](CONTEXT.md)
 - [架构决策](docs/adr/)
 - [视频号获取原理](docs/research/wx-channels-architecture.md)
+- [解析服务部署与维护](docs/resolver-deployment.md)
 - [自建解析服务规格与验收标准](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)
 - [测试与评估](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)
 - [变更日志](CHANGELOG.md)

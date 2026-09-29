@@ -10,3 +10,6 @@ tmp_*/
 
 # local promotional assets
 assets/
+
+# locally built server binary
+server/resolver-linux-amd64
