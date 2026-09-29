@@ -7,10 +7,6 @@ from pathlib import Path
 _CONFIG = json.loads(Path(__file__).with_name("resolver_config.json").read_text(encoding="utf-8"))
 
 
-def _resolve_api_url() -> str:
-    return os.environ.get("WX_VIDEO_ACCOUNT_RESOLVE_API", "").strip() or _CONFIG["api_url"]
-
-
 def _pick_video_url(payload: dict) -> str:
     feed_info = payload.get("data", {}).get("feedInfo", {})
     for path in (("h264VideoInfo", "videoUrl"), ("h265VideoInfo", "videoUrl"), ("videoUrl",)):
@@ -61,38 +57,43 @@ def parse_worker_payload(payload: dict) -> dict:
 
 def resolve_share_link(share_url: str) -> dict:
     import httpx
-    api_url = _resolve_api_url()
+    configured_url = os.environ.get("WX_VIDEO_ACCOUNT_RESOLVE_API", "").strip()
+    configured_key = os.environ.get("WX_VIDEO_ACCOUNT_RESOLVE_KEY", "").strip()
+    if bool(configured_url) != bool(configured_key):
+        raise RuntimeError("自部署解析服务需要同时设置 WX_VIDEO_ACCOUNT_RESOLVE_API 和 WX_VIDEO_ACCOUNT_RESOLVE_KEY。")
+    api_url = configured_url or _CONFIG["api_url"]
+    access_key = configured_key or _CONFIG["access_key"]
     try:
         response = httpx.get(
             api_url,
             params={"url": share_url},
-            headers={"Authorization": f"Bearer {_CONFIG['access_key']}"},
+            headers={"Authorization": f"Bearer {access_key}"},
             timeout=70.0,
         )
     except httpx.RequestError as exc:
-        raise RuntimeError("解析服务不可达，请稍后重试或联系维护者。") from exc
+        raise RuntimeError("解析服务不可达，请检查所选服务或稍后重试。") from exc
     try:
         payload = response.json()
     except ValueError as exc:
-        raise RuntimeError("解析服务返回了无效响应，请联系维护者。") from exc
+        raise RuntimeError("解析服务返回了无效响应，请联系所选服务的维护者。") from exc
     code = payload.get("code") if isinstance(payload, dict) else None
     if response.status_code != 200 or code != "OK":
         messages = {
-            "UNAUTHORIZED": "解析凭证不匹配，请更新 Skill 或联系维护者。",
+            "UNAUTHORIZED": "解析凭证不匹配，请检查所选服务的访问凭证。",
             "RATE_LIMITED": "解析请求过于频繁，请稍后重试。",
             "INVALID_LINK": "视频号分享链接格式不正确。",
-            "LOGIN_REQUIRED": "解析服务缺少元宝登录态，请联系维护者更新 Cookie。",
-            "LOGIN_EXPIRED_OR_UPSTREAM_CHANGED": "元宝登录态可能失效或上游接口已变化，请联系维护者检查。",
-            "FEED_UNAVAILABLE_OR_UPSTREAM_CHANGED": "媒体动态不可用或上游接口已变化，请换可用链接或联系维护者。",
-            "RESOLVER_UNAVAILABLE": "解析服务暂时不可用，请稍后重试或联系维护者。",
+            "LOGIN_REQUIRED": "解析服务缺少元宝登录态，请联系所选服务的维护者更新 Cookie。",
+            "LOGIN_EXPIRED_OR_UPSTREAM_CHANGED": "元宝登录态可能失效或上游接口已变化，请联系所选服务的维护者检查。",
+            "FEED_UNAVAILABLE_OR_UPSTREAM_CHANGED": "媒体动态不可用或上游接口已变化，请换可用链接或联系所选服务的维护者。",
+            "RESOLVER_UNAVAILABLE": "解析服务暂时不可用，请稍后重试或联系所选服务的维护者。",
         }
-        raise RuntimeError(messages.get(code, "解析失败，请联系维护者检查服务状态。"))
+        raise RuntimeError(messages.get(code, "解析失败，请联系所选服务的维护者检查状态。"))
     feed = payload.get("data")
     if not isinstance(feed, dict):
-        raise RuntimeError("解析服务返回了无效媒体数据，请联系维护者。")
+        raise RuntimeError("解析服务返回了无效媒体数据，请联系所选服务的维护者。")
     try:
         resolved = parse_worker_payload(feed)
     except (AttributeError, RuntimeError, TypeError) as exc:
-        raise RuntimeError("媒体动态缺少可下载内容，请换可用链接或联系维护者。") from exc
+        raise RuntimeError("媒体动态缺少可下载内容，请换可用链接或联系所选服务的维护者。") from exc
     resolved["raw_text"] = json.dumps(payload, ensure_ascii=False, indent=2)
     return resolved

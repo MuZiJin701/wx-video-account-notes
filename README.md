@@ -4,6 +4,15 @@
 
 [English README](README.en.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
+## 两种使用方式
+
+| 方式 | 适合谁 | 需要做什么 |
+| --- | --- | --- |
+| **直接使用维护者解析服务（默认）** | 所有用户 | 安装 Skill，提交分享链接；无需部署服务器或配置凭证。 |
+| **自行部署解析服务（可选）** | 希望自行管理解析服务的用户 | 在自己的 Linux x64 服务器部署解析服务和元宝登录态，再为 Skill 配置自己的接口地址与凭证。 |
+
+两种方式都只在服务器解析视频号分享链接；媒体下载、OCR、ASR 和笔记生成在用户本机完成。下方[快速开始](#快速开始)列出两条路径。
+
 ## 核心优势
 
 - **一条链接开始**：自动处理视频动态和图文动态。
@@ -14,11 +23,11 @@
 
 ## 当前解析状态
 
-本版本的 Skill 请求维护者自建的公网解析服务。2026 年 9 月 29 日，维护者本机已通过公网 HTTP 对真实链接完成解析、视频下载、OCR、ASR 和 Markdown 笔记验收。接口使用公网 HTTP，分享链接、共用凭证和解析响应均明文传输；共用凭证随公开 Skill 分发，不具备保密性。元宝登录态失效时需由维护者更新服务器上的 Cookie 文件，更新后无需重启；可直接编辑，也可用脚本先验证再替换。部署和维护方式见[解析服务说明](docs/resolver-deployment.md)。
+默认服务已于 2026 年 9 月 29 日通过真实链接的解析、下载、OCR、ASR 和 Markdown 笔记验收。它使用公网 HTTP，分享链接、解析响应和公开 Skill 内的共用凭证均明文传输；该凭证不具备保密性，服务全局每分钟限流 30 次请求。元宝登录态由维护者在服务器更新，服务当前由维护者手动启动。详情见[解析服务说明](docs/resolver-deployment.md)。
 
 ## 快速开始
 
-### 安装
+### 安装 Skill
 
 ```sh
 npm install -g skills
@@ -38,9 +47,9 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 
 如果使用 `cc-switch`，直接输入仓库地址即可。
 
-### 处理链接
+### 直接使用维护者解析服务（默认）
 
-把下面的请求和真实链接交给 agent：
+安装后无需配置服务器或凭证。把下面的请求和真实链接交给 agent：
 
 ```text
 处理这个视频号分享链接并生成笔记：
@@ -53,6 +62,14 @@ https://weixin.qq.com/sph/your_share_id_here
 把这个视频号链接整理到 D:\notes\wx：
 https://weixin.qq.com/sph/your_share_id_here
 ```
+
+### 自行部署解析服务（可选）
+
+1. 按[自部署说明](docs/resolver-deployment.md)在自己的 Linux x64 服务器构建并启动解析服务，使用自己的元宝 Cookie 和访问凭证。
+2. 在启动 agent 的环境中同时设置 `WX_VIDEO_ACCOUNT_RESOLVE_API`（自己的完整解析接口地址）和 `WX_VIDEO_ACCOUNT_RESOLVE_KEY`（自己的访问凭证）。两者缺一不可；取消这两项配置即可恢复默认服务。
+3. 像上面一样把分享链接交给 agent。自部署服务失败时不会自动改用维护者服务。
+
+自部署服务若使用公网 HTTP，也会明文传输分享链接、访问凭证和解析响应；需要保密传输时请为自己的服务配置 HTTPS 入口。
 
 ## 输出
 
@@ -79,7 +96,7 @@ https://weixin.qq.com/sph/your_share_id_here
 | Python | 3.13.14，项目私有环境 |
 | 推理 | CPU-only，faster-whisper tiny |
 | 输入 | `https://weixin.qq.com/sph/...` 分享链接 |
-| 外部服务 | 维护者的公网 HTTP 解析接口、GitHub Releases、Hugging Face |
+| 外部服务 | 维护者的公网 HTTP 解析接口或自部署解析服务、GitHub Releases、Hugging Face |
 
 ARM64、GPU 推理和离线首次初始化暂不支持。
 
@@ -113,7 +130,6 @@ sh scripts/invoke_pipeline.sh --share-url "https://weixin.qq.com/sph/your_share_
 - [架构决策](docs/adr/)
 - [视频号获取原理](docs/research/wx-channels-architecture.md)
 - [解析服务部署与维护](docs/resolver-deployment.md)
-- [自建解析服务规格与验收标准](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)
 - [测试与评估](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)
 - [变更日志](CHANGELOG.md)
 

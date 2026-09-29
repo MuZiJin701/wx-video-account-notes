@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Made the maintainer-hosted default and optional user-hosted resolver visible in both READMEs; added paired client endpoint/key overrides and self-hosting instructions without changing the live server.
 - Added the self-hosted single-route HTTP resolver, client response adaptation, shared-key/rate-limit gateway, and optional no-echo Cookie validation script; the Cookie file can also be edited directly without restarting the resolver. Completed a real public-HTTP link-to-note acceptance run on Windows x64.
 - Pinned FFmpeg to a retained monthly build after the previous daily release was pruned.
 - Consolidated resolver programs, configuration, Cookie, PID files, and logs under `/root/projects/wx-video-account-notes/`; switched to manual startup.

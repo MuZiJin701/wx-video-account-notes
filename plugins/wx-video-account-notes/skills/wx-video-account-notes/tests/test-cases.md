@@ -2,7 +2,7 @@
 
 This is the release checklist for real bootstrap and end-to-end processing. It is not the automated `unittest` entry point. Automated tests run in the locked uv environment and do not contact external download services.
 
-The self-hosted resolver is specified in [issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4). Its delivery gate is one complete run from the maintainer's machine through the public HTTP endpoint, not a server-only parse or a second-machine installation test.
+The maintainer-hosted default resolver was delivered under [issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4). For optional user hosting, set both `WX_VIDEO_ACCOUNT_RESOLVE_API` and `WX_VIDEO_ACCOUNT_RESOLVE_KEY` to the user's own service before running the resolver and full Skill checks below. The September 29 acceptance record covers the default service only.
 
 ## Prerequisites
 

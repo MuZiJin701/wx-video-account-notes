@@ -4,6 +4,15 @@ Turn one WeChat Channels share link into structured note materials for an agent,
 
 [中文 README](README.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
+## Two ways to use the resolver
+
+| Mode | For whom | What to do |
+| --- | --- | --- |
+| **Use the maintainer's resolver (default)** | Everyone | Install the Skill and submit a share link; no server or credential setup. |
+| **Deploy your own resolver (optional)** | Users who want to operate their own resolver | Deploy the service and Yuanbao login on your Linux x64 server, then configure its endpoint and access key in the Skill. |
+
+Either way, the server only resolves WeChat Channels share links. Media download, OCR, ASR, and note writing run on your machine. Both paths are in [Quick start](#quick-start).
+
 ## Why use it
 
 - **One link in**: automatically handles video and image posts.
@@ -14,11 +23,11 @@ Turn one WeChat Channels share link into structured note materials for an agent,
 
 ## Current resolver status
 
-This version of the Skill calls a maintainer-hosted public resolver. On September 29, 2026, the maintainer's machine completed a real link-to-note run through the public HTTP endpoint, including media download, OCR, ASR, and a Markdown note. Public HTTP sends the share link, shared access key, and resolver response in plaintext; the key ships with the public Skill and is not secret. When the Yuanbao login expires, the maintainer updates the server's Cookie file without restarting the resolver. The file can be edited directly, or a script can validate and replace it. See the [resolver deployment guide](docs/resolver-deployment.md).
+The default resolver completed a real link-to-note run on September 29, 2026, including download, OCR, ASR, and a Markdown note. Its public HTTP connection sends the share link, resolver response, and shared access key in plaintext. The key ships with the public Skill and is not secret; the service has a global limit of 30 requests per minute. The maintainer updates the Yuanbao login on the server and currently starts both service processes manually. See the [resolver guide](docs/resolver-deployment.md).
 
 ## Quick start
 
-### Install
+### Install the Skill
 
 ```sh
 npm install -g skills
@@ -38,9 +47,9 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 
 With `cc-switch`, paste the repository URL directly.
 
-### Process a link
+### Use the maintainer's resolver (default)
 
-Send this request with a real share link to your agent:
+No server or credential setup is needed after installation. Send this request with a real share link to your agent:
 
 ```text
 Process this WeChat Channels share link and create a note:
@@ -53,6 +62,14 @@ To choose an output directory, add a path:
 Process this WeChat Channels link into D:\notes\wx:
 https://weixin.qq.com/sph/your_share_id_here
 ```
+
+### Deploy your own resolver (optional)
+
+1. Follow the [self-hosting guide](docs/resolver-deployment.md) to build and start the resolver on your Linux x64 server with your own Yuanbao Cookie and access key.
+2. Before starting the agent, set both `WX_VIDEO_ACCOUNT_RESOLVE_API` (your full parse endpoint) and `WX_VIDEO_ACCOUNT_RESOLVE_KEY` (your access key). Both are required; unset both to return to the default service.
+3. Send the share link to your agent as above. A failure of your resolver does not silently fall back to the maintainer's service.
+
+Public HTTP on your own server also sends the share link, access key, and response in plaintext. Use an HTTPS front end if you need transport confidentiality.
 
 ## Output
 
@@ -79,7 +96,7 @@ Image posts skip video, audio, and ASR. Source images go to `frames/` and may be
 | Python | 3.13.14, private project runtime |
 | Inference | CPU-only, faster-whisper tiny |
 | Input | `https://weixin.qq.com/sph/...` share links |
-| Services | Maintainer-hosted HTTP resolver, GitHub Releases, Hugging Face |
+| Services | Maintainer-hosted HTTP resolver or your own resolver, GitHub Releases, Hugging Face |
 
 ARM64, GPU inference, and offline first-time bootstrap are not currently supported.
 
@@ -113,7 +130,6 @@ sh scripts/invoke_pipeline.sh --share-url "https://weixin.qq.com/sph/your_share_
 - [Architecture decisions](docs/adr/)
 - [WeChat Channels acquisition architecture](docs/research/wx-channels-architecture.md)
 - [Resolver deployment and maintenance](docs/resolver-deployment.md)
-- [Self-hosted resolver spec and acceptance criteria](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)
 - [Tests and evaluation](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)
 - [Changelog](CHANGELOG.md)
 
