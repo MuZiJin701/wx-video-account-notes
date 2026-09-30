@@ -37,7 +37,7 @@ https://weixin.qq.com/sph/your_share_id_here
 
 ### 想使用自己的服务器？
 
-按[自部署指南](docs/resolver-deployment.md)构建、安装并启动解析服务，再为 agent 配置自己的接口地址和访问凭证。自部署服务失败时不会自动改用默认服务。
+按[自部署指南](docs/resolver-deployment.md)在 Linux 服务器克隆本仓库并启动解析服务，再为 agent 配置自己的接口地址和访问凭证。自部署服务失败时不会自动改用默认服务。
 
 ## 生成的文件
 

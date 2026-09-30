@@ -2,52 +2,32 @@
 
 只想生成笔记？按 [README](../README.md) 安装 Skill 即可，无需服务器。本页供需要**自己运行解析服务**的用户使用。服务器只解析分享链接；下载、OCR、ASR 和写笔记仍在客户端进行。
 
-需要一台 Linux x64 服务器（Python 3、root 权限）和一台装有 Git、Go 的构建机。构建命令使用 POSIX shell，Windows 可在 WSL 中运行。当前脚本固定使用 `/root/projects/wx-video-account-notes/`，网关占用服务器的 80 端口。
+只需要一台 Linux x64 服务器，安装 Git 和 Python 3，并能使用 root 权限。本仓库已包含 Linux x64 解析程序 `server/resolver-linux-amd64`，无需在 Windows 构建，也无需克隆上游仓库。当前脚本固定使用 `/root/projects/wx-video-account-notes/`，网关占用服务器的 80 端口。
 
-> 已部署过？无需重装。服务器重启后看[启动与检查](#4-启动与检查)；登录态失效时看[更新元宝 Cookie](#3-更新元宝-cookie)。
+> 已部署过？无需重装。服务器重启后看[启动与检查](#3-启动与检查)；登录态失效时看[更新元宝 Cookie](#2-更新元宝-cookie)。
 
-## 1. 构建解析程序（构建机）
+## 1. 克隆并安装（服务器）
 
-先检出本仓库，在**仓库外**选构建目录，并把 `repo` 改为仓库的绝对路径：
-
-```sh
-repo=/absolute/path/to/wx-video-account-notes
-cd /path/to/build-directory
-git clone https://github.com/ltaoo/wx_channels_download.git
-cd wx_channels_download
-git checkout 124f044235bc706fe796c043a14ff442a150ae5d
-git apply "$repo/server/upstream-yuanbao.patch"
-mkdir -p cmd/notes-resolver
-cp "$repo/server/upstream_main.go" cmd/notes-resolver/main.go
-cp "$repo/server/upstream-tests/notes_yuanbao_test.go" pkg/scraper/wxchannels/notes_yuanbao_test.go
-go test -mod=mod ./pkg/scraper/wxchannels -run TestNotesRejectsUnusableYuanbaoResponses -count=1
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=mod -trimpath -o resolver-linux-amd64 ./cmd/notes-resolver
-```
-
-生成的 `resolver-linux-amd64` 用于部署。构建可能改动上游仓库的 `go.mod`；不要把这些改动带回本仓库。
-
-## 2. 上传并安装
-
-仍在构建机执行，把 `your-server` 换成自己的 SSH 地址（下例假设可以 root 登录）：
+以下命令都在**服务器的 root shell** 中执行。先克隆本仓库，再把服务文件复制到脚本要求的项目根目录：
 
 ```sh
-ssh root@your-server 'install -d -m 0700 /root/projects/wx-video-account-notes'
-scp resolver-linux-amd64 "$repo/server/gateway.py" "$repo/server/update_cookie.py" "$repo/server/install.sh" root@your-server:/root/projects/wx-video-account-notes/
-ssh root@your-server
-```
-
-以下命令在服务器执行。新部署时生成自己的随机访问凭证：
-
-```sh
-cd /root/projects/wx-video-account-notes
 umask 077
+mkdir -p /root/projects
+git clone https://github.com/MuZiJin701/wx-video-account-notes.git /root/projects/wx-video-account-notes
+cd /root/projects/wx-video-account-notes
+cp server/resolver-linux-amd64 server/gateway.py server/update_cookie.py server/install.sh .
+```
+
+生成自己的随机访问凭证，然后安装：
+
+```sh
 python3 -c 'import json,secrets; print(json.dumps({"access_key":secrets.token_urlsafe(32)}))' > client.json
 sh install.sh
 ```
 
 在可信终端查看 `client.json`，把 `access_key` 安全地保存到客户端；不要使用公开 Skill 自带的默认凭证，也不要把凭证放入仓库或日志。`install.sh` 只准备文件和权限，不创建 Cookie，也不启动服务。已有部署不要重新生成 `client.json`。
 
-## 3. 更新元宝 Cookie
+## 2. 更新元宝 Cookie
 
 1. 在浏览器打开 [元宝](https://yuanbao.tencent.com/) 并登录。
 2. 按 `F12` 打开开发者工具的“网络”，刷新页面；若没有请求，先在页面中操作一次。
@@ -60,7 +40,7 @@ python3 /root/projects/wx-video-account-notes/update_cookie.py
 
 脚本用内置分享链接验证新 Cookie，成功后才写入，失败则保留旧文件。若内置链接已不可用，可先设置 `WX_NOTES_VERIFY_LINK` 为另一条可用分享链接。不要使用可能漏掉 HttpOnly 内容的 `document.cookie`，也不要把 Cookie 放进命令参数、仓库或 issue。
 
-## 4. 启动与检查
+## 3. 启动与检查
 
 先检查旧进程；服务器重启后 PID 文件可能仍在：
 
@@ -86,7 +66,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1/api/channels/parse_sp
 
 **预期返回 `401`**：无凭证请求被拒绝，说明网关有响应。实际解析还需按下一节用真实链接测试。公网访问失败时，另查服务器防火墙和云安全组的 80 端口。进程不会随开机自动启动；服务器重启或进程退出后需重新执行本节。更换访问凭证后需重启网关，更新 Cookie 无需重启。
 
-## 5. 配置客户端并验收
+## 4. 配置客户端并验收
 
 在**运行 agent 的电脑**设置两项环境变量，然后从同一环境启动 agent。已打开的桌面应用需要重启，才能继承新环境。
 
