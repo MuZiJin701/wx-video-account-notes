@@ -85,7 +85,7 @@ macOS/Linux 对应命令为 `sh scripts/bootstrap.sh`、`sh scripts/verify_runti
 
 - [自部署与故障排查](docs/resolver-deployment.md)
 - [Skill 执行说明](plugins/wx-video-account-notes/skills/wx-video-account-notes/SKILL.md)
-- [仓库目录](目录说明.md) · [领域术语](CONTEXT.md) · [架构决策](docs/adr/)
+- [仓库目录](目录说明.md) · [领域术语](GLOSSARY.md) · [架构决策](docs/adr/)
 - [解析原理](docs/research/wx-channels-architecture.md) · [测试与评估](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md) · [变更日志](CHANGELOG.md)
 
 贡献前请阅读 [AGENTS.md](AGENTS.md)；需求与问题请提交 GitHub Issues。项目采用 [MIT 许可证](LICENSE)。

@@ -2,17 +2,19 @@
 
 This file defines repository-wide guidance for coding agents. User-facing documentation is in `README.md`.
 
-## Issue tracker
+## Agent skills
 
-Issues for this repository live in GitHub Issues and are managed with `gh`. See `docs/agents/issue-tracker.md`.
+### Issue tracker
 
-## Triage labels
+Issues and specs live in GitHub Issues and are managed with `gh`. Before tracker operations, read `docs/agents/issue-tracker.md`.
 
-Use the canonical triage labels mapped in `docs/agents/triage-labels.md`.
+### Triage labels
 
-## Domain docs
+Before triage, read the canonical role-to-label mapping in `docs/agents/triage-labels.md`.
 
-This repository has a single context. Read `CONTEXT.md` and relevant ADRs under `docs/adr/` before exploring the code. See `docs/agents/domain.md`.
+### Domain docs
+
+This repository has a single context. Before exploring the code, read `GLOSSARY.md`, relevant ADRs under `docs/adr/`, and the consumer rules in `docs/agents/domain.md`.
 
 For WeChat Channels share-link resolution work, read `docs/research/wx-channels-architecture.md` and `docs/research/wx-channels-upstream.md` before changing the resolver.
 

@@ -85,7 +85,7 @@ On macOS/Linux, use `sh scripts/bootstrap.sh`, `sh scripts/verify_runtime.sh`, a
 
 - [Self-hosting and troubleshooting (Chinese)](docs/resolver-deployment.md)
 - [Skill execution guide (Chinese)](plugins/wx-video-account-notes/skills/wx-video-account-notes/SKILL.md)
-- [Repository map (Chinese)](目录说明.md) · [Domain glossary (Chinese)](CONTEXT.md) · [Architecture decisions](docs/adr/)
+- [Repository map (Chinese)](目录说明.md) · [Domain glossary (Chinese)](GLOSSARY.md) · [Architecture decisions](docs/adr/)
 - [Resolver architecture (Chinese)](docs/research/wx-channels-architecture.md) · [Tests and evaluation](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md) · [Changelog](CHANGELOG.md)
 
 Read [AGENTS.md](AGENTS.md) before contributing. Use GitHub Issues for requests and bugs. Licensed under [MIT](LICENSE).
