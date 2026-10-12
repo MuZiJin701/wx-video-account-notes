@@ -1,6 +1,6 @@
 # 自部署视频号解析服务
 
-只想生成笔记？按 [README](../README.md) 安装 Skill 即可，无需服务器。本页供需要**自己运行解析服务**的用户使用。服务器只解析分享链接；下载、OCR、ASR 和写笔记仍在客户端进行。
+只想下载视频号内容并生成笔记？按 [README](../README.md) 安装 Skill 即可，无需服务器。本页供需要**自己运行解析服务**的用户使用。服务器只解析分享链接；下载、OCR、ASR 和写笔记仍在客户端进行。
 
 只需要一台 Linux x64 服务器，安装 Git 和 Python 3，并能使用 root 权限。本仓库已包含 Linux x64 解析程序 `server/resolver-linux-amd64`，无需在 Windows 构建，也无需克隆上游仓库。当前脚本固定使用 `/root/projects/wx-video-account-notes/`，网关占用服务器的 80 端口。
 

@@ -1,7 +1,7 @@
 {
   "name": "wx-video-account-notes",
   "version": "0.2.3",
-  "description": "将微信视频号分享链接转换为 OCR/ASR 笔记材料与 Markdown 笔记。 Convert WeChat Channels share links into OCR/ASR note materials and Markdown notes.",
+  "description": "下载微信视频号视频和图文内容，提取 OCR/ASR 笔记材料并生成 Markdown 笔记。 Download WeChat Channels videos and image posts, extract OCR/ASR note materials, and create Markdown notes.",
   "author": {
     "name": "chenjinchi",
     "email": "muzijin702@gmail.com",
@@ -11,17 +11,19 @@
   "repository": "https://github.com/MuZiJin701/wx-video-account-notes",
   "license": "MIT",
   "keywords": [
-    "wechat",
-    "video-channel",
+    "wechat-channels",
+    "video-downloader",
     "ocr",
     "asr",
-    "notes"
+    "markdown-notes",
+    "agent-skill",
+    "codex-plugin"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "wx-video-account-notes",
-    "shortDescription": "处理视频号链接并生成 OCR/ASR 笔记材料。 Process WeChat Channels links into OCR/ASR note materials.",
-    "longDescription": "解析视频号分享链接，处理视频或图文动态，提取 OCR、ASR 和视觉材料，并生成结构化笔记输入。 Resolve WeChat Channels share links, process video or image posts, extract OCR, ASR, and visual materials, and prepare structured note inputs.",
+    "shortDescription": "下载视频号视频或图文图片并生成笔记。 Download WeChat Channels videos or images and create notes.",
+    "longDescription": "根据分享链接下载视频或图文图片，提取 OCR、ASR 和视觉材料，生成结构化笔记输入。 Download WeChat Channels videos or image posts from share links, extract OCR, ASR, and visual materials, and prepare structured note inputs.",
     "developerName": "chenjinchi",
     "category": "Productivity",
     "capabilities": [
@@ -30,7 +32,7 @@
     ],
     "websiteURL": "https://github.com/MuZiJin701/wx-video-account-notes",
     "defaultPrompt": [
-      "处理这个视频号链接并生成笔记：https://weixin.qq.com/sph/...",
+      "下载并整理这个视频号链接：https://weixin.qq.com/sph/...",
       "下载这个视频号链接并输出 OCR 与 ASR 材料：https://weixin.qq.com/sph/...",
       "把这个视频号链接整理到指定目录：https://weixin.qq.com/sph/..."
     ],

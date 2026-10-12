@@ -1,6 +1,6 @@
 # wx-video-account-notes
 
-把一个微信视频号分享链接交给 agent，生成可检查的笔记材料和 Markdown 笔记。支持视频动态与图文动态。
+从微信视频号分享链接下载视频或图文图片，提取 OCR/ASR 笔记材料，并由 agent 生成 Markdown 笔记。
 
 [English README](README.en.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
@@ -29,7 +29,7 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 默认使用项目维护者的解析服务，无需配置服务器或凭证。把真实链接交给 agent：
 
 ```text
-处理这个视频号分享链接并生成笔记：
+下载这个视频号分享链接的内容并生成笔记：
 https://weixin.qq.com/sph/your_share_id_here
 ```
 

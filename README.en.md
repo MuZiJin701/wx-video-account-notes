@@ -1,6 +1,6 @@
 # wx-video-account-notes
 
-Give an agent one WeChat Channels share link to create inspectable note materials and a Markdown note. Supports video and image posts.
+Download WeChat Channels videos or image posts from a share link, extract OCR/ASR note materials, and have an agent write a Markdown note.
 
 [中文 README](README.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
@@ -29,7 +29,7 @@ With `cc-switch`, enter the repository URL.
 By default, the Skill uses the maintainer's resolver. You do not need a server or credentials. Send a real link to your agent:
 
 ```text
-Process this WeChat Channels share link and write a note:
+Download the content from this WeChat Channels share link and write a note:
 https://weixin.qq.com/sph/your_share_id_here
 ```
 

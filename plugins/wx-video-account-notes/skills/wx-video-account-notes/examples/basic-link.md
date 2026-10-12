@@ -1,11 +1,11 @@
 # 基础用法
 
-把一个视频号分享链接交给 agent，默认生成笔记材料和同目录 Markdown 笔记。
+把一个视频号分享链接交给 agent，下载视频或图文图片，并生成笔记材料和同目录 Markdown 笔记。
 
 ## 输入示例
 
 ```text
-帮我处理这个视频号分享链接：https://weixin.qq.com/sph/AClgYpX4KB
+帮我下载并整理这个视频号分享链接：https://weixin.qq.com/sph/AClgYpX4KB
 ```
 
 ## 期望结果

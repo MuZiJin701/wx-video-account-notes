@@ -1,6 +1,6 @@
 # wx-video-account-notes 领域术语
 
-本项目把微信视频号分享内容转换为可供 agent 整理的结构化笔记材料。实现选择记录在 ADR 中。
+本项目从微信视频号分享链接下载视频或图文图片，提取可供 agent 整理的结构化笔记材料。实现选择记录在 ADR 中。
 
 当前支持 Windows x64、macOS Intel x64 和 Linux x64，运行时资产按 `.runtime/<os>-<arch>/` 隔离。
 
