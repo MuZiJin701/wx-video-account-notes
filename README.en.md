@@ -4,6 +4,20 @@ Download WeChat Channels videos or image posts from a share link, extract OCR/AS
 
 [中文 README](README.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
+## See it in action
+
+Send a WeChat Channels share link to your agent to generate a Markdown note. The video, reference frames, and note materials are saved locally for review, verification, and further editing.
+
+### In use
+
+![Sending a WeChat Channels share link in Codex and generating a Markdown note](docs/images/使用过程.png)
+
+### Saved files
+
+![Locally saved video, Markdown notes, reference frames, and OCR/ASR note materials](docs/images/产物.png)
+
+In this example, OCR succeeded while ASR recognized no speech. The agent explains the recognition status and flags unverified information in its response.
+
 ## Get started
 
 Supports Windows x64, Intel macOS x64, and Linux x64. The first run downloads a private Python runtime, dependencies, FFmpeg, and models from sources including GitHub Releases and Hugging Face. It needs network access and disk space; later runs reuse them.

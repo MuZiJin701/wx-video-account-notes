@@ -4,6 +4,20 @@
 
 [English README](README.en.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
+## 使用效果
+
+把视频号分享链接交给 agent，生成 Markdown 笔记，并将视频、参考帧和笔记材料保存在本地，方便回看、核对与二次整理。
+
+### 使用过程
+
+![在 Codex 中发送视频号分享链接并生成 Markdown 笔记](docs/images/使用过程.png)
+
+### 生成产物
+
+![本地保存的视频、Markdown 笔记、参考帧与 OCR/ASR 笔记材料](docs/images/产物.png)
+
+本次示例中 OCR 成功，ASR 未识别出文字；agent 在结果中说明了识别状态及未经核实的信息。
+
 ## 开始使用
 
 支持 Windows x64、macOS Intel x64 和 Linux x64。首次处理会从 GitHub Releases、Hugging Face 等来源下载项目私有的 Python、依赖、FFmpeg 和模型；需要联网和足够的磁盘空间，之后可复用。
