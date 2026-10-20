@@ -45,7 +45,7 @@ https://weixin.qq.com/sph/your_share_id_here
 
 ### 想使用自己的服务器？
 
-按[自部署指南](docs/resolver-deployment.md)用 systemctl 管理 Linux 解析服务，并配置客户端接口地址和访问凭证。自部署失败不会自动改用默认服务。
+按[自部署指南](docs/resolver-deployment.md)用 systemctl 管理 Linux 解析服务，再修改已安装 Skill 的 `runtime/resolver_config.json`，填写接口地址和访问凭证。自部署失败不会自动改用默认服务。
 
 ## 生成的文件
 

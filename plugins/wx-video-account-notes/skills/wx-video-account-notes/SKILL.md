@@ -44,5 +44,5 @@ description: 根据微信视频号分享链接下载视频或图文图片，提�
 ## 实施要求
 
 - 优先使用 skill 目录下当前平台的 `.runtime/<os>-<arch>/` 环境，不依赖系统 PATH。
-- 默认使用维护者的公网 HTTP 解析服务；仅在用户配置 `WX_VIDEO_ACCOUNT_RESOLVE_API` 和 `WX_VIDEO_ACCOUNT_RESOLVE_KEY` 后改用自部署服务，失败时不自动回退。两种方式的元宝 Cookie 均由所选服务的维护者在服务器保存，不得写入笔记材料或仓库。
+- 从 `runtime/resolver_config.json` 读取服务地址和访问凭证；随包配置指向维护者的公网 HTTP 服务，自部署时修改 `api_url` 和 `access_key`。已有的 `WX_VIDEO_ACCOUNT_RESOLVE_API` 和 `WX_VIDEO_ACCOUNT_RESOLVE_KEY` 必须成对设置，会优先覆盖文件配置。解析失败不自动回退。元宝 Cookie 只由所选服务的维护者保存在服务器，不得写入笔记材料或仓库；私有配置不得提交或公开。
 - 默认服务经公网 HTTP 明文传输分享链接和解析响应；其共用访问凭证随 Skill 分发，不具备保密性。自部署服务若也使用 HTTP，具有相同的明文传输风险。

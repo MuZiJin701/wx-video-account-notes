@@ -2,7 +2,7 @@
 
 Release checks that use real downloads, services, and models. Offline unit tests are documented in the [README](../../../../../README.md#本地开发).
 
-For self-hosting, follow the [deployment guide](../../../../../docs/resolver-deployment.md) and set both client overrides before resolver and full Skill checks. The September 29 record below covers only the default resolver ([issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)).
+For self-hosting, follow the [deployment guide](../../../../../docs/resolver-deployment.md) and edit `api_url` and `access_key` in the installed Skill's `runtime/resolver_config.json` before resolver and full Skill checks. Optional environment overrides take precedence. The September 29 record below covers only the default resolver ([issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)).
 
 ## Prerequisites
 

@@ -102,29 +102,28 @@ cat /root/projects/wx-video-account-notes/client.json
 
 复制 `access_key` 的值，供下面输入。使用自己生成的凭证，不要使用公开 Skill 的共用凭证，也不要把这个文件发给别人。
 
-回到**运行 agent 的电脑**，选择对应终端设置接口地址和凭证。把 `<服务器>` 换成服务器的公网 IP 或域名。
+回到**运行 agent 的电脑**，用文本编辑器打开实际使用的 Skill 目录下的 `runtime/resolver_config.json`。本仓库中的位置是：
 
-PowerShell 7.1 及以上：
-
-```powershell
-$env:WX_VIDEO_ACCOUNT_RESOLVE_API = 'http://<服务器>/api/channels/parse_sph'
-$env:WX_VIDEO_ACCOUNT_RESOLVE_KEY = Read-Host -Prompt '访问凭证' -MaskInput
+```text
+plugins/wx-video-account-notes/skills/wx-video-account-notes/runtime/resolver_config.json
 ```
 
-Bash：
+如果是通过插件或 `skills` 安装的，请修改已安装的那份 Skill，修改源码仓库不会影响另一个安装副本。
 
-```sh
-export WX_VIDEO_ACCOUNT_RESOLVE_API='http://<服务器>/api/channels/parse_sph'
-read -r -s -p '访问凭证: ' WX_VIDEO_ACCOUNT_RESOLVE_KEY
-echo
-export WX_VIDEO_ACCOUNT_RESOLVE_KEY
+先备份原文件，再把两个字段改成自己的地址和凭证：
+
+```json
+{
+  "api_url": "http://<服务器>/api/channels/parse_sph",
+  "access_key": "服务器 client.json 中的 access_key 值"
+}
 ```
 
-如果已配置 HTTPS，把接口地址换成自己的完整 HTTPS 地址。
+把 `<服务器>` 换成公网 IP 或域名；已配置 HTTPS 时填写完整 HTTPS 接口地址。只替换引号内的值，保留 JSON 格式。这样即可完成本机配置，无需终端命令或修改机器的环境变量。
 
-从**设置变量的同一个终端**启动 agent；已经运行的 agent 需先退出。发一条真实分享链接，确认生成媒体、`note_materials.json` 和 Markdown 笔记，并查看 OCR/ASR 状态。
+保存后给 agent 发一条真实分享链接，确认生成媒体、`note_materials.json` 和 Markdown 笔记，并查看 OCR/ASR 状态。自部署失败不会自动切换到默认服务；恢复默认服务时，还原备份的配置文件。
 
-两项变量必须一起设置，一起取消后才恢复默认服务。自部署失败不会自动切换，也不要修改 Skill 中的 `resolver_config.json`。
+配置中含有自己的访问凭证，不要提交或公开。更新或重装 Skill 可能覆盖配置，更新前请备份。如果之前设置过 `WX_VIDEO_ACCOUNT_RESOLVE_API` 和 `WX_VIDEO_ACCOUNT_RESOLVE_KEY`，它们仍会优先覆盖文件配置。
 
 ## 常见问题
 

@@ -45,7 +45,7 @@ To choose an output directory, include it in the request, for example, “Save t
 
 ### Want to use your own server?
 
-Follow the [self-hosting guide (Chinese)](docs/resolver-deployment.md) to manage a Linux resolver with systemctl and configure the client endpoint and access key. A failure of your server does not fall back to the default resolver.
+Follow the [self-hosting guide (Chinese)](docs/resolver-deployment.md) to manage a Linux resolver with systemctl, then edit the installed Skill's `runtime/resolver_config.json` with your endpoint and access key. A failure of your server does not fall back to the default resolver.
 
 ## Output files
 
