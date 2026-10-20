@@ -7,10 +7,19 @@ from pathlib import Path
 from types import ModuleType
 from unittest.mock import MagicMock, Mock, patch
 
-from mail_notification import notify_error
+from mail_notification import notify_error, open_mail
+from yuanbao_login import LoginError
 
 
 class MailTests(unittest.TestCase):
+    def test_mandatory_verification_is_not_hidden_as_generic_mail_failure(self):
+        context = Mock()
+        context.pages = [Mock(frames=[Mock(name="ptlogin_iframe")])]
+        context.pages[0].frames[0].name = "ptlogin_iframe"
+        with patch("mail_notification.visible_text", return_value=None), patch("mail_notification.submit_qq_password", side_effect=LoginError("QQ_VERIFICATION_REQUIRED")):
+            with self.assertRaisesRegex(LoginError, "^QQ_VERIFICATION_REQUIRED$"):
+                open_mail(context, {})
+
     def test_alert_is_self_addressed_sanitized_and_sent_once_even_if_toast_is_missing(self):
         class BrowserError(Exception):
             pass

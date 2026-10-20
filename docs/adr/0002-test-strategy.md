@@ -16,7 +16,7 @@ This keeps cross-platform code repeatable without making network access or large
 
 The unit suite stays offline. A separate Linux CI smoke job installs locked Playwright and its matching Chromium/system dependencies, then checks new headless launch, JavaScript, and persistent browser state without account credentials or external website navigation. The user requested GitHub Actions coverage for the self-deployment browser runtime; real QQ authentication and email delivery remain controlled manual acceptance, with no personal credentials uploaded to CI. Large media/model downloads remain outside CI.
 
-Use `server/check_login.py` in an isolated checkout for manual Yuanbao login/parse and QQ Mail login checks before considering deployment. These checks use fresh temporary profiles, do not publish Cookie, install services, or send mail. Test delivery and service lifecycle separately with the required authorization. Current server login failures and investigation status belong in the [acceptance record](../research/yuanbao-qq-login.md#用户手动复现与排查交接2026-10-20); passing CI does not override failed real-login acceptance.
+QQ password-login exploration was paused at the user's request on 2026-10-20. Preserve `server/check_login.py` and its historical isolated-checkout instructions, but do not resume real-login checks, CAPTCHA trials, mail delivery, or deployment without an explicit request. Offline regressions and credential-free Chromium smoke may validate the preserved branch snapshot. The [pause and acceptance record](../research/yuanbao-qq-login.md#探索暂停与分支隔离2026-10-20) distinguishes those checks from incomplete real-login acceptance.
 
 ## Canonical vocabulary
 

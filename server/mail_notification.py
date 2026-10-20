@@ -19,10 +19,11 @@ def visible_text(page, text):
     return None
 
 
-def open_mail(context, qq: dict):
+def open_mail(context, qq: dict, progress=lambda stage, page: None):
     page = context.pages[0] if context.pages else context.new_page()
-    page.goto("https://mail.qq.com/", wait_until="domcontentloaded", timeout=45_000)
+    progress("BROWSER_READY", page)
     try:
+        page.goto("https://mail.qq.com/", wait_until="domcontentloaded", timeout=45_000)
         deadline = time.monotonic() + 30
         while time.monotonic() < deadline:
             compose = visible_text(page, "写信")
@@ -31,16 +32,22 @@ def open_mail(context, qq: dict):
             if any(f.name == "ptlogin_iframe" for f in page.frames):
                 break
             page.wait_for_timeout(250)
-        submit_qq_password(page, qq, lambda: None)
+        submit_qq_password(page, qq, lambda: None, progress)
         deadline = time.monotonic() + 90
         while time.monotonic() < deadline:
             compose = visible_text(page, "写信")
             if compose:
                 return page, compose
-            skip_optional_binding(page)
+            if skip_optional_binding(page):
+                progress("OPTIONAL_BINDING_SKIPPED", page)
             page.wait_for_timeout(1_000)
+    except LoginError:
+        progress("FAILED", page)
+        raise
     except Exception:
+        progress("FAILED", page)
         raise LoginError("MAIL_LOGIN_FAILED") from None
+    progress("FAILED", page)
     raise LoginError("MAIL_LOGIN_FAILED")
 
 

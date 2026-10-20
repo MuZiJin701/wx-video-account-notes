@@ -9,6 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from mail_notification import open_mail
+from login_diagnostics import report_login
 from server_config import load_config
 from update_cookie import check_cookie
 from yuanbao_login import LoginError, UpstreamError, acquire_cookie
@@ -19,7 +20,7 @@ def check_login(target: str, config: dict, work_root: Path) -> str:
     with TemporaryDirectory(prefix="login-check-", dir=work_root) as directory:
         root = Path(directory)
         if target == "yuanbao":
-            cookie = acquire_cookie(config["qq"], root / "profile", lambda: print("YUANBAO_PASSWORD_ATTEMPT", flush=True))
+            cookie = acquire_cookie(config["qq"], root / "profile", lambda: print("YUANBAO_PASSWORD_ATTEMPT", flush=True), report_login)
             print("YUANBAO_LOGIN_OK", flush=True)
             binary = root / "resolver"
             shutil.copyfile(Path(__file__).with_name("resolver-linux-amd64"), binary)
@@ -35,7 +36,7 @@ def check_login(target: str, config: dict, work_root: Path) -> str:
                 str(root / "profile"), channel="chromium", headless=True, locale="zh-CN",
             )
             try:
-                open_mail(context, config["qq"])
+                open_mail(context, config["qq"], report_login)
                 return "MAIL_LOGIN_OK"
             finally:
                 context.close()

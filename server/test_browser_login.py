@@ -43,10 +43,47 @@ class BrowserLoginTests(unittest.TestCase):
         frame.name = "ptlogin_iframe"
         page = Mock(url="https://graph.qq.com/oauth2.0/show", frames=[frame])
         page.wait_for_timeout.side_effect = lambda _: setattr(frame, "url", "https://xui.ptlogin2.qq.com/cgi-bin/xlogin")
+        frame.evaluate.return_value = {"timeout": False, "verification": False}
         before_login = Mock()
         submit_qq_password(page, {"account": "12345678", "password": "test-only"}, before_login)
         before_login.assert_called_once()
         page.wait_for_timeout.assert_called_once()
+
+    def test_progress_distinguishes_filling_failure_from_returned_click(self):
+        frame = Mock(url="https://xui.ptlogin2.qq.com/cgi-bin/xlogin")
+        frame.name = "ptlogin_iframe"
+        frame.evaluate.return_value = {"timeout": False, "verification": False}
+        page = Mock(url="https://graph.qq.com/oauth2.0/show", frames=[frame])
+        stages = []
+        progress = lambda stage, _: stages.append(stage)
+        submit_qq_password(page, {"account": "12345678", "password": "test-only"}, Mock(), progress)
+        self.assertEqual(stages, ["QQ_FRAME_READY", "PASSWORD_MODE_READY", "ACCOUNT_FILLED", "QQ_ACCOUNT_CHECK_PASSED",
+                                  "PASSWORD_FILLED", "PASSWORD_CLICK_RETURNED"])
+        stages.clear()
+        frame.get_by_role.return_value.fill.side_effect = RuntimeError("private-browser-error")
+        with self.assertRaises(RuntimeError):
+            submit_qq_password(page, {"account": "12345678", "password": "test-only"}, Mock(), progress)
+        self.assertEqual(stages, ["QQ_FRAME_READY", "PASSWORD_MODE_READY"])
+
+    def test_mandatory_verification_and_check_failure_never_fill_or_submit_password(self):
+        for check, code in (({"timeout": False, "verification": True}, "QQ_VERIFICATION_REQUIRED"),
+                            ({"timeout": True, "verification": True}, "QQ_ACCOUNT_CHECK_TIMEOUT"),
+                            (RuntimeError("private-browser-error"), "QQ_ACCOUNT_CHECK_FAILED")):
+            frame = Mock(url="https://xui.ptlogin2.qq.com/cgi-bin/xlogin")
+            frame.name = "ptlogin_iframe"
+            account, password, login = Mock(), Mock(), Mock()
+            frame.get_by_role.side_effect = lambda role, name, **_: password if name == "请输入密码" else login if role == "button" else account
+            if isinstance(check, Exception):
+                frame.wait_for_function.side_effect = check
+            else:
+                frame.evaluate.return_value = check
+            before = Mock()
+            with self.assertRaisesRegex(LoginError, "^" + code + "$"):
+                submit_qq_password(Mock(url="https://graph.qq.com/", frames=[frame]),
+                                   {"account": "12345678", "password": "private-placeholder"}, before)
+            password.fill.assert_not_called()
+            login.click.assert_not_called()
+            before.assert_not_called()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 # ADR 0004: Browser login for the self-deployed resolver
 
-Status: Accepted
+Status: Paused (2026-10-20; exploratory branch only, not merged into main)
+
+The user paused Playwright-based QQ account-and-password login exploration for both Yuanbao and QQ Mail. Preserve the experimental implementation, diagnostics, and findings on `codex/explore-qq-yuanbao-login`; do not continue real-login tests, CAPTCHA experiments, mail delivery, or deployment without an explicit request to resume. The design below is an experimental record, not an accepted production capability. `main` retains manual Cookie maintenance.
 
 Keep the self-deployed service on Linux x64 with systemd, retaining the Go resolver and gateway. Add Playwright-controlled headless Chromium to obtain Yuanbao Cookie through QQ login, with QQ login credentials supplied in a server-side configuration file during deployment. This keeps browser authentication separate from share-link resolution and avoids replacing the working resolver.
 
@@ -10,6 +12,8 @@ Keep all operator-supplied server configuration in one private `config.json`: th
 
 The login flow skips the optional phone-binding step observed in the existing experiment. Password errors, non-skippable verification, or a changed page flow report a failure and suspend automatic password retries until manual recovery; periodic checks may still reuse a valid existing Cookie. Keep the manual Cookie update entry point. Secrets and browser state must stay out of Git and logs.
 
+Acceptance requires QQ account-and-password login on the target server without human intervention. Skip optional steps; verification requiring a person fails this acceptance. Validate automated CAPTCHA completion separately before integrating it: an account-check CAPTCHA flag alone does not prove that a person is required. Human-assisted login and manual Cookie recovery do not count as successful password automation.
+
 On the first occurrence of a maintenance error, attempt a self-addressed QQ Mail notification using Playwright and the same QQ credentials, with a separate persistent browser profile. Include only a timestamp and a fixed error code. Mark the attempt before sending, suppress repeat notifications for the same unresolved error, and log delivery failure without recursively notifying. A paused-login status does not create another alert. This avoids another mail secret at the cost of making notification depend on QQ web login; do not treat it as guaranteed delivery.
 
-Daily checks allow nearly a day between an unexpected expiry and the next automatic recovery attempt. Local Windows and WSL headless checks passed, while the user reproduced Yuanbao and QQ Mail login failures on the target cloud server. This accepted design is not proof of successful cloud authentication. Continue standalone real-login investigation without deploying services; see the [acceptance record and handoff](../research/yuanbao-qq-login.md#用户手动复现与排查交接2026-10-20).
+Daily checks allow nearly a day between an unexpected expiry and the next automatic recovery attempt. Local Windows and WSL headless checks passed, while target-cloud login acceptance remains incomplete. A Yuanbao CAPTCHA success sample does not establish complete login or independent server-side image recognition. Exploration is paused; see the [pause status and preserved evidence](../research/yuanbao-qq-login.md#探索暂停与分支隔离2026-10-20).

@@ -1,8 +1,10 @@
 # 自部署指南
 
+> **本分支的 Playwright + QQ 账号密码登录探索已于 2026-10-20 暂停，未合入 `main`，云端登录验收未通过。** 本页保留实验分支的历史检查与部署草案，暂停期间不执行真实登录、发信或安装脚本。需要当前可用的自部署方式，请使用 [`main` 的指南](https://github.com/MuZiJin701/wx-video-account-notes/blob/main/docs/resolver-deployment.md)并手动维护 Cookie。恢复探索需用户明确要求，状态见[暂停记录](research/yuanbao-qq-login.md#探索暂停与分支隔离2026-10-20)。
+
 服务器只解析视频号分享链接；媒体下载、OCR、ASR 和笔记仍在客户端完成。普通使用无需自部署，见 [README](../README.md)。
 
-当前分支的服务器真实登录仍未通过：用户独立检查得到元宝 `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED`、邮箱 `MAIL_LOGIN_FAILED`。当前工作停留在第 0 节排查登录，**不需要运行安装脚本**；第 1–4 节留作之后明确选择部署时使用。已知事实、错误含义和后续排查入口见[交接记录](research/yuanbao-qq-login.md#用户手动复现与排查交接2026-10-20)。
+暂停时服务器真实登录仍未通过：阿里云直连下两个入口均要求图片点选验证码，有头和无头模式都触发。同一云端浏览器经 Windows 出口不要求验证，经 `volcengine` 出口仍要求验证；腾讯内部具体规则未知。元宝单题已有程序点击通过的样本，通用识图尚未集成，现有入口仍返回 `QQ_VERIFICATION_REQUIRED`。以下各节均为保留记录；将来如明确恢复，先重新确认分支与验收范围。证据见[验证码与模式对照](research/yuanbao-qq-login.md#验证码题型程序点击与有头无头对照2026-10-20)。
 
 支持 Linux x64 + systemd。准备 Git、`/usr/bin/python3`、curl、tar 和可用网络，以 root 安装到固定目录 `/root/projects/wx-video-account-notes`。选择 Playwright 当前支持的 Linux 发行版，见[系统要求](https://playwright.dev/python/docs/intro#system-requirements)。开放公网 80 端口；解析器的 17879 端口仅监听回环。
 
@@ -54,7 +56,9 @@ export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
 
 预期依次出现 `YUANBAO_LOGIN_OK` 和 `YUANBAO_PARSE_OK`。前者通过、后者失败表示登录已完成，但 Cookie 解析未通过，应另查验证链接或上游接口。
 
-若停在 `YUANBAO_PASSWORD_ATTEMPT`，该标记是在填写账号密码前打印的，不能仅凭它判断提交已经成功；之后的填表和点击可能等待元素，提交返回后还会等待约 90 秒确认元宝登录。当前入口没有中间进度提示。用户实际得到的下一行是 `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED`，表示等待结束仍未确认登录成功，不代表已确认密码错误或验证码。
+程序会输出 `LOGIN_STAGE` 固定阶段码；填写账号并移开焦点后，先等待 QQ 账号检查。若腾讯要求额外验证，直接返回 `QQ_VERIFICATION_REQUIRED`，不会填写或提交密码。`QQ_ACCOUNT_CHECK_TIMEOUT` 表示检查超时，`QQ_ACCOUNT_CHECK_FAILED` 表示无法完成检查；均不循环尝试密码。
+
+检查通过后才出现 `YUANBAO_PASSWORD_ATTEMPT`，该标记在填写密码前打印；`PASSWORD_FILLED` 和 `PASSWORD_CLICK_RETURNED` 分别说明填入密码、点击调用返回，仍不能证明腾讯已接受登录。之后最多等待约 90 秒确认元宝登录。`effab68` 旧版的 `YUANBAO_PASSWORD_ATTEMPT` 在填写账号前打印，旧日志需按[历史交接](research/yuanbao-qq-login.md#用户手动复现与排查交接2026-10-20)解释。
 
 再单独验证 QQ 邮箱登录，只确认进入可写信的邮箱页面：
 
@@ -64,9 +68,9 @@ export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
 
 预期 `MAIL_LOGIN_OK`。检查程序不会点击写信或发送，也不会调用告警通知。两个命令分别使用全新的临时浏览器资料，各自至多提交一次密码；正常结束或报错后删除临时资料，Cookie 仅在内存及解析器标准输入中使用，不覆盖任何部署的 Cookie、不改 systemd 配置。若进程被强制杀死，可能残留私有临时资料，应按敏感登录态保管。
 
-失败时只记录固定错误码，退出码非零；保留输出中的脱敏错误码供排查，先停止重复密码尝试。真实登录通过后，如需上线服务，再另行执行第 1–4 节。登录检查本身不需要部署，也不能证明每日维护、发信送达或服务生命周期已经通过。
+失败时记录固定阶段、站点分类、布尔标志、数字认证回调码及固定错误码，退出码非零；不输出页面正文、完整 URL、凭据、Cookie 或原始响应。保留脱敏输出供排查，先停止重复密码尝试。真实登录通过后，如需上线服务，再另行执行第 1–4 节。登录检查本身不需要部署，也不能证明每日维护、发信送达或服务生命周期已经通过。
 
-用户的 QQ 邮箱检查已返回 `MAIL_LOGIN_FAILED`，该码会合并多种页面或登录失败，目前没有足够信息区分原因。页面阶段、授权按钮或验证提示的脱敏诊断尚未实现；下一步应先补充诊断，再决定是否进行一次受控复现。独立检查不写维护暂停状态，也不会自动重试。
+QQ 邮箱保留共享账号检查的具体错误码；其他页面或登录异常仍可能返回 `MAIL_LOGIN_FAILED`。当前两个入口均已在阿里云直连复现 `QQ_VERIFICATION_REQUIRED`，这是密码登录失败，不以扫码、人工验证或手动 Cookie 恢复代替验收。独立检查不写维护暂停状态，也不会自动重试。
 
 ## 1. 在固定目录部署当前分支
 
@@ -110,7 +114,7 @@ cd /root/projects/wx-video-account-notes && sh ./server/install.sh
 
 Cookie 验证通过才原子替换，失败保留原文件。安装脚本不会启动对外网关或 Go 服务；Cookie 检查失败时先按第 3 节排查，再启动它们。
 
-当前验收限制：本机元宝和邮箱无头登录成功，但本次阿里云服务器的网页登录未通过；已有 Cookie 在该服务器完整解析正常。因此首次部署可能需要第 3 节的手动 Cookie 恢复，不能保证只填账号密码即可在目标服务器登录。详见[真实测试记录](research/yuanbao-qq-login.md#阿里云隔离验证2026-10-20)。
+当前验收限制：本机元宝和邮箱无头登录成功，但阿里云直连的 QQ 账号检查要求额外验证，未通过密码登录；已有 Cookie 在该服务器完整解析正常。因此不能保证只填账号密码即可在目标服务器登录。第 3 节保留手动 Cookie 恢复入口，但这不满足密码自动登录验收。详见[出口对照与诊断结果](research/yuanbao-qq-login.md#出口对照与密码登录边界2026-10-20)。
 
 ## 2. 启动与定时维护
 
@@ -186,8 +190,10 @@ systemctl stop wx-notes-cookie.service wx-notes-gateway wx-notes-resolver
 | --- | --- |
 | `CONFIG_INVALID` | 填好 `config.json` 的 QQ 账号密码和有效验证链接；不要公开整个配置。 |
 | `LOGIN_RETRY_PAUSED` | 修复账号或登录流程后手动运行 `maintain_cookie.py --resume`。 |
+| `QQ_VERIFICATION_REQUIRED` | QQ 账号检查要求验证码，而当前入口尚未集成自动识图处理，因此退出且不填写密码；此码不证明验证码只能由人工完成。 |
+| `QQ_ACCOUNT_CHECK_TIMEOUT` / `QQ_ACCOUNT_CHECK_FAILED` | 账号检查超时或无法完成；先检查认证资源和页面变化，不认定密码错误，不循环重试。 |
 | `QQ_LOGIN_FLOW_FAILED` / `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED` | 登录流程异常或未确认元宝登录成功，不能仅凭此码认定密码错误或验证码。维护程序遇此错误会暂停自动密码重试；独立检查仅退出，不写暂停状态。 |
-| `MAIL_LOGIN_FAILED` | 独立邮箱检查未确认进入可写信页面；原因未确定，不表示已尝试发送邮件。先补充脱敏页面诊断，不循环尝试密码。 |
+| `MAIL_LOGIN_FAILED` | 独立邮箱检查未确认进入可写信页面；查看固定阶段与脱敏状态，不表示已尝试发送邮件，不循环尝试密码。 |
 | `COOKIE_OR_UPSTREAM_UNAVAILABLE` | Cookie 无法解析且无法确认登录失效；检查网络、验证链接及上游接口。 |
 | `NEW_COOKIE_VALIDATION_FAILED` | 新 Cookie 未通过完整解析检查，旧文件保留。 |
 | `ERROR_MAIL_FAILED` | 邮箱登录、独立密码、风控或发信流程有变化；查看本地维护结果。 |

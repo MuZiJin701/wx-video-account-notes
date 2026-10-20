@@ -37,7 +37,7 @@ def login_status(cookie: str) -> str:
         return "unknown"
 
 
-def submit_qq_password(page, qq: dict, before_login) -> None:
+def submit_qq_password(page, qq: dict, before_login, progress=lambda stage, page: None) -> None:
     deadline = time.monotonic() + 30
     frame = None
     while time.monotonic() < deadline:
@@ -49,11 +49,29 @@ def submit_qq_password(page, qq: dict, before_login) -> None:
             or not (urlsplit(frame.url).hostname or "").endswith(".ptlogin2.qq.com")
             or urlsplit(page.url).hostname not in {"graph.qq.com", "mail.qq.com", "wx.mail.qq.com"}):
         raise LoginError("QQ_LOGIN_PAGE_CHANGED")
+    progress("QQ_FRAME_READY", page)
     frame.get_by_role("link", name="密码登录", exact=True).click(timeout=15_000)
-    before_login()
+    progress("PASSWORD_MODE_READY", page)
     frame.get_by_role("textbox", name="支持QQ号/邮箱/手机号登录", exact=True).fill(qq["account"])
-    frame.get_by_role("textbox", name="请输入密码", exact=True).fill(qq["password"])
+    progress("ACCOUNT_FILLED", page)
+    password = frame.get_by_role("textbox", name="请输入密码", exact=True)
+    password.focus()
+    # Blurring the account starts QQ's verification check; never submit ahead of it.
+    try:
+        frame.wait_for_function("() => { const p = window.pt?.plogin; return p && (p.checkState === true || p.isCheckTimeout); }", timeout=10_000)
+        check = frame.evaluate("() => { const p = window.pt.plogin; return {timeout: !!p.isCheckTimeout, verification: !!(p.needVc || p.needShowNewVc || p.needSms)}; }")
+    except Exception:
+        raise LoginError("QQ_ACCOUNT_CHECK_FAILED") from None
+    if check["timeout"]:
+        raise LoginError("QQ_ACCOUNT_CHECK_TIMEOUT")
+    if check["verification"]:
+        raise LoginError("QQ_VERIFICATION_REQUIRED")
+    progress("QQ_ACCOUNT_CHECK_PASSED", page)
+    before_login()
+    password.fill(qq["password"])
+    progress("PASSWORD_FILLED", page)
     frame.get_by_role("button", name="登录", exact=True).click()
+    progress("PASSWORD_CLICK_RETURNED", page)
 
 
 def skip_optional_binding(page) -> bool:
@@ -65,7 +83,7 @@ def skip_optional_binding(page) -> bool:
     return False
 
 
-def acquire_cookie(qq: dict, profile: Path, before_login) -> str:
+def acquire_cookie(qq: dict, profile: Path, before_login, progress=lambda stage, page: None) -> str:
     from playwright.sync_api import Error, sync_playwright
 
     profile.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -75,6 +93,7 @@ def acquire_cookie(qq: dict, profile: Path, before_login) -> str:
         )
         try:
             page = context.pages[0] if context.pages else context.new_page()
+            progress("BROWSER_READY", page)
             try:
                 page.goto(YUANBAO, wait_until="domcontentloaded", timeout=45_000)
                 status = context.request.get(USER_INFO, timeout=20_000).status
@@ -95,7 +114,7 @@ def acquire_cookie(qq: dict, profile: Path, before_login) -> str:
                         if urlsplit(page.url).hostname == "yuanbao.tencent.com" and context.request.get(USER_INFO, timeout=10_000).status == 200:
                             break
                         if any(f.name == "ptlogin_iframe" for f in page.frames):
-                            submit_qq_password(page, qq, before_login)
+                            submit_qq_password(page, qq, before_login, progress)
                             break
                         page.wait_for_timeout(250)
                     else:
@@ -105,6 +124,7 @@ def acquire_cookie(qq: dict, profile: Path, before_login) -> str:
                     while time.monotonic() < deadline:
                         if skips < 3 and skip_optional_binding(page):
                             skips += 1
+                            progress("OPTIONAL_BINDING_SKIPPED", page)
                         if urlsplit(page.url).hostname == "yuanbao.tencent.com":
                             if context.request.get(USER_INFO, timeout=10_000).status == 200:
                                 break
@@ -114,5 +134,8 @@ def acquire_cookie(qq: dict, profile: Path, before_login) -> str:
                 except Error:
                     raise LoginError("QQ_LOGIN_FLOW_FAILED") from None
             return "; ".join(f"{c['name']}={c['value']}" for c in context.cookies([PARSE_API]))
+        except Exception:
+            progress("FAILED", page)
+            raise
         finally:
             context.close()

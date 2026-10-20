@@ -22,7 +22,7 @@ class LoginCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
 
-            def acquire(qq, profile, before):
+            def acquire(qq, profile, before, progress):
                 profile.mkdir()
                 (profile / "private-session").write_text("private-cookie")
                 before()
@@ -55,7 +55,7 @@ class LoginCheckTests(unittest.TestCase):
                         probe.check_login("mail", CONFIG, root)
                 else:
                     self.assertEqual(probe.check_login("mail", CONFIG, root), "MAIL_LOGIN_OK")
-                open_mail.assert_called_once_with(context, CONFIG["qq"])
+                open_mail.assert_called_once_with(context, CONFIG["qq"], probe.report_login)
                 context.close.assert_called_once()
                 compose.click.assert_not_called()
                 self.assertEqual(page.mock_calls, [])
