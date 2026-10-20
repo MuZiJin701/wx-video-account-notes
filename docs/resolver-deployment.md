@@ -1,12 +1,12 @@
-# 自部署解析服务
+# 自部署指南
 
-普通使用无需服务器，见 [README](../README.md)。自部署只解析分享链接，下载、OCR、ASR 和笔记仍在客户端完成。
+本页教你在自己的服务器上运行解析服务。服务器只解析分享链接，下载、OCR、ASR 和写笔记仍在你的电脑上完成。普通使用无需自部署，见 [README](../README.md)。
 
-要求：使用 systemd 的 Linux x64 服务器、Git、`/usr/bin/python3`、curl 和 root shell。固定目录为 `/root/projects/wx-video-account-notes/`；Go 解析进程监听 `127.0.0.1:17879`，Python 网关占用公网 80 端口。仓库已包含解析二进制，无需自行构建。
+准备一台支持 systemd 的 Linux x64 服务器，装好 Git、Python 3（`/usr/bin/python3`）和 curl，用 root 登录。防火墙和云安全组需要开放 80 端口。
 
-## 1. 克隆并安装（服务器）
+## 1. 下载并安装
 
-以下命令在**服务器的 root shell** 中执行：
+在**服务器**上依次运行。项目目录固定为 `/root/projects/wx-video-account-notes`，不要改路径。
 
 ```sh
 umask 077
@@ -15,7 +15,7 @@ git clone https://github.com/MuZiJin701/wx-video-account-notes.git /root/project
 cd /root/projects/wx-video-account-notes
 ```
 
-仅在没有凭证文件时生成随机凭证，然后安装：
+创建访问凭证，再安装服务。已有 `client.json` 时会保留原文件。
 
 ```sh
 if [ ! -e client.json ]; then
@@ -24,70 +24,87 @@ fi
 sh server/install.sh
 ```
 
-将 `client.json` 中的 `access_key` 安全保存到客户端，不使用公开 Skill 的共用凭证。安装脚本复制程序、安装两个 systemd 服务并执行 `daemon-reload`，不创建 Cookie，也不自动启动或启用服务。**已有部署保留 `client.json` 和 `cookie`**；更新仓库后只重新运行安装脚本，再按下文重启，不要重新生成凭证。
+安装完成后服务还没有启动，需要先设置 Cookie。以后更新程序时，保留 `client.json` 和 `cookie`，只需在项目目录重新运行 `sh server/install.sh`，再重启服务。
 
 ## 2. 更新元宝 Cookie
 
-1. 在浏览器打开 [元宝](https://yuanbao.tencent.com/) 并登录。
-2. 按 `F12` 打开开发者工具的“网络”，刷新页面；若没有请求，先在页面中操作一次。
-3. 找到发往 `yuanbao.tencent.com/api/` 的请求，复制“请求标头”中 `Cookie` **后面的完整值**。
-4. 在服务器运行以下命令，按提示粘贴；输入不会回显：
+1. 在电脑浏览器登录[元宝](https://yuanbao.tencent.com/)。
+2. 按 F12，打开“网络”，刷新页面。没有请求时，在页面上操作一次。
+3. 找到地址包含 `yuanbao.tencent.com/api/` 的请求，复制“请求标头”里 `Cookie` 后面的完整值。
+4. 在服务器运行下面的命令，按提示粘贴 Cookie。输入不显示是正常的。
 
 ```sh
 python3 /root/projects/wx-video-account-notes/update_cookie.py
 ```
 
-脚本用内置分享链接验证新 Cookie，成功后才写入，失败则保留旧文件。若内置链接已不可用，可先设置 `WX_NOTES_VERIFY_LINK` 为另一条可用分享链接。不要使用可能漏掉 HttpOnly 内容的 `document.cookie`，也不要把 Cookie 放进命令参数、仓库或 issue。
+看到“Cookie 已更新”即可继续。验证失败会保留旧文件；内置测试链接失效时，可设置 `WX_NOTES_VERIFY_LINK` 为另一条有效分享链接后重试。不要用 `document.cookie` 取值，它可能不完整。不要把 Cookie 写进命令参数、仓库或 issue。
 
 ## 3. 启动、停止与恢复
 
-以下命令在服务器执行。完成 Cookie 配置后，**启动并启用开机启动**：
+下面的命令都在**服务器**上运行。`wx-notes-resolver` 负责解析，`wx-notes-gateway` 提供对外接口。
+
+### 启动并检查
+
+依次启动服务、设置开机启动、查看运行状态：
 
 ```sh
-systemctl enable --now wx-notes-resolver.service wx-notes-gateway.service
-systemctl status wx-notes-resolver.service wx-notes-gateway.service --no-pager
+systemctl start wx-notes-resolver wx-notes-gateway
+systemctl enable wx-notes-resolver wx-notes-gateway
+systemctl status wx-notes-resolver wx-notes-gateway
 ```
 
-**停止**（保留开机启动设置）：
+两个服务都显示 `active (running)`，说明进程已启动。若进入翻页界面，按 `q` 退出。再检查接口：
 
 ```sh
-systemctl stop wx-notes-gateway.service wx-notes-resolver.service
+curl -i http://127.0.0.1/api/channels/parse_sph
 ```
 
-手动停止不会触发自动重启。若重启服务器后也要保持停用，执行 `systemctl disable --now wx-notes-gateway.service wx-notes-resolver.service`。
+看到 **401** 或 `UNAUTHORIZED` 是正常的，因为这次检查没有提供访问凭证。它只说明接口有响应，实际解析还要按第 4 步测试。
 
-**停止后恢复运行**：
+### 停止
 
 ```sh
-systemctl start wx-notes-resolver.service wx-notes-gateway.service
+systemctl stop wx-notes-gateway wx-notes-resolver
 ```
 
-若曾禁用开机启动，改用 `enable --now`。两个进程异常退出后会间隔 5 秒自动重启；这不修复 Cookie 失效、上游接口变化或仍存活但卡住的进程。
-
-**故障恢复或更新程序/凭证后重启**：
+手动停止后会保持停止；如果保留开机启动，服务器重启时仍会启动。要取消开机启动，再运行：
 
 ```sh
-systemctl status wx-notes-resolver.service wx-notes-gateway.service --no-pager
-journalctl -u wx-notes-resolver.service -u wx-notes-gateway.service -n 50 --no-pager
-# 修复问题后，清除失败/启动限流状态并重启
-systemctl reset-failed wx-notes-resolver.service wx-notes-gateway.service
-systemctl restart wx-notes-resolver.service wx-notes-gateway.service
-systemctl status wx-notes-resolver.service wx-notes-gateway.service --no-pager
-curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1/api/channels/parse_sph
+systemctl disable wx-notes-gateway wx-notes-resolver
 ```
 
-两项状态应为 `active (running)`；无凭证探测预期返回 **401**，只证明网关有响应，完整验收见下一节。修改服务文件后先执行 `systemctl daemon-reload`；更换 `client.json` 凭证需重启网关，更新 Cookie 无需重启。公网访问失败时检查防火墙和云安全组的 80 端口。
+### 停止后恢复
 
-## 4. 配置客户端并验收
+```sh
+systemctl start wx-notes-resolver wx-notes-gateway
+```
 
-在**运行 agent 的电脑**设置两项环境变量，然后从同一环境启动 agent。已打开的桌面应用需要重启，才能继承新环境。
+需要恢复开机启动时，再运行前面的 `systemctl enable` 命令。已设置开机启动的服务，会在服务器重启后自动运行。
 
-| 变量 | 填写内容 |
-| --- | --- |
-| `WX_VIDEO_ACCOUNT_RESOLVE_API` | `http://<服务器>/api/channels/parse_sph`，或自己的 HTTPS 入口完整地址 |
-| `WX_VIDEO_ACCOUNT_RESOLVE_KEY` | 服务器 `client.json` 中的 `access_key` |
+### 故障后恢复
 
-PowerShell：
+先按下方“常见问题”排查。修好问题后，或更新程序、访问凭证后，重启并检查：
+
+```sh
+systemctl restart wx-notes-resolver wx-notes-gateway
+systemctl status wx-notes-resolver wx-notes-gateway
+```
+
+进程异常退出后会等待 5 秒自动重启。但 Cookie 失效、上游接口变化或进程卡住，需要人工处理。更新 Cookie 不用重启；手动修改 `.service` 文件后，先运行 `systemctl daemon-reload` 再重启。
+
+## 4. 在电脑上连接服务
+
+先在服务器查看访问凭证：
+
+```sh
+cat /root/projects/wx-video-account-notes/client.json
+```
+
+复制 `access_key` 的值，供下面输入。使用自己生成的凭证，不要使用公开 Skill 的共用凭证，也不要把这个文件发给别人。
+
+回到**运行 agent 的电脑**，选择对应终端设置接口地址和凭证。把 `<服务器>` 换成服务器的公网 IP 或域名。
+
+PowerShell 7.1 及以上：
 
 ```powershell
 $env:WX_VIDEO_ACCOUNT_RESOLVE_API = 'http://<服务器>/api/channels/parse_sph'
@@ -98,25 +115,42 @@ Bash：
 
 ```sh
 export WX_VIDEO_ACCOUNT_RESOLVE_API='http://<服务器>/api/channels/parse_sph'
-read -rsp 'Access key: ' WX_VIDEO_ACCOUNT_RESOLVE_KEY
+read -r -s -p '访问凭证: ' WX_VIDEO_ACCOUNT_RESOLVE_KEY
 echo
 export WX_VIDEO_ACCOUNT_RESOLVE_KEY
 ```
 
-把一条可用的视频号分享链接交给 agent。验收时检查媒体文件、`note_materials.json`、OCR/ASR 状态和最终 Markdown 笔记；接口有响应并不代表完整流程成功。两项变量必须同时设置；都取消后恢复默认服务。自部署失败时不会自动改用默认服务，也不要修改 Skill 内的 `resolver_config.json`。
+如果已配置 HTTPS，把接口地址换成自己的完整 HTTPS 地址。
+
+从**设置变量的同一个终端**启动 agent；已经运行的 agent 需先退出。发一条真实分享链接，确认生成媒体、`note_materials.json` 和 Markdown 笔记，并查看 OCR/ASR 状态。
+
+两项变量必须一起设置，一起取消后才恢复默认服务。自部署失败不会自动切换，也不要修改 Skill 中的 `resolver_config.json`。
 
 ## 常见问题
 
+查看最近 50 条日志（按 `q` 退出）：
+
+```sh
+journalctl -u wx-notes-resolver -u wx-notes-gateway -n 50
+```
+
+如果提示启动过于频繁，修好问题后先清除失败记录，再按上文重启：
+
+```sh
+systemctl reset-failed wx-notes-resolver wx-notes-gateway
+```
+
 | 现象或错误码 | 先检查什么 |
 | --- | --- |
-| 连不上服务器 | 两个服务状态、端口占用、防火墙和云安全组。 |
+| 连不上服务器 | 查看两个服务状态，确认防火墙和云安全组已开放 80 端口。 |
+| 端口已被占用 | 检查是否有其他程序使用 80 或本机 17879 端口。 |
 | `UNAUTHORIZED` | 客户端凭证是否与 `client.json` 一致。 |
 | `LOGIN_REQUIRED` | 服务器是否已通过脚本写入 Cookie。 |
 | `LOGIN_EXPIRED_OR_UPSTREAM_CHANGED` | 元宝登录态或接口可能变化；重新运行 Cookie 更新脚本验证。 |
 | `FEED_UNAVAILABLE_OR_UPSTREAM_CHANGED` | 换一条可用分享链接重试，再排查上游接口。 |
-| `RESOLVER_UNAVAILABLE` | 回环解析服务和 journal 日志。 |
+| `RESOLVER_UNAVAILABLE` | 检查解析服务是否运行，查看上面的日志。 |
 | `RATE_LIMITED` | 等待一分钟再试；网关对所有客户端合计每分钟最多处理 30 次请求。 |
 
-公网 HTTP 明文传输链接、凭证和结果；保密传输需在网关前配置仅转发解析路由的 HTTPS 入口。项目目录仅 root 可访问，凭证和 Cookie 权限为 `0600`。不要公开 Cookie、访问凭证、带令牌的媒体地址或原始响应。
+HTTP 会明文传输链接、凭证和结果。需要加密传输时，请为网关配置 HTTPS，并只转发解析接口。安装脚本会限制目录和凭证文件的访问权限；不要公开 Cookie、访问凭证、带令牌的媒体地址或原始响应。
 
-解析原理见[技术调查](research/wx-channels-upstream.md)，完整验收见[检查清单](../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)；管理命令语义见 [systemctl 手册](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html)和[服务重启策略](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Restart=)。
+更多：[解析原理](research/wx-channels-upstream.md) · [完整验收](../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md) · [systemctl 官方说明](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html)。
