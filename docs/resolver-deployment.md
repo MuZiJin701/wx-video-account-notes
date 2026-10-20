@@ -6,7 +6,7 @@
 
 ## 0. 先验收开发分支
 
-在 Linux x64 的独立目录检查分支代码，避免覆盖已有部署：
+本节仅检查代码和浏览器运行环境。在 Linux x64 的独立目录执行：
 
 ```sh
 git clone --branch codex/explore-qq-yuanbao-login --single-branch \
@@ -25,19 +25,26 @@ export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
 
 预期单测全部通过、最后输出 `BROWSER_SMOKE_OK`。浏览器安装中的 `--with-deps` 会调用系统包管理器，需要 root 或 sudo 权限；其余运行资产保存在此检出目录。上述检查无需 QQ 配置，不登录账号、不发送邮件、不改服务或定时任务。客户端三平台完整单测同时由 [Actions](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml) 执行。
 
-真实部署验收继续按第 1–4 节操作。新部署时将下方的克隆命令改为上面的 `--branch` 形式，并使用固定部署目录。**不要在此测试目录直接运行 `server/install.sh`**：安装器会切换到 `/root/projects/wx-video-account-notes` 并安装系统服务。已有部署先保留配置、Cookie 与运行资产，确认该目录检出的分支后再升级。首次维护失败可能尝试给自己的 QQ 邮箱发一封错误通知；只有真实登录、Cookie 解析、服务请求和 timer 都通过，才算完成目标服务器验收。
+只需检查代码时，到这里结束。`~/wx-notes-branch-check` 不用于运行 `server/install.sh`：安装器使用固定目录 `/root/projects/wx-video-account-notes`，并会安装系统服务。
 
-## 1. 填写统一配置并安装
+需要验证真实登录和服务时，再执行第 1–4 节的实际部署；只有真实登录、Cookie 解析、服务请求和 timer 都通过，才算完成目标服务器验收。
+
+## 1. 在固定目录部署当前分支
+
+本节会安装系统库、写入 systemd 配置、启用每日维护并立即检查 Cookie；维护失败可能尝试给自己的 QQ 邮箱发送错误通知。请以 root 在用于部署的服务器执行。**以下克隆命令仅适用于 `/root/projects/wx-video-account-notes` 尚不存在的新部署**；已有部署先保留配置、Cookie 与运行资产，再按第 3 节升级。
+
+下列命令明确检出本次开发分支，并切换到固定目录后运行该目录内的安装脚本。即使已完成第 0 节，也要在这里单独准备部署目录：
 
 ```sh
 umask 077
 mkdir -p /root/projects
-git clone https://github.com/MuZiJin701/wx-video-account-notes.git /root/projects/wx-video-account-notes
-cd /root/projects/wx-video-account-notes
-sh server/install.sh
+git clone --branch codex/explore-qq-yuanbao-login --single-branch \
+  https://github.com/MuZiJin701/wx-video-account-notes.git /root/projects/wx-video-account-notes &&
+  cd /root/projects/wx-video-account-notes &&
+  sh ./server/install.sh
 ```
 
-首次运行会创建权限为 `0600` 的 `config.json`，并提示 `CONFIG_INVALID`，此时尚未登录或启动服务。用文本编辑器填写其中的 QQ 账号和密码后，再运行同一安装命令。配置示例见 [`server/config.example.json`](../server/config.example.json)：
+首次运行会创建权限为 `0600` 的 `/root/projects/wx-video-account-notes/config.json`，并提示 `CONFIG_INVALID`，此时尚未登录或启动服务。用文本编辑器填写其中的 QQ 账号和密码。配置示例见 [`server/config.example.json`](../server/config.example.json)：
 
 ```json
 {
@@ -49,6 +56,12 @@ sh server/install.sh
 ```
 
 `access_key` 用于客户端调用服务，留空时自动生成，已有值则保留；QQ 账号密码仅用于服务器登录元宝和 QQ 邮箱。若验证链接失效，将 `verify_link` 换成有效的视频号分享链接。不要把配置文件、Cookie、浏览器资料或完整日志提交、发给他人；也不要在命令参数中填写密码。
+
+填写后，仅重新运行固定目录中的安装脚本，无需再次克隆：
+
+```sh
+cd /root/projects/wx-video-account-notes && sh ./server/install.sh
+```
 
 安装脚本会：
 
@@ -113,7 +126,13 @@ python3 /root/projects/wx-video-account-notes/update_cookie.py
 
 输入不回显；候选 Cookie 会使用 `config.json` 的验证链接检查，通过后替换，无需重启解析器。保留 `WX_NOTES_VERIFY_LINK` 作为临时兼容覆盖。不使用 `document.cookie`，它可能缺少 HttpOnly 凭证。手动更新 Cookie 不会解除自动密码重试暂停。
 
-升级时保留 `config.json`、`cookie` 和 `.runtime/`，重新运行 `sh server/install.sh`，随后重启网关和解析器。旧版只有 `client.json` 时，安装脚本会将其访问凭证迁入新 `config.json`，保留旧文件和 Cookie；补齐 QQ 配置后重跑。新配置已存在时以新配置为准。修改检查周期后也需重跑安装脚本，以更新 timer。
+升级时保留 `config.json`、`cookie` 和 `.runtime/`，先确认 `/root/projects/wx-video-account-notes` 内没有未处理的源码修改，再将该目录的源码更新至目标分支；本次验收分支为 `codex/explore-qq-yuanbao-login`。不要用第 0 节的测试检出代替部署目录。在固定部署目录确认 `git branch --show-current` 和 `git rev-parse HEAD` 后，执行：
+
+```sh
+cd /root/projects/wx-video-account-notes && sh ./server/install.sh
+```
+
+安装成功后重启网关和解析器。旧版只有 `client.json` 时，安装脚本会将其访问凭证迁入新 `config.json`，保留旧文件和 Cookie；补齐 QQ 配置后重跑。新配置已存在时以新配置为准。修改检查周期后也需重跑安装脚本，以更新 timer。
 
 停止全部服务与定时维护：
 
