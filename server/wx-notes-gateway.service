@@ -1,0 +1,14 @@
+[Unit]
+Description=WeChat Channels public gateway
+Wants=wx-notes-resolver.service
+After=wx-notes-resolver.service
+
+[Service]
+WorkingDirectory=/root/projects/wx-video-account-notes
+ExecStart=/usr/bin/python3 -u /root/projects/wx-video-account-notes/gateway.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

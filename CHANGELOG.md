@@ -2,15 +2,14 @@
 
 ## Unreleased
 
+- Slimmed project documentation and replaced manual server startup with systemd units, installation support, and start/stop/recovery instructions; existing credentials and Cookie are preserved.
 - Updated the README, Skill, plugin descriptions, and examples to state that the workflow downloads WeChat Channels videos and images before producing notes.
 - Include the Linux x64 resolver binary in the repository and document direct server-side deployment from this repository.
 - Made the maintainer-hosted default and optional user-hosted resolver visible in both READMEs; added paired client endpoint/key overrides and self-hosting instructions without changing the live server.
 - Added the self-hosted single-route HTTP resolver, client response adaptation, shared-key/rate-limit gateway, and optional no-echo Cookie validation script; the Cookie file can also be edited directly without restarting the resolver. Completed a real public-HTTP link-to-note acceptance run on Windows x64.
 - Pinned FFmpeg to a retained monthly build after the previous daily release was pruned.
-- Consolidated resolver programs, configuration, Cookie, PID files, and logs under `/root/projects/wx-video-account-notes/`; switched to manual startup.
-- Added cross-platform runtime support for Windows x64, Intel macOS x64, and Linux x64.
-- Unified runtime initialization, asset verification, and media processing under Python.
-- Added platform-isolated runtimes, SHA256 verification, runtime checks, and three-platform CI.
+- Consolidated resolver programs and private configuration under `/root/projects/wx-video-account-notes/`, with service logs in the system journal.
+- Added Windows x64, Intel macOS x64, and Linux x64 support with a canonical Python runtime, isolated assets, SHA256 checks, and three-platform CI.
 - Split the README into concise Chinese and English entry points.
 - Updated documentation to use one primary language per file and corrected the global `skills` CLI command.
 

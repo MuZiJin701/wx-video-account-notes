@@ -1,14 +1,22 @@
 # Manual smoke test checklist
 
-This is the release checklist for real bootstrap and end-to-end processing. It is not the automated `unittest` entry point. Automated tests run in the locked uv environment and do not contact external download services.
+Release checks that use real downloads, services, and models. Offline unit tests are documented in the [README](../../../../../README.md#本地开发).
 
-The maintainer-hosted default resolver was delivered under [issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4). For optional user hosting, set both `WX_VIDEO_ACCOUNT_RESOLVE_API` and `WX_VIDEO_ACCOUNT_RESOLVE_KEY` to the user's own service before running the resolver and full Skill checks below. The September 29 acceptance record covers the default service only.
+For self-hosting, follow the [deployment guide](../../../../../docs/resolver-deployment.md) and set both client overrides before resolver and full Skill checks. The September 29 record below covers only the default resolver ([issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)).
 
 ## Prerequisites
 
 - Run on Windows x64, Intel macOS x64, or Linux x64.
 - Allow access to the WeChat Channels resolver, GitHub Releases, and Hugging Face.
 - Use a fresh skill directory, or back up and remove the platform-specific `.runtime/<os>-<arch>/` before testing first-run behavior.
+
+Run from the Skill directory; replace the sample link with a valid share link:
+
+| Step | Windows | macOS / Linux |
+| --- | --- | --- |
+| Bootstrap | `pwsh -File scripts/bootstrap.ps1` | `sh scripts/bootstrap.sh` |
+| Verify assets | `pwsh -File scripts/verify_runtime.ps1` | `sh scripts/verify_runtime.sh` |
+| Process | `pwsh -File scripts/invoke_pipeline.ps1 -ShareUrl "https://weixin.qq.com/sph/your_share_id_here"` | `sh scripts/invoke_pipeline.sh --share-url "https://weixin.qq.com/sph/your_share_id_here"` |
 
 ## Cases
 
@@ -21,7 +29,8 @@ The maintainer-hosted default resolver was delivered under [issue #4](https://gi
 7. **Unsupported platform**: run on an unsupported OS or architecture. Confirm immediate failure with the detected OS/architecture and supported scope.
 8. **Public resolver**: from the maintainer's machine, check that a missing Cookie produces `LOGIN_REQUIRED`, a wrong access key produces `UNAUTHORIZED`, and a working Cookie resolves a valid share link. Confirm unrelated routes return 404 and repeated requests hit the rate limit. Do not record response bodies or tokens.
 9. **Full Skill acceptance**: use `https://weixin.qq.com/sph/AHhuzPE3Pi` from the maintainer's machine through the public HTTP endpoint. Confirm media download, `note_materials.json`, OCR/ASR status and final `<slug>.md`. If the media is unavailable, use another valid link and record only the reason for substitution.
-10. **Cookie update**: with a temporary file and placeholder Cookies, confirm no echo, successful replacement, non-zero exit and preservation of the old file after a failed verification.
+10. **Cookie update**: check that real terminal input does not echo. Replacement, failure exit and preservation of the old file are covered by [unit tests](../../../../../server/test_update_cookie.py).
+11. **systemd lifecycle (test server only)**: install without starting or enabling services; verify both units with `systemd-analyze verify`. Enable/start, confirm both are active and the unauthenticated gateway probe returns 401, then resolve a real link. Stop both and confirm they stay stopped; start them again. Force an abnormal process exit and confirm automatic recovery after 5 seconds. Reboot and confirm enabled units start; disable/stop and confirm they stay disabled after reboot. Repair a failed configuration, reset failure state and restart. Reinstall and confirm Cookie/access key contents are unchanged. Use the [deployment commands](../../../../../docs/resolver-deployment.md#3-启动停止与恢复).
 
 ## Record
 

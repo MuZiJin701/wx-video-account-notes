@@ -10,3 +10,11 @@ tmp_*/
 
 # local promotional assets
 assets/
+
+# private resolver state and installed server programs
+/client.json
+/cookie
+/resolver
+/resolver.new
+/gateway.py
+/update_cookie.py

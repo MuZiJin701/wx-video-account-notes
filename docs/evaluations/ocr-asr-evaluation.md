@@ -1,8 +1,8 @@
 # OCR / ASR evaluation
 
-This record summarizes the current OCR/ASR stack, performance trade-offs, and validation history.
+June 2026 evaluation record: stack choices, optimizations, and sample observations. These results do not guarantee transcription quality for other media; see the [later acceptance record](../../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md#record).
 
-## Current stack
+## Evaluated stack
 
 | Component | Provider | Model | Configuration |
 | --- | --- | --- | --- |
@@ -22,7 +22,7 @@ This record summarizes the current OCR/ASR stack, performance trade-offs, and va
 - Model: `Systran/faster-whisper-tiny`
 - Runtime: CTranslate2 with int8 quantization
 - Output: segment-based text without punctuation
-- Result: all tested videos produced non-empty text reliably
+- Sample result: all three videos in the June evaluation produced non-empty text; this measures availability, not accuracy.
 
 ## History
 

@@ -1,6 +1,6 @@
 # `wx_channels_download` 实现原理
 
-查阅日期：2026-09-29。本文依据上游仓库 [`ltaoo/wx_channels_download`](https://github.com/ltaoo/wx_channels_download) 的源码和项目文档，解释与视频号内容获取有关的两条路径。分享链接路径的字段、错误和凭证细节另见[解析实现调查](wx-channels-upstream.md)。上游使用的视频号及元宝 Web 接口并非稳定的公开接口，以下描述是当前实现，不保证长期有效。
+查阅日期：2026-09-29。本文记录上游 [`ltaoo/wx_channels_download`](https://github.com/ltaoo/wx_channels_download) 的两条获取路径，图中 Worker 属于上游方案。字段与错误见[解析实现调查](wx-channels-upstream.md)；非公开 Web 接口可能变化。
 
 ## 总览
 
@@ -40,8 +40,4 @@ flowchart LR
 
 ## 与本项目 Skill 的关系
 
-此前的 [`resolve_link.py`](../../plugins/wx-video-account-notes/skills/wx-video-account-notes/runtime/resolve_link.py) 采用第二条路径中的上游 Worker，因缺少 Worker 访问凭证而在媒体下载之前得到 `401`；这不能证明分享链接失效或元宝 Cookie 过期。本版本改为访问自建服务，再由 [`pipeline.py`](../../plugins/wx-video-account-notes/skills/wx-video-account-notes/runtime/pipeline.py) 在本机下载、抽帧、OCR、ASR 并生成笔记材料。详见[解析实现调查](wx-channels-upstream.md)和[部署说明](../resolver-deployment.md)。
-
-若要继续采用分享链接路径，需要自己可访问的解析端及其凭证，并区分 Worker 认证失败、元宝登录态失败、内容不可播放等错误。媒体地址可能带临时令牌；日志及 `raw.json` 应避免泄露这些地址和任何 Cookie 或访问凭证。
-
-[规格 issue #4](https://github.com/MuZiJin701/wx-video-account-notes/issues/4)的服务和 Skill 适配已部署，并于 2026 年 9 月 29 日通过真实 Cookie 的公网解析和完整 Skill 验收。当前服务由 root 手动启动，每次解析请求从服务器文件读取 Cookie；维护方式见[部署说明](../resolver-deployment.md)。此文上述 Worker 路径描述的是此前实现与上游原理。
+本项目使用服务器上的 Go 解析函数，本机完成媒体处理与成稿。默认/自部署边界见 [ADR 0003](../adr/0003-resolver-ownership.md)，服务维护见[部署指南](../resolver-deployment.md)，2026-09-29 验收见[记录](../../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md#record)。此前 Worker 无凭证 `401` 的定位保留在[实现调查](wx-channels-upstream.md)。

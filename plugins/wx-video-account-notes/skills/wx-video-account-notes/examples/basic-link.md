@@ -1,16 +1,7 @@
 # 基础用法
 
-把一个视频号分享链接交给 agent，下载视频或图文图片，并生成笔记材料和同目录 Markdown 笔记。
-
-## 输入示例
-
 ```text
 帮我下载并整理这个视频号分享链接：https://weixin.qq.com/sph/AClgYpX4KB
 ```
 
-## 期望结果
-
-- 自动初始化当前平台的 `.runtime/<os>-<arch>/` 目录。
-- 下载视频或图文动态图片。
-- 生成 `note_materials.json`、`ocr.txt`、`asr.txt`、`frames/`；视频动态还会生成 `ocr_frames/` 和音频。
-- 生成同目录 Markdown 笔记。
+下载素材、笔记材料与 Markdown 保存在同一目录，见 [Skill](../SKILL.md)。

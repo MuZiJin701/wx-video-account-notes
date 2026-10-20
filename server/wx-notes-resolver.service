@@ -1,0 +1,14 @@
+[Unit]
+Description=WeChat Channels loopback resolver
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+WorkingDirectory=/root/projects/wx-video-account-notes
+ExecStart=/root/projects/wx-video-account-notes/resolver
+Restart=on-failure
+RestartSec=5
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -1,28 +1,17 @@
 # Agent instructions
 
-This file defines repository-wide guidance for coding agents. User-facing documentation is in `README.md`.
+User documentation: [README.md](README.md).
 
-## Agent skills
+## Read when needed
 
-### Issue tracker
-
-Issues and specs live in GitHub Issues and are managed with `gh`. Before tracker operations, read `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Before triage, read the canonical role-to-label mapping in `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-This repository has a single context. Before exploring the code, read `GLOSSARY.md`, relevant ADRs under `docs/adr/`, and the consumer rules in `docs/agents/domain.md`.
-
-For WeChat Channels share-link resolution work, read `docs/research/wx-channels-architecture.md` and `docs/research/wx-channels-upstream.md` before changing the resolver.
+- Before code exploration: `GLOSSARY.md`, relevant `docs/adr/` decisions, and `docs/agents/domain.md`.
+- Before tracker operations: `docs/agents/issue-tracker.md` (GitHub Issues via `gh`).
+- Before triage: `docs/agents/triage-labels.md` (canonical label mapping).
+- Before resolver changes: `docs/research/wx-channels-architecture.md` and `docs/research/wx-channels-upstream.md`.
 
 ## Change policy
 
-- Preserve unrelated user changes.
-- Reuse existing code and project conventions before adding abstractions.
-- Keep implementation, tests, and documentation aligned.
-- Do not expose passwords, tokens, API keys, personal data, or sensitive logs.
-- Do not push code, send messages, modify permissions, delete important data, or affect production resources without explicit authorization.
-- Run tests, type checks, builds, or manual checks appropriate to the risk of the change.
+- Preserve unrelated changes; reuse existing code and conventions.
+- Keep code, tests, and docs aligned; verify according to risk.
+- Protect credentials, personal data, and sensitive logs.
+- Require explicit authorization to push, message others, change permissions, delete important data, or affect production.

@@ -6,17 +6,11 @@ Download WeChat Channels videos or image posts from a share link, extract OCR/AS
 
 ## See it in action
 
-Send a WeChat Channels share link to your agent to generate a Markdown note. The video, reference frames, and note materials are saved locally for review, verification, and further editing.
-
-### In use
-
 ![Sending a WeChat Channels share link in Codex and generating a Markdown note](docs/images/使用过程.png)
-
-### Saved files
 
 ![Locally saved video, Markdown notes, reference frames, and OCR/ASR note materials](docs/images/产物.png)
 
-In this example, OCR succeeded while ASR recognized no speech. The agent explains the recognition status and flags unverified information in its response.
+OCR succeeded in this example; ASR recognized no speech. Notes flag failures and uncertainty.
 
 ## Get started
 
@@ -51,7 +45,7 @@ To choose an output directory, include it in the request, for example, “Save t
 
 ### Want to use your own server?
 
-Follow the [self-hosting guide (Chinese)](docs/resolver-deployment.md) to clone this repository onto a Linux server and start the resolver. Then configure your own endpoint and access key for the agent. A failure of your server does not fall back to the default resolver.
+Follow the [self-hosting guide (Chinese)](docs/resolver-deployment.md) to manage a Linux resolver with systemctl and configure the client endpoint and access key. A failure of your server does not fall back to the default resolver.
 
 ## Output files
 
@@ -74,7 +68,7 @@ Image posts have no video or audio. Vision-capable agents also read images in `f
 
 - The server only resolves share links. Media download, OCR, ASR, and note writing run locally; no GPU or system FFmpeg is required.
 - The default resolver uses public HTTP, so share links and results travel in plaintext. Its shared access key ships with the public Skill and is not secret. The service handles at most 30 requests per minute across all users.
-- The maintainer updates the default resolver's Yuanbao login. Its processes currently require manual startup. Self-hosting can use an HTTPS front end; see the [deployment guide (Chinese)](docs/resolver-deployment.md).
+- The maintainer updates the default resolver's Yuanbao login. Self-hosted users maintain their own login and can configure HTTPS.
 - ARM64, GPU inference, and offline first-time setup are not supported. The private Python version is 3.13.14; ASR uses faster-whisper tiny on CPU.
 
 ## Development
@@ -85,15 +79,7 @@ uv sync --locked
 uv run --locked python -m unittest discover -s runtime/tests
 ```
 
-Real bootstrap and end-to-end processing require manual checks:
-
-```powershell
-pwsh -File scripts\bootstrap.ps1
-pwsh -File scripts\verify_runtime.ps1
-pwsh -File scripts\invoke_pipeline.ps1 -ShareUrl "https://weixin.qq.com/sph/your_share_id_here"
-```
-
-On macOS/Linux, use `sh scripts/bootstrap.sh`, `sh scripts/verify_runtime.sh`, and `sh scripts/invoke_pipeline.sh --share-url "https://weixin.qq.com/sph/your_share_id_here"`.
+Run server tests from the repository root with `python3 -m unittest discover -s server` (standard library only). For real bootstrap and end-to-end checks, use the [manual acceptance checklist](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md).
 
 ## More documentation
 
