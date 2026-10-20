@@ -49,7 +49,7 @@ https://weixin.qq.com/sph/your_share_id_here
 
 按[自部署指南](docs/resolver-deployment.md)在 Linux 服务器的私有 `config.json` 中填写 QQ 账号密码。Playwright 驱动专用无头 Chromium，首次部署后立即、随后每天验证 Cookie，有效则复用，失效后登录更新；维护错误会尝试通过 QQ 邮箱通知自己。再修改已安装 Skill 的 `runtime/resolver_config.json`，填写接口地址和访问凭证。自部署失败不会自动改用默认服务。
 
-自动登录已通过本机无头测试，但在本次阿里云验证中未完成元宝及邮箱网页登录。首次部署请保留手动 Cookie 恢复入口，详见[实际验收范围](docs/research/yuanbao-qq-login.md)。
+自动登录已通过本机无头测试，但用户在阿里云独立目录手动复现了两项失败：元宝返回 `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED`，QQ 邮箱返回 `MAIL_LOGIN_FAILED`，原因尚未确定。当前先按指南第 0 节排查真实登录，无需部署；CI 和 `BROWSER_SMOKE_OK` 只证明相应检查通过。详见[当前结果与排查交接](docs/research/yuanbao-qq-login.md#用户手动复现与排查交接2026-10-20)。
 
 ## 生成的文件
 

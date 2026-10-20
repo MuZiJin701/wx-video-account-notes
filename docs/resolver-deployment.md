@@ -2,6 +2,8 @@
 
 服务器只解析视频号分享链接；媒体下载、OCR、ASR 和笔记仍在客户端完成。普通使用无需自部署，见 [README](../README.md)。
 
+当前分支的服务器真实登录仍未通过：用户独立检查得到元宝 `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED`、邮箱 `MAIL_LOGIN_FAILED`。当前工作停留在第 0 节排查登录，**不需要运行安装脚本**；第 1–4 节留作之后明确选择部署时使用。已知事实、错误含义和后续排查入口见[交接记录](research/yuanbao-qq-login.md#用户手动复现与排查交接2026-10-20)。
+
 支持 Linux x64 + systemd。准备 Git、`/usr/bin/python3`、curl、tar 和可用网络，以 root 安装到固定目录 `/root/projects/wx-video-account-notes`。选择 Playwright 当前支持的 Linux 发行版，见[系统要求](https://playwright.dev/python/docs/intro#system-requirements)。开放公网 80 端口；解析器的 17879 端口仅监听回环。
 
 ## 0. 先验收开发分支
@@ -52,6 +54,8 @@ export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
 
 预期依次出现 `YUANBAO_LOGIN_OK` 和 `YUANBAO_PARSE_OK`。前者通过、后者失败表示登录已完成，但 Cookie 解析未通过，应另查验证链接或上游接口。
 
+若停在 `YUANBAO_PASSWORD_ATTEMPT`，该标记是在填写账号密码前打印的，不能仅凭它判断提交已经成功；之后的填表和点击可能等待元素，提交返回后还会等待约 90 秒确认元宝登录。当前入口没有中间进度提示。用户实际得到的下一行是 `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED`，表示等待结束仍未确认登录成功，不代表已确认密码错误或验证码。
+
 再单独验证 QQ 邮箱登录，只确认进入可写信的邮箱页面：
 
 ```sh
@@ -61,6 +65,8 @@ export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
 预期 `MAIL_LOGIN_OK`。检查程序不会点击写信或发送，也不会调用告警通知。两个命令分别使用全新的临时浏览器资料，各自至多提交一次密码；正常结束或报错后删除临时资料，Cookie 仅在内存及解析器标准输入中使用，不覆盖任何部署的 Cookie、不改 systemd 配置。若进程被强制杀死，可能残留私有临时资料，应按敏感登录态保管。
 
 失败时只记录固定错误码，退出码非零；保留输出中的脱敏错误码供排查，先停止重复密码尝试。真实登录通过后，如需上线服务，再另行执行第 1–4 节。登录检查本身不需要部署，也不能证明每日维护、发信送达或服务生命周期已经通过。
+
+用户的 QQ 邮箱检查已返回 `MAIL_LOGIN_FAILED`，该码会合并多种页面或登录失败，目前没有足够信息区分原因。页面阶段、授权按钮或验证提示的脱敏诊断尚未实现；下一步应先补充诊断，再决定是否进行一次受控复现。独立检查不写维护暂停状态，也不会自动重试。
 
 ## 1. 在固定目录部署当前分支
 
@@ -180,7 +186,8 @@ systemctl stop wx-notes-cookie.service wx-notes-gateway wx-notes-resolver
 | --- | --- |
 | `CONFIG_INVALID` | 填好 `config.json` 的 QQ 账号密码和有效验证链接；不要公开整个配置。 |
 | `LOGIN_RETRY_PAUSED` | 修复账号或登录流程后手动运行 `maintain_cookie.py --resume`。 |
-| `QQ_LOGIN_FLOW_FAILED` / `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED` | 检查密码、验证要求或页面变化；自动密码重试已暂停。 |
+| `QQ_LOGIN_FLOW_FAILED` / `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED` | 登录流程异常或未确认元宝登录成功，不能仅凭此码认定密码错误或验证码。维护程序遇此错误会暂停自动密码重试；独立检查仅退出，不写暂停状态。 |
+| `MAIL_LOGIN_FAILED` | 独立邮箱检查未确认进入可写信页面；原因未确定，不表示已尝试发送邮件。先补充脱敏页面诊断，不循环尝试密码。 |
 | `COOKIE_OR_UPSTREAM_UNAVAILABLE` | Cookie 无法解析且无法确认登录失效；检查网络、验证链接及上游接口。 |
 | `NEW_COOKIE_VALIDATION_FAILED` | 新 Cookie 未通过完整解析检查，旧文件保留。 |
 | `ERROR_MAIL_FAILED` | 邮箱登录、独立密码、风控或发信流程有变化；查看本地维护结果。 |

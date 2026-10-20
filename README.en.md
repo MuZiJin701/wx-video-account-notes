@@ -49,7 +49,7 @@ To choose an output directory, include it in the request, for example, “Save t
 
 Follow the [self-hosting guide (Chinese)](docs/resolver-deployment.md) and enter your QQ credentials in the server's private `config.json`. Playwright drives dedicated headless Chromium to check the Cookie immediately after deployment and daily thereafter, reusing valid Cookies and logging in after expiry. Maintenance errors trigger a best-effort self-addressed QQ Mail alert. Then edit the installed Skill's `runtime/resolver_config.json` with your endpoint and access key. A failure of your server does not fall back to the default resolver.
 
-Automatic login passed local headless checks but did not complete Yuanbao or QQ Mail login on the tested Alibaba Cloud server. Keep the manual Cookie recovery path available; see the [acceptance record (Chinese)](docs/research/yuanbao-qq-login.md).
+Automatic login passed local headless checks, but the user reproduced both failures in an isolated Alibaba Cloud checkout: `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED` for Yuanbao and `MAIL_LOGIN_FAILED` for QQ Mail. The cause is unknown. Continue with the standalone login checks in section 0 before deployment; green CI and `BROWSER_SMOKE_OK` do not establish successful account login. See the [current results and investigation handoff (Chinese)](docs/research/yuanbao-qq-login.md#用户手动复现与排查交接2026-10-20).
 
 ## Output files
 

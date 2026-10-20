@@ -1,10 +1,12 @@
 # QQ 密码登录与元宝 Cookie 实验
 
-日期：2026-10-20。测试代码基于 `d5ebf23`，探索分支为 `codex/explore-qq-yuanbao-login`。
+日期：2026-10-20。最初可视实验基于 `d5ebf23`，探索分支为 `codex/explore-qq-yuanbao-login`；独立真实登录检查入口由 `effab68` 引入。
 
 ## 结论
 
 本次本机实验中，QQ 密码登录取得的**元宝 Cookie**可以用于现有视频号解析流程；关闭并重新打开浏览器后，登录态仍可复用。早先的可视实验仅验证可行性；后续已集成浏览器自动登录、每日 Cookie 维护与 QQ 邮箱告警，操作见[部署指南](../resolver-deployment.md)。
+
+当前目标服务器验收未通过：用户已在独立目录复现元宝和 QQ 邮箱真实登录失败，原因尚未确定。接下来继续排查登录，无需安装服务；最新证据与接续入口见[文末交接](#用户手动复现与排查交接2026-10-20)。
 
 ## 方法与结果
 
@@ -62,3 +64,39 @@ Linux x64 补充验证：WSL Ubuntu 26.04、项目私有 Python 3.13.14、相同
 因此不能将本次改造视为云服务器自动登录验收已通过，也不能用无凭据 CI 的成功代替真实账号验收。服务器可继续使用手动更新 Cookie 的恢复入口；QQ 网页自动登录需要在目标环境进一步验证。
 
 待验证：服务器网页登录失败原因、真实过期或被服务端注销后的重新登录、不可跳过的验证、浏览器资料损坏，以及长期运行的稳定性。尚未在远程服务器安装或启动正式服务，也未执行真实 systemd 重启验收；本机成功不能保证所有账号可用或永久无人值守，也不能保证登录异常时 QQ 邮箱仍可登录。
+
+## 用户手动复现与排查交接（2026-10-20）
+
+当前分支为 `codex/explore-qq-yuanbao-login`，登录代码基线为 `effab68`。用户在服务器独立检出目录 `/root/wx-notes-branch-check` 运行检查，使用该目录下的私有 `.runtime/server/login-check.json` 和 `.runtime/server/browsers`。账号密码不记录在本文中，后续也不要输出整个配置。
+
+| 检查 | 最新事实 |
+| --- | --- |
+| 用户最初的独立环境检查（`b0e8eac`） | Python 3.13.14、Playwright 1.64.0；20 项服务器单测通过，浏览器返回 `BROWSER_SMOKE_OK`。这组命令不尝试账号登录。 |
+| 用户安装浏览器依赖 | `--with-deps` 实际升级了系统的 `xserver-common` 和 `xvfb`。日志中的 apt 源和待重启内核提示未阻止 smoke；它们不是已确认的登录失败原因。 |
+| 独立检查入口的 CI（`effab68`） | [三平台单测、23 项 Linux 服务端测试及无凭据 Chromium smoke 均通过](https://github.com/MuZiJin701/wx-video-account-notes/actions/runs/39428490824)。CI 不登录真实账号、不发送邮件。 |
+| 用户手动验证元宝 | 输出 `YUANBAO_CHECK_STARTED`、`YUANBAO_PASSWORD_ATTEMPT`，最终 `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED`；没有得到 `YUANBAO_LOGIN_OK` 或 `YUANBAO_PARSE_OK`。 |
+| 用户手动验证 QQ 邮箱 | 输出 `MAIL_CHECK_STARTED`，最终 `MAIL_LOGIN_FAILED`；没有得到 `MAIL_LOGIN_OK`，未发送邮件。 |
+| 当前操作范围 | 继续在独立目录排查真实登录，不运行 `server/install.sh` 或维护程序，不启动项目服务。用户将在新线程继续调查原因。 |
+
+两个复现命令如下；保留用于说明入口，**不是要求立即再次尝试密码**：
+
+```sh
+cd /root/wx-notes-branch-check
+export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
+.runtime/server/.venv/bin/python server/check_login.py yuanbao --config .runtime/server/login-check.json
+.runtime/server/.venv/bin/python server/check_login.py mail --config .runtime/server/login-check.json
+```
+
+`YUANBAO_PASSWORD_ATTEMPT` 来自 [`check_login.py`](../../server/check_login.py) 传给登录函数的回调；[`submit_qq_password`](../../server/yuanbao_login.py) 在填写凭据前调用它。随后元素操作可能等待超时，提交返回后还会等待约 90 秒确认元宝登录成功。当前没有中间进度提示，因此这段无输出容易被当成卡死；最终的失败码表示等待结束仍未确认成功，不能据此认定验证码、密码错误或服务器 IP 风控。
+
+邮箱的 [`open_mail`](../../server/mail_notification.py) 会将多种登录或页面操作异常合并为 `MAIL_LOGIN_FAILED`。当前入口没有保存失败页面阶段、按钮状态或验证提示；不能仅凭通用错误码确定失败点。此前受限诊断未确认可见验证码或密码错误，也不代表这些因素已被排除。
+
+下一线程先处理以下事项：
+
+1. 阅读本节及[独立登录步骤](../resolver-deployment.md#真实登录检查无需部署)，确认服务器检出提交。保留私有配置和运行资产，继续不使用本机 WSL，不部署服务。
+2. 检查共享的 `submit_qq_password`、元宝跳转等待和邮箱的异常合并。两项共同失败提示应检查共享流程，但不能证明根因相同。
+3. **脱敏诊断尚未实现**。先补充填写、提交、等待跳转等阶段码，以及允许列表内的站点分类、授权控件和验证提示是否存在。不要输出密码、Cookie、完整 URL 查询参数、页面正文或原始响应；用离线回归验证脱敏和清理路径。
+4. 有了可区分阶段的证据，再安排一次受控复现；不要循环尝试密码。此阶段只检查登录，QQ 邮箱检查不发信。此前唯一获授权的测试邮件已在 Windows 发出且用户确认收到，不再发送新的测试邮件。
+5. 依据实际证据修复并验证后，才讨论上线。账号密码登录、每日续期、邮件告警送达及 systemd 生命周期须分别验收，不能互相替代。
+
+本次交接仅更新文档，未实现上述诊断、未修复根因，也未新增登录、发信或部署尝试。

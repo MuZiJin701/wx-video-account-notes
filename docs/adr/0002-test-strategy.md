@@ -16,6 +16,8 @@ This keeps cross-platform code repeatable without making network access or large
 
 The unit suite stays offline. A separate Linux CI smoke job installs locked Playwright and its matching Chromium/system dependencies, then checks new headless launch, JavaScript, and persistent browser state without account credentials or external website navigation. The user requested GitHub Actions coverage for the self-deployment browser runtime; real QQ authentication and email delivery remain controlled manual acceptance, with no personal credentials uploaded to CI. Large media/model downloads remain outside CI.
 
+Use `server/check_login.py` in an isolated checkout for manual Yuanbao login/parse and QQ Mail login checks before considering deployment. These checks use fresh temporary profiles, do not publish Cookie, install services, or send mail. Test delivery and service lifecycle separately with the required authorization. Current server login failures and investigation status belong in the [acceptance record](../research/yuanbao-qq-login.md#用户手动复现与排查交接2026-10-20); passing CI does not override failed real-login acceptance.
+
 ## Canonical vocabulary
 
 - **Unit test**: offline test of one module or pure Python behavior; it does not download assets or call real FFmpeg or models.
