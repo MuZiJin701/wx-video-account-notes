@@ -71,7 +71,7 @@ class UvTests(unittest.TestCase):
                           "Ensure-Uv")
                 result = subprocess.run([powershell, "-NoProfile", "-Command", script], env={**os.environ, "PATH": str(root) + os.pathsep + os.environ["SystemRoot"] + "\\System32"}, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(result.stdout.strip(), str(expected))
+                self.assertEqual(Path(result.stdout.strip()).resolve(), expected.resolve())
                 self.assertIn(version, system.read_text())
 
 
