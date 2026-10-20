@@ -16,6 +16,8 @@
 
 支持 Windows x64、macOS Intel x64 和 Linux x64。首次处理会从 GitHub Releases、Hugging Face 等来源下载项目私有的 Python、依赖、FFmpeg 和模型；需要联网和足够的磁盘空间，之后可复用。
 
+优先复用系统中可用的 uv（最低 0.11.25）；缺失或不兼容时，沿用固定版本和校验的项目私有 uv。
+
 ### 1. 安装 Skill
 
 ```sh
@@ -45,7 +47,9 @@ https://weixin.qq.com/sph/your_share_id_here
 
 ### 想使用自己的服务器？
 
-按[自部署指南](docs/resolver-deployment.md)用 systemctl 管理 Linux 解析服务，再修改已安装 Skill 的 `runtime/resolver_config.json`，填写接口地址和访问凭证。自部署失败不会自动改用默认服务。
+按[自部署指南](docs/resolver-deployment.md)在 Linux 服务器的私有 `config.json` 中填写 QQ 账号密码。Playwright 驱动专用无头 Chromium，首次部署后立即、随后每天验证 Cookie，有效则复用，失效后登录更新；维护错误会尝试通过 QQ 邮箱通知自己。再修改已安装 Skill 的 `runtime/resolver_config.json`，填写接口地址和访问凭证。自部署失败不会自动改用默认服务。
+
+自动登录已通过本机无头测试，但在本次阿里云验证中未完成元宝及邮箱网页登录。首次部署请保留手动 Cookie 恢复入口，详见[实际验收范围](docs/research/yuanbao-qq-login.md)。
 
 ## 生成的文件
 
@@ -68,7 +72,7 @@ https://weixin.qq.com/sph/your_share_id_here
 
 - 服务器只解析分享链接；下载媒体、OCR、ASR 和写笔记在本机完成，不需要 GPU 或系统 FFmpeg。
 - 默认服务使用公网 HTTP，分享链接和解析结果明文传输；公开 Skill 内的共用访问凭证不是秘密。服务对所有用户合计每分钟最多处理 30 次请求。
-- 默认服务的元宝登录态由维护者更新；自部署由用户维护，可配置 HTTPS 入口。
+- 默认服务的元宝登录态由维护者更新；自部署提供每日自动维护和手动恢复，可配置 HTTPS 入口。登录风控可能需要人工处理，邮件通知也依赖 QQ 登录。
 - 目前不支持 ARM64、GPU 推理或离线首次初始化。项目私有 Python 版本为 3.13.14，ASR 使用 CPU 上的 faster-whisper tiny。
 
 ## 本地开发
@@ -81,9 +85,12 @@ uv run --locked python -m unittest discover -s runtime/tests
 
 服务端单测从仓库根目录运行 `python3 -m unittest discover -s server`（仅用标准库）；真实初始化和端到端处理见[手动验收清单](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)。
 
+GitHub Actions 同时执行三平台单测及无凭据的 Linux Chromium 启动、JavaScript 与资料持久化检查，支持手动触发。真实 QQ 登录和发信使用受控人工验收，不向 CI 上传个人凭据。服务器上可先按[开发分支验收步骤](docs/resolver-deployment.md#0-先验收开发分支)独立检查，再部署服务。
+
 ## 更多文档
 
 - [自部署与故障排查](docs/resolver-deployment.md)
+- [QQ 密码登录、Cookie 维护与邮件通知验证](docs/research/yuanbao-qq-login.md)
 - [Skill 执行说明](plugins/wx-video-account-notes/skills/wx-video-account-notes/SKILL.md)
 - [仓库目录](目录说明.md) · [领域术语](GLOSSARY.md) · [架构决策](docs/adr/)
 - [解析原理](docs/research/wx-channels-architecture.md) · [测试与评估](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md) · [变更日志](CHANGELOG.md)

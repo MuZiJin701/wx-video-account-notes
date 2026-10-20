@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import os
+import re
+import shutil
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -92,6 +95,24 @@ def find_runtime_binary(root: Path, name: str) -> Path | None:
         return None
     matches = sorted(path for path in root.rglob(name) if path.is_file())
     return matches[0] if matches else None
+
+
+def find_uv(root: Path, info: PlatformInfo | None = None) -> Path | None:
+    current = info or detect_platform()
+    system = shutil.which("uv")
+    private = find_runtime_binary(root / "uv", current.uv_binary)
+    for candidate in (system, private):
+        if not candidate:
+            continue
+        try:
+            result = subprocess.run([str(candidate), "--version"], capture_output=True, text=True, timeout=10)
+            match = re.match(r"^uv (\d+)\.(\d+)\.(\d+)(?:\s|$)", result.stdout)
+            version = tuple(map(int, match.groups())) if match else ()
+            if result.returncode == 0 and (version >= (0, 11, 25) if candidate == system else version == (0, 11, 25)):
+                return Path(candidate)
+        except (OSError, subprocess.TimeoutExpired):
+            continue
+    return None
 
 
 def find_ffmpeg_tools(runtime_root_path: Path, info: PlatformInfo | None = None) -> tuple[Path, Path]:

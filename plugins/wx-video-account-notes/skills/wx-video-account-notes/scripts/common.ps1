@@ -22,28 +22,34 @@ function Ensure-Directory([string]$Path) {
 
 function Get-CommandVersionText([string]$FilePath) {
     if (-not (Test-Path -LiteralPath $FilePath)) { return $null }
-    $output = & $FilePath --version 2>$null
-    if ($LASTEXITCODE -ne 0) { return $null }
-    return ($output -join "`n")
+    try {
+        $output = & $FilePath --version 2>$null
+        if ($LASTEXITCODE -eq 0) { return ($output -join "`n") }
+    } catch { }
+    return $null
 }
 
 function Get-UvCommand {
+    $systemUv = Get-Command uv -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($systemUv) {
+        $versionText = Get-CommandVersionText $systemUv.Source
+        if ($versionText -match '^uv (\d+\.\d+\.\d+)(?:\s|$)' -and [version]$Matches[1] -ge [version](Get-TargetUvVersion)) {
+            return $systemUv.Source
+        }
+    }
     $root = Join-Path (Get-RuntimeRoot) 'uv'
-    $candidate = Get-ChildItem -LiteralPath $root -Filter 'uv.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+    $candidate = Get-ChildItem -LiteralPath $root -Filter 'uv.exe' -Recurse -ErrorAction SilentlyContinue |
+        Where-Object { (Get-CommandVersionText $_.FullName) -match '^uv 0\.11\.25(?:\s|$)' } | Select-Object -First 1
     if ($candidate) { return $candidate.FullName }
     return $null
 }
 
 function Ensure-Uv {
+    $uvCommand = Get-UvCommand
+    if ($uvCommand) { return $uvCommand }
     $runtimeRoot = Get-RuntimeRoot
     $uvDir = Ensure-Directory (Join-Path $runtimeRoot 'uv')
     $cacheDir = Ensure-Directory (Join-Path $runtimeRoot 'cache')
-    $uvCommand = Get-UvCommand
-    if ($uvCommand -and ((Get-CommandVersionText $uvCommand) -notlike "*$(Get-TargetUvVersion)*")) {
-        Remove-Item -LiteralPath $uvDir -Recurse -Force
-        $uvDir = Ensure-Directory (Join-Path $runtimeRoot 'uv')
-        $uvCommand = $null
-    }
     if (-not $uvCommand) {
         $archive = Join-Path $cacheDir (Get-UvArchive)
         $temporary = "$archive.tmp"

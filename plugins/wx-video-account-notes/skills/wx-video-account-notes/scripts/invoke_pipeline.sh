@@ -12,6 +12,7 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 [ -n "$share_url" ] || { echo '--share-url is required.' >&2; exit 2; }
+ensure_uv
 [ -x "$uv_command" ] && [ -x "$venv_dir/bin/python" ] || { echo 'Private runtime is not initialized. Run scripts/bootstrap.sh first.' >&2; exit 1; }
 export PYTHONPATH="$skill_root"
 export UV_PROJECT_ENVIRONMENT="$venv_dir"

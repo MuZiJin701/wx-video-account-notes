@@ -6,7 +6,7 @@ param(
 . (Join-Path $PSScriptRoot 'common.ps1')
 $skillRoot = Get-SkillRoot
 $runtimeRoot = Get-RuntimeRoot
-$uvCommand = Get-UvCommand
+$uvCommand = Ensure-Uv
 $venvPython = Get-VenvPython
 if (-not $uvCommand -or -not $venvPython) { throw 'Private runtime is not initialized. Run scripts/bootstrap.ps1 first.' }
 

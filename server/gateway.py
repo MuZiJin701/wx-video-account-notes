@@ -14,10 +14,10 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 from urllib.request import urlopen
 
 
-CONFIG = os.environ.get("WX_NOTES_RESOLVER_CONFIG", "/root/projects/wx-video-account-notes/client.json")
+CONFIG = os.environ.get("WX_NOTES_RESOLVER_CONFIG", "/root/projects/wx-video-account-notes/config.json")
 with open(CONFIG, encoding="utf-8") as source:
     ACCESS_KEY = json.load(source)["access_key"]
-if not ACCESS_KEY:
+if not isinstance(ACCESS_KEY, str) or not ACCESS_KEY or not ACCESS_KEY.isascii() or any(c in ACCESS_KEY for c in "\r\n"):
     raise SystemExit("access key is empty")
 
 # ponytail: one shared 30/min budget; use per-client limits if invited-user traffic grows.

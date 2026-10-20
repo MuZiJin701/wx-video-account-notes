@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Prefer compatible system uv and fall back to the existing pinned, checksum-verified project-private uv.
+- Added a manually dispatchable GitHub Actions Linux Chromium smoke job without account credentials.
+- Added self-hosted QQ password login with Playwright's new headless Chromium, immediate and daily Cookie checks, validated atomic updates, suspended retries after login failures, and best-effort self-addressed QQ Mail alerts. Consolidated server configuration into private config.json while retaining legacy credentials during migration.
+- Verified headless Yuanbao login and real Go parsing on Windows and WSL Linux, Windows session reuse, and one self-addressed test email; long-term renewal and account challenges still require operational validation.
+- On the isolated Alibaba Cloud test host, 20 server regressions, Chromium smoke, and parsing with an existing Cookie passed, but fresh Yuanbao and QQ Mail web login did not complete. Cloud automatic-login acceptance remains unresolved; manual Cookie recovery is retained.
 - Slimmed project documentation and replaced manual server startup with systemd units, installation support, and start/stop/recovery instructions; existing credentials and Cookie are preserved.
 - Updated the README, Skill, plugin descriptions, and examples to state that the workflow downloads WeChat Channels videos and images before producing notes.
 - Include the Linux x64 resolver binary in the repository and document direct server-side deployment from this repository.

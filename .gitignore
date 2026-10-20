@@ -13,8 +13,15 @@ assets/
 
 # private resolver state and installed server programs
 /client.json
+/config.json
+/.runtime/
+/server/.venv/
 /cookie
 /resolver
 /resolver.new
 /gateway.py
 /update_cookie.py
+/server_config.py
+/yuanbao_login.py
+/maintain_cookie.py
+/mail_notification.py

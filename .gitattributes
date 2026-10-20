@@ -1,3 +1,5 @@
 server/*.patch text eol=lf whitespace=-space-before-tab,-trailing-space
 server/*.sh text eol=lf
 server/*.service text eol=lf
+server/*.timer text eol=lf
+plugins/wx-video-account-notes/skills/wx-video-account-notes/scripts/*.sh text eol=lf

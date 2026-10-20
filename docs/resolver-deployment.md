@@ -1,155 +1,164 @@
 # 自部署指南
 
-本页教你在自己的服务器上运行解析服务。服务器只解析分享链接，下载、OCR、ASR 和写笔记仍在你的电脑上完成。普通使用无需自部署，见 [README](../README.md)。
+服务器只解析视频号分享链接；媒体下载、OCR、ASR 和笔记仍在客户端完成。普通使用无需自部署，见 [README](../README.md)。
 
-准备一台支持 systemd 的 Linux x64 服务器，装好 Git、Python 3（`/usr/bin/python3`）和 curl，用 root 登录。防火墙和云安全组需要开放 80 端口。
+支持 Linux x64 + systemd。准备 Git、`/usr/bin/python3`、curl、tar 和可用网络，以 root 安装到固定目录 `/root/projects/wx-video-account-notes`。选择 Playwright 当前支持的 Linux 发行版，见[系统要求](https://playwright.dev/python/docs/intro#system-requirements)。开放公网 80 端口；解析器的 17879 端口仅监听回环。
 
-## 1. 下载并安装
+## 0. 先验收开发分支
 
-在**服务器**上依次运行。项目目录固定为 `/root/projects/wx-video-account-notes`，不要改路径。
+在 Linux x64 的独立目录检查分支代码，避免覆盖已有部署：
+
+```sh
+git clone --branch codex/explore-qq-yuanbao-login --single-branch \
+  https://github.com/MuZiJin701/wx-video-account-notes.git ~/wx-notes-branch-check
+cd ~/wx-notes-branch-check
+git rev-parse HEAD
+uv_command=$(sh plugins/wx-video-account-notes/skills/wx-video-account-notes/scripts/ensure_uv.sh)
+export UV_PROJECT_ENVIRONMENT="$PWD/.runtime/server/.venv"
+export UV_PYTHON_INSTALL_DIR="$PWD/.runtime/server/python"
+export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
+"$uv_command" sync --locked --project server --python 3.13.14
+"$UV_PROJECT_ENVIRONMENT/bin/python" -m unittest discover -s server
+"$UV_PROJECT_ENVIRONMENT/bin/python" -m playwright install --with-deps --no-shell chromium
+"$UV_PROJECT_ENVIRONMENT/bin/python" server/smoke_browser.py
+```
+
+预期单测全部通过、最后输出 `BROWSER_SMOKE_OK`。浏览器安装中的 `--with-deps` 会调用系统包管理器，需要 root 或 sudo 权限；其余运行资产保存在此检出目录。上述检查无需 QQ 配置，不登录账号、不发送邮件、不改服务或定时任务。客户端三平台完整单测同时由 [Actions](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml) 执行。
+
+真实部署验收继续按第 1–4 节操作。新部署时将下方的克隆命令改为上面的 `--branch` 形式，并使用固定部署目录。**不要在此测试目录直接运行 `server/install.sh`**：安装器会切换到 `/root/projects/wx-video-account-notes` 并安装系统服务。已有部署先保留配置、Cookie 与运行资产，确认该目录检出的分支后再升级。首次维护失败可能尝试给自己的 QQ 邮箱发一封错误通知；只有真实登录、Cookie 解析、服务请求和 timer 都通过，才算完成目标服务器验收。
+
+## 1. 填写统一配置并安装
 
 ```sh
 umask 077
 mkdir -p /root/projects
 git clone https://github.com/MuZiJin701/wx-video-account-notes.git /root/projects/wx-video-account-notes
 cd /root/projects/wx-video-account-notes
-```
-
-创建访问凭证，再安装服务。已有 `client.json` 时会保留原文件。
-
-```sh
-if [ ! -e client.json ]; then
-  python3 -c 'import json,secrets; print(json.dumps({"access_key":secrets.token_urlsafe(32)}))' > client.json
-fi
 sh server/install.sh
 ```
 
-安装完成后服务还没有启动，需要先设置 Cookie。以后更新程序时，保留 `client.json` 和 `cookie`，只需在项目目录重新运行 `sh server/install.sh`，再重启服务。
+首次运行会创建权限为 `0600` 的 `config.json`，并提示 `CONFIG_INVALID`，此时尚未登录或启动服务。用文本编辑器填写其中的 QQ 账号和密码后，再运行同一安装命令。配置示例见 [`server/config.example.json`](../server/config.example.json)：
 
-## 2. 更新元宝 Cookie
+```json
+{
+  "access_key": "",
+  "qq": {"account": "你的QQ号", "password": "你的QQ密码"},
+  "cookie_check_interval_hours": 24,
+  "verify_link": "https://weixin.qq.com/sph/AHhuzPE3Pi"
+}
+```
 
-1. 在电脑浏览器登录[元宝](https://yuanbao.tencent.com/)。
-2. 按 F12，打开“网络”，刷新页面。没有请求时，在页面上操作一次。
-3. 找到地址包含 `yuanbao.tencent.com/api/` 的请求，复制“请求标头”里 `Cookie` 后面的完整值。
-4. 在服务器运行下面的命令，按提示粘贴 Cookie。输入不显示是正常的。
+`access_key` 用于客户端调用服务，留空时自动生成，已有值则保留；QQ 账号密码仅用于服务器登录元宝和 QQ 邮箱。若验证链接失效，将 `verify_link` 换成有效的视频号分享链接。不要把配置文件、Cookie、浏览器资料或完整日志提交、发给他人；也不要在命令参数中填写密码。
+
+安装脚本会：
+
+1. 优先使用 PATH 中可执行的 uv（最低 `0.11.25`）；缺失、损坏或版本过旧时，沿用 Skill 的固定版本、SHA256 校验及平台私有目录方案。
+2. 在项目 `.runtime/server/` 准备私有 Python 3.13.14、锁定的 Playwright 依赖和配套完整 Chromium；`playwright install --with-deps --no-shell chromium` 也会通过系统包管理器安装所需 Linux 库。浏览器依赖只安装在服务端。
+3. 安装 Go 解析器、网关和 Cookie 维护程序，启用 `wx-notes-cookie.timer`，立即执行一次 Cookie 检查。QQ 密码登录会自动跳过可选的手机号绑定提示。
+
+Cookie 验证通过才原子替换，失败保留原文件。安装脚本不会启动对外网关或 Go 服务；Cookie 检查失败时先按第 3 节排查，再启动它们。
+
+当前验收限制：本机元宝和邮箱无头登录成功，但本次阿里云服务器的网页登录未通过；已有 Cookie 在该服务器完整解析正常。因此首次部署可能需要第 3 节的手动 Cookie 恢复，不能保证只填账号密码即可在目标服务器登录。详见[真实测试记录](research/yuanbao-qq-login.md#阿里云隔离验证2026-10-20)。
+
+## 2. 启动与定时维护
+
+```sh
+systemctl enable --now wx-notes-resolver wx-notes-gateway
+systemctl status wx-notes-resolver wx-notes-gateway wx-notes-cookie.timer
+systemctl list-timers wx-notes-cookie.timer
+curl -i http://127.0.0.1/api/channels/parse_sph
+```
+
+最后的未认证请求应返回 `401`，只说明网关有响应；完整解析需要第 4 节的客户端测试。
+
+定时任务默认每天检查一次，服务器重启后也会补做一次检查：
+
+- 现有 Cookie 通过完整解析验证：直接复用，无需启动浏览器。
+- 解析失败：额外查询元宝登录状态。只有明确返回未登录时，才启动浏览器，优先复用浏览器登录态，必要时输入 QQ 账号密码。
+- 网络故障、接口变化或状态不明：保留旧 Cookie，记录错误，不直接触发密码重登。
+- 密码错误、无法跳过的验证或页面流程变化：暂停自动密码重试，等待人工修复；有效旧 Cookie 仍可继续使用。
+
+每天检查意味着 Cookie 意外失效后，自动恢复最长可能要等到下一天。可随时手动触发一次检查：
+
+```sh
+systemctl start wx-notes-cookie.service
+journalctl -u wx-notes-cookie.service -n 30
+```
+
+首次出现某类维护错误时，程序尝试用同一 QQ 账号密码登录 QQ 邮箱，给 `<QQ号>@qq.com` 发一封通知，仅含时间和错误码。同一未解决错误不会重复尝试通知；暂停状态也不会产生第二封告警。发信失败仅记录 `ERROR_MAIL_FAILED`，不递归发信。QQ 邮箱登录同样可能遇到风控或独立密码，因此请结合本地日志排查，不能保证告警送达。
+
+## 3. 故障恢复、手动 Cookie 与升级
+
+查看脱敏日志：
+
+```sh
+journalctl -u wx-notes-resolver -u wx-notes-gateway -u wx-notes-cookie.service -n 50
+```
+
+修正账号密码或处理登录异常后，显式恢复一次密码登录尝试：
+
+```sh
+PLAYWRIGHT_BROWSERS_PATH=/root/projects/wx-video-account-notes/.runtime/server/browsers \
+  /root/projects/wx-video-account-notes/.runtime/server/.venv/bin/python \
+  /root/projects/wx-video-account-notes/maintain_cookie.py --resume
+```
+
+恢复失败会再次暂停，旧 Cookie 保留。普通 `systemctl start` 不会解除暂停。程序用文件锁避免手动命令和定时任务并发操作浏览器。
+
+仍可从电脑浏览器登录元宝，在开发者工具的网络面板复制元宝 API 请求的完整 Cookie，然后在服务器运行：
 
 ```sh
 python3 /root/projects/wx-video-account-notes/update_cookie.py
 ```
 
-看到“Cookie 已更新”即可继续。验证失败会保留旧文件；内置测试链接失效时，可设置 `WX_NOTES_VERIFY_LINK` 为另一条有效分享链接后重试。不要用 `document.cookie` 取值，它可能不完整。不要把 Cookie 写进命令参数、仓库或 issue。
+输入不回显；候选 Cookie 会使用 `config.json` 的验证链接检查，通过后替换，无需重启解析器。保留 `WX_NOTES_VERIFY_LINK` 作为临时兼容覆盖。不使用 `document.cookie`，它可能缺少 HttpOnly 凭证。手动更新 Cookie 不会解除自动密码重试暂停。
 
-## 3. 启动、停止与恢复
+升级时保留 `config.json`、`cookie` 和 `.runtime/`，重新运行 `sh server/install.sh`，随后重启网关和解析器。旧版只有 `client.json` 时，安装脚本会将其访问凭证迁入新 `config.json`，保留旧文件和 Cookie；补齐 QQ 配置后重跑。新配置已存在时以新配置为准。修改检查周期后也需重跑安装脚本，以更新 timer。
 
-下面的命令都在**服务器**上运行。`wx-notes-resolver` 负责解析，`wx-notes-gateway` 提供对外接口。
-
-### 启动并检查
-
-依次启动服务、设置开机启动、查看运行状态：
+停止全部服务与定时维护：
 
 ```sh
-systemctl start wx-notes-resolver wx-notes-gateway
-systemctl enable wx-notes-resolver wx-notes-gateway
-systemctl status wx-notes-resolver wx-notes-gateway
+systemctl disable --now wx-notes-cookie.timer
+systemctl stop wx-notes-cookie.service wx-notes-gateway wx-notes-resolver
 ```
 
-两个服务都显示 `active (running)`，说明进程已启动。若进入翻页界面，按 `q` 退出。再检查接口：
+若也不希望网关和解析器开机启动，运行 `systemctl disable wx-notes-gateway wx-notes-resolver`。恢复时重新启用 timer 并启动上述两个服务。修复服务失败后可运行 `systemctl reset-failed` 再重试；手动修改 unit 后先 `systemctl daemon-reload`。
+
+| 错误码或现象 | 处理 |
+| --- | --- |
+| `CONFIG_INVALID` | 填好 `config.json` 的 QQ 账号密码和有效验证链接；不要公开整个配置。 |
+| `LOGIN_RETRY_PAUSED` | 修复账号或登录流程后手动运行 `maintain_cookie.py --resume`。 |
+| `QQ_LOGIN_FLOW_FAILED` / `QQ_LOGIN_FAILED_OR_VERIFICATION_REQUIRED` | 检查密码、验证要求或页面变化；自动密码重试已暂停。 |
+| `COOKIE_OR_UPSTREAM_UNAVAILABLE` | Cookie 无法解析且无法确认登录失效；检查网络、验证链接及上游接口。 |
+| `NEW_COOKIE_VALIDATION_FAILED` | 新 Cookie 未通过完整解析检查，旧文件保留。 |
+| `ERROR_MAIL_FAILED` | 邮箱登录、独立密码、风控或发信流程有变化；查看本地维护结果。 |
+| `UNAUTHORIZED` | 客户端访问凭证与服务器 `config.json` 不一致。 |
+| `LOGIN_REQUIRED` | 服务器尚无有效 Cookie，触发一次维护或手动更新。 |
+| `LOGIN_EXPIRED_OR_UPSTREAM_CHANGED` | 登录态或元宝接口异常，不应仅凭此错误反复登录。 |
+| `RESOLVER_UNAVAILABLE` | 检查解析器服务和本地 17879 端口。 |
+| `RATE_LIMITED` | 等待一分钟；网关全局每分钟最多处理 30 次请求。 |
+
+## 4. 客户端连接
+
+仅查看访问凭证，不要输出包含 QQ 密码的整个配置：
 
 ```sh
-curl -i http://127.0.0.1/api/channels/parse_sph
+python3 -c 'import json; print(json.load(open("/root/projects/wx-video-account-notes/config.json"))["access_key"])'
 ```
 
-看到 **401** 或 `UNAUTHORIZED` 是正常的，因为这次检查没有提供访问凭证。它只说明接口有响应，实际解析还要按第 4 步测试。
-
-### 停止
-
-```sh
-systemctl stop wx-notes-gateway wx-notes-resolver
-```
-
-手动停止后会保持停止；如果保留开机启动，服务器重启时仍会启动。要取消开机启动，再运行：
-
-```sh
-systemctl disable wx-notes-gateway wx-notes-resolver
-```
-
-### 停止后恢复
-
-```sh
-systemctl start wx-notes-resolver wx-notes-gateway
-```
-
-需要恢复开机启动时，再运行前面的 `systemctl enable` 命令。已设置开机启动的服务，会在服务器重启后自动运行。
-
-### 故障后恢复
-
-先按下方“常见问题”排查。修好问题后，或更新程序、访问凭证后，重启并检查：
-
-```sh
-systemctl restart wx-notes-resolver wx-notes-gateway
-systemctl status wx-notes-resolver wx-notes-gateway
-```
-
-进程异常退出后会等待 5 秒自动重启。但 Cookie 失效、上游接口变化或进程卡住，需要人工处理。更新 Cookie 不用重启；手动修改 `.service` 文件后，先运行 `systemctl daemon-reload` 再重启。
-
-## 4. 在电脑上连接服务
-
-先在服务器查看访问凭证：
-
-```sh
-cat /root/projects/wx-video-account-notes/client.json
-```
-
-复制 `access_key` 的值，供下面输入。使用自己生成的凭证，不要使用公开 Skill 的共用凭证，也不要把这个文件发给别人。
-
-回到**运行 agent 的电脑**，用文本编辑器打开实际使用的 Skill 目录下的 `runtime/resolver_config.json`。本仓库中的位置是：
-
-```text
-plugins/wx-video-account-notes/skills/wx-video-account-notes/runtime/resolver_config.json
-```
-
-如果是通过插件或 `skills` 安装的，请修改已安装的那份 Skill，修改源码仓库不会影响另一个安装副本。
-
-先备份原文件，再把两个字段改成自己的地址和凭证：
+在**运行 agent 的电脑**备份并编辑实际安装的 Skill 中的 `runtime/resolver_config.json`：
 
 ```json
 {
   "api_url": "http://<服务器>/api/channels/parse_sph",
-  "access_key": "服务器 client.json 中的 access_key 值"
+  "access_key": "服务器config.json中的access_key"
 }
 ```
 
-把 `<服务器>` 换成公网 IP 或域名；已配置 HTTPS 时填写完整 HTTPS 接口地址。只替换引号内的值，保留 JSON 格式。这样即可完成本机配置，无需终端命令或修改机器的环境变量。
+填写实际公网地址；配置了 HTTPS 时填写完整 HTTPS 接口地址。插件安装副本与源码仓库各自独立；更新或重装前备份客户端配置。已有的 `WX_VIDEO_ACCOUNT_RESOLVE_API` 和 `WX_VIDEO_ACCOUNT_RESOLVE_KEY` 仍须成对设置，并优先于客户端文件。
 
-保存后给 agent 发一条真实分享链接，确认生成媒体、`note_materials.json` 和 Markdown 笔记，并查看 OCR/ASR 状态。自部署失败不会自动切换到默认服务；恢复默认服务时，还原备份的配置文件。
+交给 agent 一条真实分享链接，确认生成媒体、`note_materials.json` 和笔记，检查 OCR/ASR 状态。自部署失败不会自动切换到默认服务；恢复默认配置时还原备份。
 
-配置中含有自己的访问凭证，不要提交或公开。更新或重装 Skill 可能覆盖配置，更新前请备份。如果之前设置过 `WX_VIDEO_ACCOUNT_RESOLVE_API` 和 `WX_VIDEO_ACCOUNT_RESOLVE_KEY`，它们仍会优先覆盖文件配置。
+HTTP 会明文传输链接、访问凭证和结果；需要加密时为网关配置 HTTPS，并只转发解析接口。更多见[登录实验与验收范围](research/yuanbao-qq-login.md)、[完整验收清单](../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)及[解析原理](research/wx-channels-upstream.md)。
 
-## 常见问题
-
-查看最近 50 条日志（按 `q` 退出）：
-
-```sh
-journalctl -u wx-notes-resolver -u wx-notes-gateway -n 50
-```
-
-如果提示启动过于频繁，修好问题后先清除失败记录，再按上文重启：
-
-```sh
-systemctl reset-failed wx-notes-resolver wx-notes-gateway
-```
-
-| 现象或错误码 | 先检查什么 |
-| --- | --- |
-| 连不上服务器 | 查看两个服务状态，确认防火墙和云安全组已开放 80 端口。 |
-| 端口已被占用 | 检查是否有其他程序使用 80 或本机 17879 端口。 |
-| `UNAUTHORIZED` | 客户端凭证是否与 `client.json` 一致。 |
-| `LOGIN_REQUIRED` | 服务器是否已通过脚本写入 Cookie。 |
-| `LOGIN_EXPIRED_OR_UPSTREAM_CHANGED` | 元宝登录态或接口可能变化；重新运行 Cookie 更新脚本验证。 |
-| `FEED_UNAVAILABLE_OR_UPSTREAM_CHANGED` | 换一条可用分享链接重试，再排查上游接口。 |
-| `RESOLVER_UNAVAILABLE` | 检查解析服务是否运行，查看上面的日志。 |
-| `RATE_LIMITED` | 等待一分钟再试；网关对所有客户端合计每分钟最多处理 30 次请求。 |
-
-HTTP 会明文传输链接、凭证和结果。需要加密传输时，请为网关配置 HTTPS，并只转发解析接口。安装脚本会限制目录和凭证文件的访问权限；不要公开 Cookie、访问凭证、带令牌的媒体地址或原始响应。
-
-更多：[解析原理](research/wx-channels-upstream.md) · [完整验收](../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md) · [systemctl 官方说明](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html)。
+[GitHub Actions](../.github/workflows/tests.yml) 的独立 Linux 浏览器任务会在干净 runner 上安装所需库，检查 Chromium 启动、JavaScript 和资料持久化。它使用合成页面和测试 Cookie，不包含真实 QQ 凭据，也不发送邮件；真实登录和远程服务生命周期仍须受控验收。

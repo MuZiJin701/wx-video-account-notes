@@ -8,7 +8,11 @@ Python is the only canonical entry point for runtime business logic. The project
 
 Platform launchers remain thin: they handle first-run bootstrapping when Python or uv is not installed, identify the platform, acquire uv, and forward commands to Python. Windows keeps a PowerShell compatibility layer; macOS and Linux use POSIX `sh` launchers.
 
-The first run downloads and verifies private uv, Python, FFmpeg, and the model. The project does not reuse system Python or FFmpeg.
+The first run downloads and verifies private Python, FFmpeg, and the model. The project does not reuse system Python or FFmpeg.
+
+### 2026-10-20 revision
+
+For clients on all three supported platforms and the self-deployed Linux service, prefer a working, compatible uv on PATH. If uv is absent, incompatible, or broken, fall back to the existing project-private uv acquisition scheme, retaining its pinned version, platform-specific runtime layout, and SHA256 verification. Reuse a valid private copy before downloading it. Preserve system installations and unrelated runtime assets. This supersedes the mandatory private-uv choice above while retaining the existing fallback, avoiding a separate user-level installation scheme. Python, FFmpeg, and model isolation remain unchanged.
 
 ## Considered options
 

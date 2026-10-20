@@ -15,6 +15,18 @@ cache_dir=$runtime_root/cache
 venv_dir=$runtime_root/.venv
 uv_command=$uv_dir/$uv_binary
 
+select_uv() {
+  system_uv=$(command -v uv 2>/dev/null || true)
+  if [ -n "$system_uv" ] && version=$("$system_uv" --version 2>/dev/null) &&
+    printf '%s\n' "$version" | awk 'BEGIN { ok=0 } $1=="uv" && $2 ~ /^[0-9]+\.[0-9]+\.[0-9]+$/ { split($2,v,"."); ok=(v[1]>0 || v[2]>11 || (v[2]==11 && v[3]>=25)) } END { exit !ok }'; then
+    uv_command=$system_uv
+  else
+    uv_command=$uv_dir/$uv_binary
+  fi
+}
+
+select_uv
+
 sha256_matches() {
   file=$1
   expected=$2
@@ -23,13 +35,13 @@ sha256_matches() {
 }
 
 ensure_uv() {
+  select_uv
+  if [ "$uv_command" != "$uv_dir/$uv_binary" ]; then return; fi
   mkdir -p "$uv_dir" "$cache_dir"
-  if [ -x "$uv_command" ] && "$uv_command" --version | grep -F '0.11.25' >/dev/null 2>&1; then return; fi
-  rm -rf "$uv_dir"
-  mkdir -p "$uv_dir"
+  if [ -x "$uv_command" ] && "$uv_command" --version 2>/dev/null | grep -E '^uv 0\.11\.25( |$)' >/dev/null; then return; fi
   archive="$cache_dir/$uv_archive"
   temporary="$archive.tmp"
-  echo '[wx-video-account-notes] Downloading private uv 0.11.25.'
+  echo '[wx-video-account-notes] Downloading private uv 0.11.25.' >&2
   if ! curl -fL --retry 3 "$uv_url" -o "$temporary"; then rm -f "$temporary"; return 1; fi
   if ! sha256_matches "$temporary" "$uv_sha256"; then rm -f "$temporary"; echo 'uv checksum verification failed.' >&2; return 1; fi
   mv "$temporary" "$archive"

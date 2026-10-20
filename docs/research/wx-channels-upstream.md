@@ -10,6 +10,8 @@
 
 ## 凭证和错误定位
 
+后续本机验证：2026-10-20，QQ 密码登录取得的元宝 Cookie 通过现有解析检查，浏览器重启后仍可复用。自部署现已接入无头 Chromium、每日 Cookie 维护和 QQ 邮箱告警；长期续期仍待运行验证，详见[实验记录与限制](yuanbao-qq-login.md)。
+
 - Worker 的 `ACCESS_CREDENTIAL` 是**调用 Worker API 的凭证**，支持 `Authorization: Bearer <凭证>`，也支持用户名固定为 `wxchannels` 的 Basic Auth。未提供或不匹配时，API 直接返回 HTTP `401`、`{"error":"unauthorized"}`；未配置该环境变量时返回 `503`。此时尚未请求元宝，不能据此判断元宝 Cookie 或分享链接是否有效。[认证实现](https://github.com/ltaoo/wx_channels_download/blob/124f044235bc706fe796c043a14ff442a150ae5d/internal/workers/sph/worker.js#L72-L143)
 - Worker 的 `COOKIE` 是**元宝 Web 登录 Cookie**，仅用于上面第 2 步。元宝 HTTP 失败在 Worker 中成为 `parse share url: parseShareUrl: http <状态码>`；缺少 `wx_export_id` 成为 `parse share url: parseShareUrl: missing wx_export_id`；这些异常由处理器返回 HTTP `500`。因此 Cookie 失效、接口变更或响应不符与 Worker 自身的 `401 unauthorized` 是不同故障。上游文档称 Cookie 有效期约一月，失效需更新；这只是上游的操作说明，不是固定有效期保证。[元宝错误处理](https://github.com/ltaoo/wx_channels_download/blob/124f044235bc706fe796c043a14ff442a150ae5d/internal/workers/sph/worker.js#L187-L209)、[异常包装与 HTTP 返回](https://github.com/ltaoo/wx_channels_download/blob/124f044235bc706fe796c043a14ff442a150ae5d/internal/workers/sph/worker.js#L354-L365)、[Cookie 维护说明](https://github.com/ltaoo/wx_channels_download/blob/124f044235bc706fe796c043a14ff442a150ae5d/docs/cli/deploy.md#L151-L169)
 - feed HTTP 失败或响应中的非零 `errCode` 会使 Worker 返回 `500`；`data.errMsg` 表示视频不可播放时，返回 `422`，带 `code=FEED_INFO_UNAVAILABLE` 和 `details`。这可供 Skill 给出不同错误提示。[feed 错误判断](https://github.com/ltaoo/wx_channels_download/blob/124f044235bc706fe796c043a14ff442a150ae5d/internal/workers/sph/worker.js#L243-L350)、[异常响应](https://github.com/ltaoo/wx_channels_download/blob/124f044235bc706fe796c043a14ff442a150ae5d/internal/workers/sph/worker.js#L423-L439)

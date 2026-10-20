@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 import shutil
 import stat
 import subprocess
@@ -12,19 +13,25 @@ from pathlib import Path
 
 @unittest.skipUnless(sys.platform == "linux", "Linux installer")
 class InstallTests(unittest.TestCase):
-    def test_install_preserves_secrets_and_only_reloads_systemd(self) -> None:
+    def test_install_preserves_secrets_and_prepares_daily_maintenance(self) -> None:
         source = Path(__file__).resolve().parent
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "server").mkdir()
             (root / "units").mkdir()
             (root / "bin").mkdir()
-            for name in ("gateway.py", "update_cookie.py", "wx-notes-resolver.service", "wx-notes-gateway.service"):
+            files = ("gateway.py", "update_cookie.py", "server_config.py", "yuanbao_login.py", "maintain_cookie.py", "mail_notification.py", "pyproject.toml", "uv.lock", "wx-notes-resolver.service", "wx-notes-gateway.service", "wx-notes-cookie.service", "wx-notes-cookie.timer")
+            for name in files:
                 shutil.copyfile(source / name, root / "server" / name)
             (root / "server/resolver-linux-amd64").write_text("new resolver")
             (root / "resolver").write_text("old resolver")
             for name in ("client.json", "cookie"):
                 (root / name).write_text("private-placeholder")
+            config = {"access_key": "kept-key", "qq": {"account": "12345678", "password": "test-only"}, "cookie_check_interval_hours": 6}
+            (root / "config.json").write_text(json.dumps(config))
+            scripts = root / "plugins/wx-video-account-notes/skills/wx-video-account-notes/scripts"
+            scripts.mkdir(parents=True)
+            (scripts / "ensure_uv.sh").write_text('printf "%s\\n" "' + str(root / "bin/uv") + '"\n')
             # Isolate fixed deployment paths and privileged commands from the real host.
             script = (source / "install.sh").read_text().replace(
                 "/root/projects/wx-video-account-notes", str(root)
@@ -36,6 +43,7 @@ class InstallTests(unittest.TestCase):
                 "chown": ":",
                 "install": 'shift 4; exec /usr/bin/install "$@"',
                 "systemctl": 'printf "%s\\n" "$*" >> "$INSTALL_CALLS"',
+                "uv": 'mkdir -p "$UV_PROJECT_ENVIRONMENT/bin"\nprintf "#!/bin/sh\\nexit 0\\n" > "$UV_PROJECT_ENVIRONMENT/bin/python"\nchmod +x "$UV_PROJECT_ENVIRONMENT/bin/python"',
             }
             for name, body in commands.items():
                 command = root / "bin" / name
@@ -45,19 +53,23 @@ class InstallTests(unittest.TestCase):
             for _ in range(2):
                 result = subprocess.run(["sh", str(installer)], env=env, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual((root / "calls").read_text().splitlines(), ["daemon-reload"] * 2)
+            expected_calls = ["daemon-reload", "enable wx-notes-cookie.timer", "restart wx-notes-cookie.timer", "start wx-notes-cookie.service"] * 2
+            self.assertEqual((root / "calls").read_text().splitlines(), expected_calls)
+            self.assertEqual(json.loads((root / "config.json").read_text())["access_key"], "kept-key")
+            self.assertEqual(stat.S_IMODE((root / "config.json").stat().st_mode), 0o600)
             self.assertEqual((root / "resolver").read_text(), "new resolver")
             self.assertFalse((root / "resolver.new").exists())
             self.assertEqual(stat.S_IMODE(root.stat().st_mode), 0o700)
             for name in ("client.json", "cookie"):
                 self.assertEqual((root / name).read_text(), "private-placeholder")
                 self.assertEqual(stat.S_IMODE((root / name).stat().st_mode), 0o600)
-            for name in ("wx-notes-resolver.service", "wx-notes-gateway.service"):
+            for name in ("wx-notes-resolver.service", "wx-notes-gateway.service", "wx-notes-cookie.service"):
                 self.assertEqual((root / "units" / name).read_bytes(), (source / name).read_bytes())
+            self.assertIn("OnUnitActiveSec=6h", (root / "units/wx-notes-cookie.timer").read_text())
             (root / "server/wx-notes-gateway.service").unlink()
             result = subprocess.run(["sh", str(installer)], env=env, capture_output=True, text=True)
             self.assertNotEqual(result.returncode, 0)
-            self.assertEqual((root / "calls").read_text().splitlines(), ["daemon-reload"] * 2)
+            self.assertEqual((root / "calls").read_text().splitlines(), expected_calls)
             self.assertEqual((root / "cookie").read_text(), "private-placeholder")
 
 
