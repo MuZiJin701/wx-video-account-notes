@@ -4,6 +4,7 @@
 
 - Prefer compatible system uv and fall back to the existing pinned, checksum-verified project-private uv.
 - Added a manually dispatchable GitHub Actions Linux Chromium smoke job without account credentials.
+- Added separate manual Yuanbao and QQ Mail login checks in an isolated checkout, without deploying services, publishing Cookie, or sending mail.
 - Added self-hosted QQ password login with Playwright's new headless Chromium, immediate and daily Cookie checks, validated atomic updates, suspended retries after login failures, and best-effort self-addressed QQ Mail alerts. Consolidated server configuration into private config.json while retaining legacy credentials during migration.
 - Verified headless Yuanbao login and real Go parsing on Windows and WSL Linux, Windows session reuse, and one self-addressed test email; long-term renewal and account challenges still require operational validation.
 - On the isolated Alibaba Cloud test host, 20 server regressions, Chromium smoke, and parsing with an existing Cookie passed, but fresh Yuanbao and QQ Mail web login did not complete. Cloud automatic-login acceptance remains unresolved; manual Cookie recovery is retained.

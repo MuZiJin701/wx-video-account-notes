@@ -85,7 +85,7 @@ uv run --locked python -m unittest discover -s runtime/tests
 
 Run server tests from the repository root with `python3 -m unittest discover -s server` (standard library only). For real bootstrap and end-to-end checks, use the [manual acceptance checklist](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md).
 
-GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Real QQ login and mail delivery use controlled manual acceptance; personal credentials are not uploaded to CI. Follow the [isolated branch checks (Chinese)](docs/resolver-deployment.md#0-先验收开发分支) on your server. For a real deployment, separately follow section 1 to install services in the fixed deployment directory.
+GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Real QQ login and mail delivery use controlled manual acceptance; personal credentials are not uploaded to CI. The [isolated branch checks (Chinese)](docs/resolver-deployment.md#0-先验收开发分支) include separate real Yuanbao and QQ Mail login checks without deployment; the mail check sends no messages. When ready to deploy, separately follow section 1 to install services in the fixed deployment directory.
 
 ## More documentation
 

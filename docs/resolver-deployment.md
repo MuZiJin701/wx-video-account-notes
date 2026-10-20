@@ -25,9 +25,42 @@ export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
 
 预期单测全部通过、最后输出 `BROWSER_SMOKE_OK`。浏览器安装中的 `--with-deps` 会调用系统包管理器，需要 root 或 sudo 权限；其余运行资产保存在此检出目录。上述检查无需 QQ 配置，不登录账号、不发送邮件、不改服务或定时任务。客户端三平台完整单测同时由 [Actions](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml) 执行。
 
-只需检查代码时，到这里结束。`~/wx-notes-branch-check` 不用于运行 `server/install.sh`：安装器使用固定目录 `/root/projects/wx-video-account-notes`，并会安装系统服务。
+以上只验证浏览器运行环境，**没有验证元宝或 QQ 邮箱登录**。需要复现此前服务器上的登录失败时，继续下面的真实登录检查；整个第 0 节无需安装项目服务。`~/wx-notes-branch-check` 不用于运行 `server/install.sh`：安装器使用固定目录 `/root/projects/wx-video-account-notes`，并会安装系统服务。
 
-需要验证真实登录和服务时，再执行第 1–4 节的实际部署；只有真实登录、Cookie 解析、服务请求和 timer 都通过，才算完成目标服务器验收。
+### 真实登录检查（无需部署）
+
+在同一独立目录准备私有测试配置；文件已存在时保留原内容：
+
+```sh
+cd ~/wx-notes-branch-check
+umask 077
+mkdir -p .runtime/server
+if [ ! -e .runtime/server/login-check.json ]; then
+  cp server/config.example.json .runtime/server/login-check.json
+fi
+chmod 600 .runtime/server/login-check.json
+```
+
+用服务器上的文本编辑器填写 `.runtime/server/login-check.json`：`qq.account` 和 `qq.password` 填真实账号密码，`access_key` 填 `login-check-only`（仅满足配置校验，不调用服务网关），`verify_link` 填有效的视频号分享链接。不要在聊天、命令参数或公开日志中粘贴凭据。
+
+先单独验证元宝 QQ 密码登录，再用取得的 Cookie 通过仓库中的 Go 二进制检查真实解析：
+
+```sh
+export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
+.runtime/server/.venv/bin/python server/check_login.py yuanbao --config .runtime/server/login-check.json
+```
+
+预期依次出现 `YUANBAO_LOGIN_OK` 和 `YUANBAO_PARSE_OK`。前者通过、后者失败表示登录已完成，但 Cookie 解析未通过，应另查验证链接或上游接口。
+
+再单独验证 QQ 邮箱登录，只确认进入可写信的邮箱页面：
+
+```sh
+.runtime/server/.venv/bin/python server/check_login.py mail --config .runtime/server/login-check.json
+```
+
+预期 `MAIL_LOGIN_OK`。检查程序不会点击写信或发送，也不会调用告警通知。两个命令分别使用全新的临时浏览器资料，各自至多提交一次密码；正常结束或报错后删除临时资料，Cookie 仅在内存及解析器标准输入中使用，不覆盖任何部署的 Cookie、不改 systemd 配置。若进程被强制杀死，可能残留私有临时资料，应按敏感登录态保管。
+
+失败时只记录固定错误码，退出码非零；保留输出中的脱敏错误码供排查，先停止重复密码尝试。真实登录通过后，如需上线服务，再另行执行第 1–4 节。登录检查本身不需要部署，也不能证明每日维护、发信送达或服务生命周期已经通过。
 
 ## 1. 在固定目录部署当前分支
 
