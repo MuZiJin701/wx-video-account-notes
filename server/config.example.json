@@ -1,6 +1,4 @@
 {
   "access_key": "",
-  "qq": {"account": "", "password": ""},
-  "cookie_check_interval_hours": 24,
   "verify_link": "https://weixin.qq.com/sph/AHhuzPE3Pi"
 }

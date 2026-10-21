@@ -14,9 +14,9 @@ This keeps cross-platform code repeatable without making network access or large
 
 ### 2026-10-20 browser validation
 
-The unit suite stays offline. A separate Linux CI smoke job installs locked Playwright and its matching Chromium/system dependencies, then checks new headless launch, JavaScript, and persistent browser state without account credentials or external website navigation. The user requested GitHub Actions coverage for the self-deployment browser runtime; real QQ authentication and email delivery remain controlled manual acceptance, with no personal credentials uploaded to CI. Large media/model downloads remain outside CI.
+The unit suite stays offline. A separate Linux CI smoke job installs locked Playwright and its matching Chromium/system dependencies, then checks new headless launch, JavaScript, and persistent browser state without account credentials or external website navigation. The user requested GitHub Actions coverage for the self-deployment browser runtime; real account authentication remains controlled manual acceptance, with no personal credentials uploaded to CI. Large media/model downloads remain outside CI.
 
-QQ password-login exploration was paused at the user's request on 2026-10-20. Preserve `server/check_login.py` and its historical isolated-checkout instructions, but do not resume real-login checks, CAPTCHA trials, mail delivery, or deployment without an explicit request. Offline regressions and credential-free Chromium smoke may validate the preserved branch snapshot. The [pause and acceptance record](../research/yuanbao-qq-login.md#探索暂停与分支隔离2026-10-20) distinguishes those checks from incomplete real-login acceptance.
+QQ password-login exploration was paused on 2026-10-20, then replaced at the user's request by [manual WeChat QR maintenance](0005-manual-wechat-cookie-maintenance.md) on 2026-10-21. The current `server/check_login.py --config ...` checks a fresh WeChat scan and full parsing in a temporary runtime without publishing Cookie. Password/mail entry points are removed; historical evidence remains in the [research record](../research/yuanbao-qq-login.md#探索暂停与分支隔离2026-10-20). Offline tests and credential-free browser smoke do not establish real account login success.
 
 ## Canonical vocabulary
 

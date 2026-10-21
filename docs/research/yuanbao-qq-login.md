@@ -2,6 +2,8 @@
 
 日期：2026-10-20。最初可视实验基于 `d5ebf23`，探索分支为 `codex/explore-qq-yuanbao-login`；独立真实登录检查入口由 `effab68` 引入。
 
+> 历史记录：2026-10-21 用户改用 [Playwright/Chromium 微信扫码手动维护](yuanbao-manual-qr-login.md#微信手动维护改造与真实验收2026-10-21)。本分支已移除密码登录、QQ 邮箱和自动维护代码，以下旧命令、函数与验收描述按当时版本保留，不是当前操作入口。当前命令见[自部署指南](../resolver-deployment.md)。
+
 ## 纯 HTTP 账号预检查（2026-10-21）
 
 用户明确要求重新探索不使用 Playwright/Chromium 的 HTTP 请求方案。本轮只恢复这一对照；浏览器方案继续暂停，不部署、不发信、不更换现有 Cookie，也不合并 `main`。目标是核对服务器是否仍要求验证码，不将账号预检查通过当作完整登录成功。
@@ -58,9 +60,9 @@
 
 ## 已集成的维护方案
 
-1. [`maintain_cookie.py`](../../server/maintain_cookie.py) 在部署后立即、之后每天验证已有 Cookie；验证成功就直接复用，不启动浏览器。
+1. [`maintain_cookie.py`](https://github.com/MuZiJin701/wx-video-account-notes/blob/3c2b2d6bc130120fe1645c4e0499c51a7b75c943/server/maintain_cookie.py) 在部署后立即、之后每天验证已有 Cookie；验证成功就直接复用，不启动浏览器。
 2. 解析失败后用元宝 `GET /api/getuserinfo` 区分明确未登录（HTTP 401）和状态不明。只有明确失效或缺失时，才以新无头 Chromium 打开专用浏览器资料，复用登录态或从私有 `config.json` 读取 QQ 账号密码登录，跳过可选手机号绑定。
-3. 新 Cookie 通过完整解析检查后，复用 [`update_cookie`](../../server/update_cookie.py) 原子替换；失败保留旧文件，解析进程无需重启。
+3. 新 Cookie 通过完整解析检查后，复用 [`update_cookie`](https://github.com/MuZiJin701/wx-video-account-notes/blob/3c2b2d6bc130120fe1645c4e0499c51a7b75c943/server/update_cookie.py) 原子替换；失败保留旧文件，解析进程无需重启。
 4. 异常登录失败持久化暂停密码重试，需要 `--resume` 恢复；首次维护错误尝试用独立 QQ 邮箱资料目录给自己发通知。只发送固定错误码和时间，通知失败不递归。
 
 `LOGIN_EXPIRED_OR_UPSTREAM_CHANGED` 也可能表示上游接口变化，不能对所有解析失败都反复重新登录。服务端统一使用 `config.json`；客户端的 `runtime/resolver_config.json` 继续只配置服务地址和访问凭证。配置、浏览器资料和 Cookie 不进入 Git 或公开日志。
@@ -120,13 +122,13 @@ export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
 .runtime/server/.venv/bin/python server/check_login.py mail --config .runtime/server/login-check.json
 ```
 
-`YUANBAO_PASSWORD_ATTEMPT` 来自 [`check_login.py`](../../server/check_login.py) 传给登录函数的回调；[`submit_qq_password`](../../server/yuanbao_login.py) 在填写凭据前调用它。随后元素操作可能等待超时，提交返回后还会等待约 90 秒确认元宝登录成功。当前没有中间进度提示，因此这段无输出容易被当成卡死；最终的失败码表示等待结束仍未确认成功，不能据此认定验证码、密码错误或服务器 IP 风控。
+`YUANBAO_PASSWORD_ATTEMPT` 来自 [`check_login.py`](https://github.com/MuZiJin701/wx-video-account-notes/blob/3c2b2d6bc130120fe1645c4e0499c51a7b75c943/server/check_login.py) 传给登录函数的回调；[`submit_qq_password`](https://github.com/MuZiJin701/wx-video-account-notes/blob/3c2b2d6bc130120fe1645c4e0499c51a7b75c943/server/yuanbao_login.py) 在填写凭据前调用它。随后元素操作可能等待超时，提交返回后还会等待约 90 秒确认元宝登录成功。当前没有中间进度提示，因此这段无输出容易被当成卡死；最终的失败码表示等待结束仍未确认成功，不能据此认定验证码、密码错误或服务器 IP 风控。
 
-邮箱的 [`open_mail`](../../server/mail_notification.py) 会将多种登录或页面操作异常合并为 `MAIL_LOGIN_FAILED`。当前入口没有保存失败页面阶段、按钮状态或验证提示；不能仅凭通用错误码确定失败点。此前受限诊断未确认可见验证码或密码错误，也不代表这些因素已被排除。
+邮箱的 [`open_mail`](https://github.com/MuZiJin701/wx-video-account-notes/blob/3c2b2d6bc130120fe1645c4e0499c51a7b75c943/server/mail_notification.py) 会将多种登录或页面操作异常合并为 `MAIL_LOGIN_FAILED`。当前入口没有保存失败页面阶段、按钮状态或验证提示；不能仅凭通用错误码确定失败点。此前受限诊断未确认可见验证码或密码错误，也不代表这些因素已被排除。
 
 当时记录的后续排查计划如下；执行结果见下一节：
 
-1. 阅读本节及[独立登录步骤](../resolver-deployment.md#真实登录检查无需部署)，确认服务器检出提交。保留私有配置和运行资产，继续不使用本机 WSL，不部署服务。
+1. 阅读本节及[独立登录步骤](https://github.com/MuZiJin701/wx-video-account-notes/blob/3c2b2d6bc130120fe1645c4e0499c51a7b75c943/docs/resolver-deployment.md#真实登录检查无需部署)，确认服务器检出提交。保留私有配置和运行资产，继续不使用本机 WSL，不部署服务。
 2. 检查共享的 `submit_qq_password`、元宝跳转等待和邮箱的异常合并。两项共同失败提示应检查共享流程，但不能证明根因相同。
 3. **脱敏诊断尚未实现**。先补充填写、提交、等待跳转等阶段码，以及允许列表内的站点分类、授权控件和验证提示是否存在。不要输出密码、Cookie、完整 URL 查询参数、页面正文或原始响应；用离线回归验证脱敏和清理路径。
 4. 有了可区分阶段的证据，再安排一次受控复现；不要循环尝试密码。此阶段只检查登录，QQ 邮箱检查不发信。此前唯一获授权的测试邮件已在 Windows 发出且用户确认收到，不再发送新的测试邮件。

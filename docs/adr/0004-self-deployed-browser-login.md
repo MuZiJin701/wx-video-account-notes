@@ -1,6 +1,8 @@
 # ADR 0004: Browser login for the self-deployed resolver
 
-Status: Paused (2026-10-20; exploratory branch only, not merged into main)
+Status: Superseded by [ADR 0005](0005-manual-wechat-cookie-maintenance.md) (2026-10-21).
+
+The following is the historical password-login experiment, paused on 2026-10-20. The user replaced it with manually invoked WeChat QR login on 2026-10-21; password login, QQ Mail notification and scheduled maintenance are removed from the implementation. Historical evidence below is retained, not a current operating procedure.
 
 The user paused Playwright-based QQ account-and-password login exploration for both Yuanbao and QQ Mail. Preserve the experimental implementation, diagnostics, and findings on `codex/explore-qq-yuanbao-login`; do not continue real-login tests, CAPTCHA experiments, mail delivery, or deployment without an explicit request to resume. The design below is an experimental record, not an accepted production capability. `main` retains manual Cookie maintenance.
 

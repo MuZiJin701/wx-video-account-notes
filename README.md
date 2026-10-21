@@ -74,7 +74,7 @@ https://weixin.qq.com/sph/your_share_id_here
 
 - 服务器只解析分享链接；下载媒体、OCR、ASR 和写笔记在本机完成，不需要 GPU 或系统 FFmpeg。
 - 默认服务使用公网 HTTP，分享链接和解析结果明文传输；公开 Skill 内的共用访问凭证不是秘密。服务对所有用户合计每分钟最多处理 30 次请求。
-- 默认服务的元宝登录态由维护者更新；`main` 的自部署由用户手动维护 Cookie，可配置 HTTPS 入口。本分支的自动维护和邮箱告警尚未验收，探索已暂停。
+- 默认服务的元宝登录态由维护者更新；本分支自部署使用手动 Cookie 维护：有效时复用，失效后由维护者在 SSH 终端通过微信扫码更新，可配置 HTTPS 入口；没有定时登录或邮箱通知。
 - 目前不支持 ARM64、GPU 推理或离线首次初始化。项目私有 Python 版本为 3.13.14，ASR 使用 CPU 上的 faster-whisper tiny。
 
 ## 本地开发
@@ -87,12 +87,12 @@ uv run --locked python -m unittest discover -s runtime/tests
 
 服务端单测从仓库根目录运行 `python3 -m unittest discover -s server`（仅用标准库）；真实初始化和端到端处理见[手动验收清单](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)。
 
-GitHub Actions 同时执行三平台单测及无凭据的 Linux Chromium 启动、JavaScript 与资料持久化检查，支持手动触发，不向 CI 上传个人凭据。[历史验收步骤](docs/resolver-deployment.md#0-先验收开发分支)保留独立登录入口；暂停期间不执行真实登录、发信或实验部署。离线回归和无凭据 CI 不代表云端登录验收通过。
+GitHub Actions 同时执行三平台单测及无凭据的 Linux Chromium 启动、JavaScript 与资料持久化检查，支持手动触发，不向 CI 上传个人凭据。[独立验收步骤](docs/resolver-deployment.md#0-独立检查开发分支)提供微信扫码和完整解析检查；离线回归和无凭据 CI 不代表云端登录验收通过。
 
 ## 更多文档
 
 - [自部署与故障排查](docs/resolver-deployment.md)
-- [QQ 密码登录、Cookie 维护与邮件通知验证](docs/research/yuanbao-qq-login.md)
+- [微信扫码与手动 Cookie 维护验证](docs/research/yuanbao-manual-qr-login.md) · [历史 QQ 密码与邮件实验](docs/research/yuanbao-qq-login.md)
 - [Skill 执行说明](plugins/wx-video-account-notes/skills/wx-video-account-notes/SKILL.md)
 - [仓库目录](目录说明.md) · [领域术语](GLOSSARY.md) · [架构决策](docs/adr/)
 - [解析原理](docs/research/wx-channels-architecture.md) · [测试与评估](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md) · [变更日志](CHANGELOG.md)

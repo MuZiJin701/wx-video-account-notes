@@ -11,13 +11,20 @@ root=/root/projects/wx-video-account-notes
 cd "$root"
 command -v systemctl >/dev/null
 test -x /usr/bin/python3
-for file in resolver-linux-amd64 gateway.py update_cookie.py server_config.py yuanbao_login.py maintain_cookie.py mail_notification.py pyproject.toml uv.lock wx-notes-resolver.service wx-notes-gateway.service wx-notes-cookie.service wx-notes-cookie.timer; do
+for file in resolver-linux-amd64 gateway.py update_cookie.py server_config.py yuanbao_login.py maintain_cookie.py pyproject.toml uv.lock wx-notes-resolver.service wx-notes-gateway.service; do
   test -s "server/$file"
 done
 chown root:root "$root"
 chmod 0700 "$root"
 umask 077
-interval=$(/usr/bin/python3 server/server_config.py "$root/config.json")
+if systemctl cat wx-notes-cookie.timer >/dev/null 2>&1; then
+  systemctl disable --now wx-notes-cookie.timer
+fi
+if systemctl cat wx-notes-cookie.service >/dev/null 2>&1; then
+  systemctl stop wx-notes-cookie.service
+fi
+rm -f /etc/systemd/system/wx-notes-cookie.timer /etc/systemd/system/wx-notes-cookie.service
+/usr/bin/python3 server/server_config.py "$root/config.json"
 chown root:root config.json
 chmod 0600 config.json
 if [ -f client.json ]; then
@@ -36,18 +43,14 @@ export PLAYWRIGHT_BROWSERS_PATH="$root/.runtime/server/browsers"
 "$UV_PROJECT_ENVIRONMENT/bin/python" -m playwright install --with-deps --no-shell chromium
 install -o root -g root -m 0644 server/gateway.py "$root/gateway.py"
 install -o root -g root -m 0700 server/update_cookie.py "$root/update_cookie.py"
-for file in server_config.py yuanbao_login.py maintain_cookie.py mail_notification.py; do
+for file in server_config.py yuanbao_login.py maintain_cookie.py; do
   install -o root -g root -m 0600 "server/$file" "$root/$file"
 done
 install -o root -g root -m 0755 server/resolver-linux-amd64 "$root/resolver.new"
 mv -f "$root/resolver.new" "$root/resolver"
 install -o root -g root -m 0644 server/wx-notes-resolver.service /etc/systemd/system/wx-notes-resolver.service
 install -o root -g root -m 0644 server/wx-notes-gateway.service /etc/systemd/system/wx-notes-gateway.service
-install -o root -g root -m 0644 server/wx-notes-cookie.service /etc/systemd/system/wx-notes-cookie.service
-sed "s/^OnUnitActiveSec=.*/OnUnitActiveSec=${interval}h/" server/wx-notes-cookie.timer > "$root/.runtime/server/cookie.timer"
-install -o root -g root -m 0644 "$root/.runtime/server/cookie.timer" /etc/systemd/system/wx-notes-cookie.timer
+rm -f "$root/mail_notification.py"
 systemctl daemon-reload
-systemctl enable wx-notes-cookie.timer
-systemctl restart wx-notes-cookie.timer
-systemctl start wx-notes-cookie.service
-echo "Installed and Cookie checked. Enable and start wx-notes-resolver and wx-notes-gateway."
+echo "Installed. Run .runtime/server/.venv/bin/python maintain_cookie.py in SSH to check/update Cookie."
+echo "Then enable and start wx-notes-resolver and wx-notes-gateway."

@@ -74,7 +74,7 @@ Image posts have no video or audio. Vision-capable agents also read images in `f
 
 - The server only resolves share links. Media download, OCR, ASR, and note writing run locally; no GPU or system FFmpeg is required.
 - The default resolver uses public HTTP, so share links and results travel in plaintext. Its shared access key ships with the public Skill and is not secret. The service handles at most 30 requests per minute across all users.
-- The maintainer updates the default resolver's Yuanbao login. Self-hosting on `main` uses manual Cookie maintenance and can use HTTPS. Automatic maintenance and mail alerts on this branch remain unaccepted, paused experiments.
+- The maintainer updates the default resolver's Yuanbao login. Self-hosting on this branch reuses valid Cookie and lets the operator refresh expired login through a WeChat QR in an SSH terminal. HTTPS can be configured; there is no scheduled login or email notification.
 - ARM64, GPU inference, and offline first-time setup are not supported. The private Python version is 3.13.14; ASR uses faster-whisper tiny on CPU.
 
 ## Development
@@ -87,12 +87,12 @@ uv run --locked python -m unittest discover -s runtime/tests
 
 Run server tests from the repository root with `python3 -m unittest discover -s server` (standard library only). For real bootstrap and end-to-end checks, use the [manual acceptance checklist](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md).
 
-GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Personal credentials are not uploaded to CI. The [historical branch checks (Chinese)](docs/resolver-deployment.md#0-先验收开发分支) retain the login entry points; do not run real login, mail delivery, or experimental deployment while exploration is paused. Offline tests and credential-free CI do not establish successful cloud authentication.
+GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Personal credentials are not uploaded to CI. The [isolated branch checks (Chinese)](docs/resolver-deployment.md#0-独立检查开发分支) cover WeChat QR login and full parsing; offline tests and credential-free CI do not establish successful cloud authentication.
 
 ## More documentation
 
 - [Self-hosting and troubleshooting (Chinese)](docs/resolver-deployment.md)
-- [QQ login, Cookie maintenance, and mail notification checks (Chinese)](docs/research/yuanbao-qq-login.md)
+- [WeChat QR and manual Cookie checks (Chinese)](docs/research/yuanbao-manual-qr-login.md) · [Historical QQ password and mail experiments (Chinese)](docs/research/yuanbao-qq-login.md)
 - [Skill execution guide (Chinese)](plugins/wx-video-account-notes/skills/wx-video-account-notes/SKILL.md)
 - [Repository map (Chinese)](目录说明.md) · [Domain glossary (Chinese)](GLOSSARY.md) · [Architecture decisions](docs/adr/)
 - [Resolver architecture (Chinese)](docs/research/wx-channels-architecture.md) · [Tests and evaluation](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md) · [Changelog](CHANGELOG.md)
