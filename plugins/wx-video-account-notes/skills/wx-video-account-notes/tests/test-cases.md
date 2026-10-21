@@ -31,8 +31,44 @@ Run from the Skill directory; replace the sample link with a valid share link:
 9. **Full Skill acceptance**: use `https://weixin.qq.com/sph/AHhuzPE3Pi` from the maintainer's machine through the public HTTP endpoint. Confirm media download, `note_materials.json`, OCR/ASR status and final `<slug>.md`. If the media is unavailable, use another valid link and record only the reason for substitution.
 10. **Cookie update**: check that real terminal input does not echo. Replacement, failure exit and preservation of the old file are covered by [unit tests](../../../../../server/test_update_cookie.py).
 11. **systemd lifecycle (test server only)**: install with private `config.json`; migration from `client.json` preserves the access key and original file. Verify resolver/gateway units with `systemd-analyze verify`. Installation must not open a browser or maintain Cookie; upgrading disables/removes legacy Cookie timer/service and removes QQ credentials/schedule fields while preserving the access key and Cookie. Enable/start resolver/gateway, check unauthenticated 401, and resolve a real link. Test stop/disable/reboot and enabled restart recovery separately. Follow the [deployment guide](../../../../../docs/resolver-deployment.md).
-12. **WeChat QR maintenance**: use the [standalone check](../../../../../docs/resolver-deployment.md#0-独立检查) to verify fresh WeChat QR login and full Go parsing through stdin without publishing Cookie. In an isolated maintenance runtime, test missing/expired Cookie, actual replacement with permissions 0600, and a second run that must reuse Cookie without a browser. Network/5xx/interface errors must preserve Cookie and avoid login. See the [record](../../../../../docs/research/yuanbao-manual-qr-login.md).
+12. **WeChat QR maintenance**: use the [standalone check](#standalone-wechat-login-check) to verify fresh WeChat QR login and full Go parsing through stdin without publishing Cookie. In an isolated maintenance runtime, test missing/expired Cookie, actual replacement with permissions 0600, and a second run that must reuse Cookie without a browser. Network/5xx/interface errors must preserve Cookie and avoid login. See the [record](../../../../../docs/research/yuanbao-manual-qr-login.md).
 13. **Terminal QR and failure boundaries**: on ordinary SSH, confirm the Unicode QR is scannable with a phone, including light/dark themes and sufficient width. Confirm explicit agreement before QR display and before recognized registration controls; test new-account registration separately. Native QR expiry may refresh within the same three-minute deadline. Cancellation, extra verification, timeout, interruption or failed replacement must preserve the old Cookie and close Chromium. No passwords, SMS, mail or background retries may run. Manual Cookie pasting remains recovery.
+
+## Standalone WeChat login check
+
+Optional developer acceptance on a Linux x64 test host; ordinary deployment does not require this. Use an interactive SSH terminal and a separate checkout. Browser setup installs system libraries through the package manager and needs root or sudo.
+
+```sh
+git clone --branch main https://github.com/MuZiJin701/wx-video-account-notes.git ~/wx-notes-branch-check
+cd ~/wx-notes-branch-check
+uv_command=$(sh plugins/wx-video-account-notes/skills/wx-video-account-notes/scripts/ensure_uv.sh)
+export UV_PROJECT_ENVIRONMENT="$PWD/.runtime/server/.venv"
+export UV_PYTHON_INSTALL_DIR="$PWD/.runtime/server/python"
+export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
+"$uv_command" sync --locked --project server --python 3.13.14
+"$UV_PROJECT_ENVIRONMENT/bin/python" -m unittest discover -s server
+"$UV_PROJECT_ENVIRONMENT/bin/python" -m playwright install --with-deps --no-shell chromium
+"$UV_PROJECT_ENVIRONMENT/bin/python" server/smoke_browser.py
+```
+
+Expect passing tests and `BROWSER_SMOKE_OK`. To check real login and full parsing without publishing Cookie, prepare a private test configuration:
+
+```sh
+umask 077
+mkdir -p .runtime/server
+if [ ! -e .runtime/server/login-check.json ]; then
+  cp server/config.example.json .runtime/server/login-check.json
+fi
+chmod 600 .runtime/server/login-check.json
+```
+
+Set `access_key` to `login-check-only` and `verify_link` to a valid share link in that file. No QQ account or password is needed. Then run:
+
+```sh
+.runtime/server/.venv/bin/python server/check_login.py --config .runtime/server/login-check.json
+```
+
+Explicitly accept the displayed agreements before scanning. Both `YUANBAO_LOGIN_OK` and `YUANBAO_PARSE_OK` are required for success. The checker cleans temporary login state on exit and never publishes Cookie. Terminal QR scanning, refresh, registration and service lifecycle need the separate checks above.
 
 ## Record
 

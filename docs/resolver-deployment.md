@@ -1,164 +1,146 @@
 # 自部署指南
 
-自部署采用 **手动检查 Cookie + Playwright/Chromium 微信扫码登录**，同时保留原有的无回显手动 Cookie 更新入口。QQ 账号密码登录、QQ 邮箱通知和定时维护已移除。维护者按需 SSH 到服务器运行命令；Playwright 启动临时无头 Chromium，命令结束后退出，不持续监控，也不连接常驻浏览器的远程调试端口。设计见 [ADR 0005](adr/0005-manual-wechat-cookie-maintenance.md)，实验见[扫码记录](research/yuanbao-manual-qr-login.md)。
+按下面 4 步部署：安装程序 → 微信扫码 → 启动服务 → 连接客户端。
 
-服务器只解析视频号分享链接；媒体下载、OCR、ASR 和笔记仍在客户端完成。普通使用无需自部署，见 [README](../README.md)。
+服务器只负责解析视频号分享链接。下载媒体、OCR、ASR 和生成笔记仍在运行 agent 的电脑上完成。
 
-支持 Linux x64 + systemd。准备 Git、`/usr/bin/python3`、curl、tar 和可用网络，以 root 安装到固定目录 `/root/projects/wx-video-account-notes`。选择 Playwright 支持的 Linux 发行版。网关默认监听 80 端口；Go 解析器的 17879 端口仅监听回环。
+## 部署前准备
 
-## 0. 独立检查
+- 一台 Linux x64 服务器，使用 systemd 管理服务，能联网下载依赖。
+- 用 root 账号通过 SSH 登录，确认已有 Git、Python 3（`/usr/bin/python3`）、curl 和 tar。
+- 确认 80 端口没有被其他程序占用，并在云服务器安全组和防火墙中允许客户端访问。内部解析端口 17879 不需要对外开放。
 
-在独立检出目录准备锁定的服务端运行环境，不安装项目服务：
+下面第 1～3 步的命令都在服务器上执行。安装目录固定为 `/root/projects/wx-video-account-notes`。
 
-```sh
-git clone --branch main --single-branch \
-  https://github.com/MuZiJin701/wx-video-account-notes.git ~/wx-notes-branch-check
-cd ~/wx-notes-branch-check
-uv_command=$(sh plugins/wx-video-account-notes/skills/wx-video-account-notes/scripts/ensure_uv.sh)
-export UV_PROJECT_ENVIRONMENT="$PWD/.runtime/server/.venv"
-export UV_PYTHON_INSTALL_DIR="$PWD/.runtime/server/python"
-export PLAYWRIGHT_BROWSERS_PATH="$PWD/.runtime/server/browsers"
-"$uv_command" sync --locked --project server --python 3.13.14
-"$UV_PROJECT_ENVIRONMENT/bin/python" -m unittest discover -s server
-"$UV_PROJECT_ENVIRONMENT/bin/python" -m playwright install --with-deps --no-shell chromium
-"$UV_PROJECT_ENVIRONMENT/bin/python" server/smoke_browser.py
-```
+## 1. 安装程序
 
-预期单测全部通过，浏览器检查输出 `BROWSER_SMOKE_OK`。`--with-deps` 会通过系统包管理器安装 Chromium 所需 Linux 库，需要 root 或 sudo 权限。检查本身不登录账号。
-
-独立验收真实扫码与解析时，在交互式 SSH 终端执行：
+首次安装时运行；已有部署请看文末的“更新程序”。
 
 ```sh
-umask 077
-mkdir -p .runtime/server
-if [ ! -e .runtime/server/login-check.json ]; then
-  cp server/config.example.json .runtime/server/login-check.json
-fi
-chmod 600 .runtime/server/login-check.json
-```
-
-用编辑器填写 `access_key` 为 `login-check-only`，并确认 `verify_link` 是有效视频号分享链接；无需 QQ 账号或密码。继续运行：
-
-```sh
-.runtime/server/.venv/bin/python server/check_login.py \
-  --config .runtime/server/login-check.json
-```
-
-确认协议后显示微信二维码。依次输出 `YUANBAO_LOGIN_OK`、`YUANBAO_PARSE_OK` 才表示登录与完整解析均通过。此入口只检查新会话，不发布 Cookie；退出后删除临时状态。历史 `yuanbao` / `mail` 密码检查参数已移除。
-
-## 1. 安装与升级
-
-以下克隆只用于固定目录尚不存在的新部署：
-
-```sh
-umask 077
 mkdir -p /root/projects
-git clone --branch main --single-branch \
-  https://github.com/MuZiJin701/wx-video-account-notes.git /root/projects/wx-video-account-notes
+git clone --branch main https://github.com/MuZiJin701/wx-video-account-notes.git /root/projects/wx-video-account-notes
 cd /root/projects/wx-video-account-notes
 sh server/install.sh
 ```
 
-安装会创建私有 `config.json`，自动生成空缺的 `access_key`，默认使用示例验证链接：
+安装脚本会下载项目使用的 Python、Playwright 和 Chromium，并安装所需的系统库，首次运行可能较慢。安装完成后会生成 `config.json` 和服务配置，但还不会启动服务或登录元宝。
+
+`config.json` 中的 `access_key` 会自动生成，稍后填写到客户端；`verify_link` 是用来检查 Cookie 的视频号分享链接，通常先保留默认值。
+
+## 2. 微信扫码获取 Cookie
+
+在同一个 SSH 终端运行：
+
+```sh
+.runtime/server/.venv/bin/python maintain_cookie.py
+```
+
+阅读协议提示后输入 `yes`，用微信扫描终端二维码，并在手机上确认。若提示确认注册，请按提示决定是否继续；扫码可能创建新的元宝账号。
+
+看到以下任一结果即可继续：
+
+- `COOKIE_UPDATED`：扫码成功，新 Cookie 已通过解析检查并保存。
+- `COOKIE_REUSED`：原 Cookie 仍然有效，无需扫码。
+
+二维码最多等待 3 分钟。终端显示不完整时先拉宽窗口；也可在命令结束前查看提示中的临时图片。超时、取消、额外验证或检查失败会退出，保留原 Cookie；处理后重新运行即可。
+
+扫码无法完成时，可以使用下面的“手动更新 Cookie”。
+
+## 3. 启动服务并检查
+
+```sh
+systemctl enable --now wx-notes-resolver wx-notes-gateway
+systemctl status wx-notes-resolver wx-notes-gateway --no-pager
+```
+
+两个服务都显示 `active (running)`，说明已启动，也会在开机时自动启动。接着完成第 4 步，用一条真实分享链接确认解析可用，无需先运行开发测试。
+
+启动失败时查看最近日志：
+
+```sh
+journalctl -u wx-notes-resolver -u wx-notes-gateway -n 50 --no-pager
+```
+
+## 4. 连接客户端
+
+在服务器查看配置，找到 `access_key`：
+
+```sh
+cat config.json
+```
+
+在**运行 agent 的电脑**上，备份并编辑实际安装的 Skill 中的 `runtime/resolver_config.json`：
 
 ```json
 {
-  "access_key": "",
-  "verify_link": "https://weixin.qq.com/sph/AHhuzPE3Pi"
+  "api_url": "http://你的服务器IP/api/channels/parse_sph",
+  "access_key": "填写服务器config.json中的access_key"
 }
 ```
 
-`access_key` 是客户端访问凭证；已有值保留。验证链接失效时，用编辑器更换 `verify_link`。配置、Cookie 和浏览器资料不应提交到 Git、发送给他人或粘贴到公开日志。
+修改安装副本中的文件；只改源码仓库不会影响已经安装的 Skill。若设置过 `WX_VIDEO_ACCOUNT_RESOLVE_API` 和 `WX_VIDEO_ACCOUNT_RESOLVE_KEY`，它们会覆盖文件配置，须同时更新或同时取消。更新、重装 Skill 前也请备份这份配置。
 
-安装器准备项目私有 Python 3.13.14、锁定的 Playwright 和配套 Chromium，以及网关、解析器和手动维护命令；不会扫码、检查 Cookie 或启动对外服务。
+给 agent 一条真实的视频号分享链接，确认能下载内容并生成笔记，部署就完成了。自部署失败时不会自动切换到默认服务。
 
-已有部署先保留 `config.json`、`cookie`、`.runtime/` 和源码修改，在固定部署目录更新源码后重新运行 `sh server/install.sh`。升级会停用并移除旧 `wx-notes-cookie.timer` / `wx-notes-cookie.service`，从活动配置移除 `qq` 和 `cookie_check_interval_hours`，保留访问凭证和 Cookie。旧 `client.json` 的访问凭证可迁入新配置，原文件保留。旧浏览器资料和历史维护状态不再使用，也不会批量删除。
+HTTP 会明文传输访问凭证、分享链接和结果；需要加密时，请通过 HTTPS 反向代理访问网关。元宝 Cookie 和服务器配置不要提交到 Git 或贴到公开日志。
 
-## 2. 手动检查与微信扫码更新
+## 日常维护
 
-在服务器交互式 SSH 终端运行：
+### Cookie 失效后重新扫码
+
+本方案没有定时登录或邮件通知。解析提示登录失效时，在服务器运行：
 
 ```sh
 cd /root/projects/wx-video-account-notes
 .runtime/server/.venv/bin/python maintain_cookie.py
 ```
 
-- 已有 Cookie 通过完整解析检查：输出 `COOKIE_REUSED`，不启动浏览器、不改文件。
-- Cookie 缺失，或解析失败且登录状态明确失效：显示服务/隐私协议链接。输入 `yes` 后启动无头 Chromium，展示微信二维码。
-- 网络或上游异常、登录状态不明，或登录有效但解析失败：保留原 Cookie 并退出，不直接重登。
-- 扫码后确认元宝登录成功，并用新 Cookie 完成解析检查；通过后以 `0600` 权限原子替换，输出 `COOKIE_UPDATED`，无需重启解析器。
+更新 Cookie 后不用重启服务。网络故障或登录状态不明时，程序不会直接重登；请先检查网络和 `config.json` 中的 `verify_link` 是否仍然有效。
 
-终端需支持 UTF-8、ANSI 颜色和 Unicode 半格字符，宽度至少容纳二维码（当前样本约 55 列）。使用微信扫描终端中的黑白二维码并在手机确认。程序同时显示临时图片路径，供辅助查看，命令退出后删除。终端过窄或无法输出字符时会失败，可调整终端后重跑。
+### 手动更新 Cookie
 
-扫码可能创建元宝账号，且可能不同于旧 QQ 登录账号；不绑定或迁移旧账号。若网页出现已识别的“同意并注册/登录”按钮，终端会再次要求确认；可选手机号绑定只点击“跳过，直接登录”。其他注册/绑定页面不保证支持，应在正常网页完成后重试。
+在正常浏览器中登录元宝，打开开发者工具的“网络”，从发往元宝 API 的请求头中复制完整 `Cookie` 值。不要使用 `document.cookie`，它可能缺少必要凭证。
 
-扫码等待最多 3 分钟；发现二维码过期时使用网页刷新控件，期限不延长。超时、拒绝协议、手机取消、Ctrl+C、额外图形验证或候选 Cookie 校验失败均退出，旧 Cookie 保留。确认协议最多等待 3 分钟，解析验证另有超时；整个命令可能超过 3 分钟。使用文件锁避免维护命令并发；非交互终端不能发起扫码。
-
-没有定时检查、后台登录、邮件通知或短信后备。请按需要手动运行；`--resume` 已移除。腾讯未来也可能要求额外验证，此流程不保证永久免验证。
-
-## 3. 启动、恢复与停止
-
-首次 Cookie 维护成功后启动网关与解析器：
+回到服务器运行，按提示粘贴（输入不回显）：
 
 ```sh
-systemctl enable --now wx-notes-resolver wx-notes-gateway
-systemctl status wx-notes-resolver wx-notes-gateway
-curl -i http://127.0.0.1/api/channels/parse_sph
+cd /root/projects/wx-video-account-notes
+python3 update_cookie.py
 ```
 
-未认证请求预期返回 `401`。升级后重启这两个服务；日常更新 Cookie 无需重启。日志：
+看到“Cookie 已更新；解析验证通过”即成功。此方式同样先检查再替换，失败保留原文件。
+
+### 更新程序
+
+先备份 `config.json`、`cookie` 和 `.runtime/`，保留自己的源码修改，再运行：
 
 ```sh
-journalctl -u wx-notes-resolver -u wx-notes-gateway -n 50
+cd /root/projects/wx-video-account-notes
+git pull --ff-only
+sh server/install.sh
+systemctl restart wx-notes-resolver wx-notes-gateway
 ```
 
-扫码不能完成时，仍可在正常元宝网页登录，从开发者工具的元宝 API 请求复制完整 Cookie，在服务器无回显输入：
+若 Git 提示有本地修改或分支分歧，先处理提示，不要强制覆盖。安装脚本保留访问凭证和 Cookie；从旧版升级时，会停用旧 Cookie 定时任务，移除活动配置中的 QQ 密码和维护周期，不再使用旧浏览器资料。
 
-```sh
-python3 /root/projects/wx-video-account-notes/update_cookie.py
-```
-
-不要使用可能缺少 HttpOnly 凭证的 `document.cookie`。手动粘贴入口同样先验证后替换，失败保留原文件；可用 `WX_NOTES_VERIFY_LINK` 临时覆盖验证链接。
-
-| 错误码 | 处理 |
-| --- | --- |
-| `COOKIE_OR_UPSTREAM_UNAVAILABLE` | 检查网络、验证链接和元宝接口；不能仅凭解析失败认定登录过期。 |
-| `NEW_COOKIE_VALIDATION_FAILED` | 新 Cookie 未通过完整解析检查；旧文件保留。 |
-| `INTERACTIVE_TERMINAL_REQUIRED` | 直接在交互式 SSH 终端运行，不通过定时任务或管道扫码。 |
-| `TERMINAL_TOO_NARROW` / `TERMINAL_UTF8_REQUIRED` | 增大终端宽度或配置 UTF-8 后重跑。 |
-| `LOGIN_CONFIRM_TIMEOUT` / `WECHAT_SCAN_TIMEOUT` / `LOGIN_CANCELLED` | 本次已退出，需要时重新运行。 |
-| `LOGIN_ADDITIONAL_VERIFICATION_REQUIRED` | 在正常网页处理额外验证，或使用手动 Cookie 入口。 |
-| `WECHAT_LOGIN_FLOW_FAILED` / `WECHAT_QR_EXPIRED` | 网页、二维码或网络有变化；先排查，再手动重跑。 |
-| `LOGIN_TERMS_CHANGED` | 网页协议链接已变化；核对并更新协议展示后重试，不沿用旧确认。 |
-| `MAINTENANCE_ALREADY_RUNNING` | 另一维护命令仍在运行，不同时启动。 |
-| `CONFIG_OR_RUNTIME_INVALID` | 检查私有配置、运行目录、权限和 Python 环境。 |
-| `LOGIN_REQUIRED` / `LOGIN_EXPIRED_OR_UPSTREAM_CHANGED` | 手动检查 Cookie，并检查上游；没有自动恢复。 |
-
-停止服务：
+### 停止服务
 
 ```sh
 systemctl stop wx-notes-gateway wx-notes-resolver
 ```
 
-如也不需要开机启动，运行 `systemctl disable wx-notes-gateway wx-notes-resolver`；恢复时重新 `enable --now`。本方案不需要 Cookie 定时任务。
+如需同时取消开机启动，运行 `systemctl disable wx-notes-gateway wx-notes-resolver`。恢复时重新执行第 3 步的启动命令。
 
-## 4. 客户端连接
+## 遇到问题
 
-仅查看访问凭证：
+| 情况 | 先这样处理 |
+| --- | --- |
+| 终端太窄、字符乱码 | 拉宽窗口、使用支持 UTF-8 的 SSH 终端后重试。 |
+| 扫码超时或取消 | 重新运行维护命令，再次扫码。 |
+| 要求额外验证，或网页流程发生变化 | 在正常网页处理，或改用手动更新 Cookie。程序不会自动解验证码。 |
+| 提示 `LOGIN_TERMS_CHANGED` | 网页协议已变化，需要先核对并更新程序中的协议链接。 |
+| 提示已有维护命令运行 | 等前一条命令退出，不要同时运行多个维护命令。 |
+| Cookie 检查失败、网络或上游不可用 | 检查服务器网络，并将 `verify_link` 换成有效分享链接；不要只凭解析失败判断 Cookie 过期。 |
+| 本机能访问，客户端连不上 | 检查服务器 IP、安全组、防火墙、80 端口及客户端访问凭证。 |
 
-```sh
-python3 -c 'import json; print(json.load(open("/root/projects/wx-video-account-notes/config.json"))["access_key"])'
-```
-
-在运行 agent 的电脑，备份并编辑实际安装 Skill 的 `runtime/resolver_config.json`：
-
-```json
-{
-  "api_url": "http://<服务器>/api/channels/parse_sph",
-  "access_key": "服务器config.json中的access_key"
-}
-```
-
-插件安装副本与源码仓库相互独立；更新或重装前备份客户端配置。`WX_VIDEO_ACCOUNT_RESOLVE_API` 和 `WX_VIDEO_ACCOUNT_RESOLVE_KEY` 仍须成对设置，并优先于客户端文件。交给 agent 一条真实分享链接，确认生成媒体、`note_materials.json` 和笔记。自部署失败不会自动切换到默认服务。
-
-HTTP 会明文传输链接、访问凭证和结果；需要加密时为网关配置 HTTPS。完整功能与模型检查见[手动验收清单](../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)。[GitHub Actions](../.github/workflows/tests.yml) 只使用离线单测和无凭据浏览器检查，真实账号扫码及远程服务生命周期需单独验收。
+需要开发测试时，再看[独立扫码检查与完整验收清单](../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md#standalone-wechat-login-check)。方案依据和已知限制见 [ADR 0005](adr/0005-manual-wechat-cookie-maintenance.md) 与[扫码验收记录](research/yuanbao-manual-qr-login.md)。

@@ -87,7 +87,7 @@ uv run --locked python -m unittest discover -s runtime/tests
 
 服务端单测从仓库根目录运行 `python3 -m unittest discover -s server`（仅用标准库）；真实初始化和端到端处理见[手动验收清单](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)。
 
-GitHub Actions 同时执行三平台单测及无凭据的 Linux Chromium 启动、JavaScript 与资料持久化检查，支持手动触发，不向 CI 上传个人凭据。[独立验收步骤](docs/resolver-deployment.md#0-独立检查)提供微信扫码和完整解析检查；离线回归和无凭据 CI 不代表云端登录验收通过。
+GitHub Actions 同时执行三平台单测及无凭据的 Linux Chromium 启动、JavaScript 与资料持久化检查，支持手动触发，不向 CI 上传个人凭据。[独立验收步骤](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md#standalone-wechat-login-check)提供微信扫码和完整解析检查；离线回归和无凭据 CI 不代表云端登录验收通过。
 
 ## 更多文档
 

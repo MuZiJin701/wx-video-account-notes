@@ -87,7 +87,7 @@ uv run --locked python -m unittest discover -s runtime/tests
 
 Run server tests from the repository root with `python3 -m unittest discover -s server` (standard library only). For real bootstrap and end-to-end checks, use the [manual acceptance checklist](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md).
 
-GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Personal credentials are not uploaded to CI. The [isolated checks (Chinese)](docs/resolver-deployment.md#0-独立检查) cover WeChat QR login and full parsing; offline tests and credential-free CI do not establish successful cloud authentication.
+GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Personal credentials are not uploaded to CI. The [isolated checks](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md#standalone-wechat-login-check) cover WeChat QR login and full parsing; offline tests and credential-free CI do not establish successful cloud authentication.
 
 ## More documentation
 
