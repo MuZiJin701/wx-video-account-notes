@@ -4,7 +4,7 @@ Download WeChat Channels videos or image posts from a share link, extract OCR/AS
 
 [中文 README](README.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
-> **Login exploration paused (2026-10-20):** `codex/explore-qq-yuanbao-login` preserves experimental Playwright + QQ password login code for Yuanbao and QQ Mail, diagnostics, and research. Full cloud login acceptance has not passed, and the work is not merged into `main`. Resume only at the user's explicit request. See [`main`](https://github.com/MuZiJin701/wx-video-account-notes/tree/main) for released behavior and deployment.
+> **Playwright login exploration paused (2026-10-20):** `codex/explore-qq-yuanbao-login` preserves experimental QQ password login code for Yuanbao and QQ Mail, diagnostics, and research. Full cloud login acceptance has not passed, and the work is not merged into `main`. In the [pure HTTP account prechecks](docs/research/yuanbao-qq-login.md#纯-http-账号预检查2026-10-21) added on 2026-10-21, both sites waived CAPTCHA locally but required it on Alibaba Cloud; no password was submitted or complete login verified. Resume browser exploration only at the user's explicit request. See [`main`](https://github.com/MuZiJin701/wx-video-account-notes/tree/main) for released behavior and deployment.
 
 ## See it in action
 

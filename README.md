@@ -4,7 +4,7 @@
 
 [English README](README.en.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
-> **登录方案探索已暂停（2026-10-20）**：`codex/explore-qq-yuanbao-login` 仅保留 Playwright + QQ 账号密码登录元宝和 QQ 邮箱的实验代码、诊断与研究记录，未通过完整云端登录验收，未合入 `main`。恢复探索需用户明确要求；当前发布功能与部署方式以 [`main`](https://github.com/MuZiJin701/wx-video-account-notes/tree/main) 为准。
+> **Playwright 登录方案探索已暂停（2026-10-20）**：`codex/explore-qq-yuanbao-login` 保留 QQ 账号密码登录元宝和 QQ 邮箱的实验代码、诊断与研究记录，未通过完整云端登录验收，未合入 `main`。2026-10-21 补充的[纯 HTTP 账号预检查](docs/research/yuanbao-qq-login.md#纯-http-账号预检查2026-10-21)中，两个入口在本机免验证码、阿里云仍要求验证码，未提交密码或验证完整登录。恢复浏览器探索需用户明确要求；当前发布功能与部署方式以 [`main`](https://github.com/MuZiJin701/wx-video-account-notes/tree/main) 为准。
 
 ## 使用效果
 

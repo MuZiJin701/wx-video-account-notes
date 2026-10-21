@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Documented pure HTTP QQ account prechecks for Yuanbao and QQ Mail on 2026-10-21: both returned `CHECK 0` on Windows and `CHECK 1` on Alibaba Cloud without launching a browser. No password was submitted or full login verified; using HTTP did not remove the cloud CAPTCHA requirement. Playwright exploration remains paused.
 - Paused Playwright-based QQ password login exploration for Yuanbao and QQ Mail on 2026-10-20. Preserve experimental code, diagnostics, tests, and findings on `codex/explore-qq-yuanbao-login`; this work is not merged into `main` and is not an accepted deployment capability. Real-login, CAPTCHA, mail, and deployment experiments require an explicit request to resume.
 - Added allowlisted login-stage and network diagnostics, QQ account-check verification detection, and regression coverage. Isolated tests showed CAPTCHA requirements varied with network exit; both headed and headless cloud checks required verification. Agent-guided clicks passed one Yuanbao image-selection challenge, but QQ Mail verification and complete cloud login remain unaccepted.
 

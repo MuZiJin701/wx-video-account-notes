@@ -2,6 +2,27 @@
 
 日期：2026-10-20。最初可视实验基于 `d5ebf23`，探索分支为 `codex/explore-qq-yuanbao-login`；独立真实登录检查入口由 `effab68` 引入。
 
+## 纯 HTTP 账号预检查（2026-10-21）
+
+用户明确要求重新探索不使用 Playwright/Chromium 的 HTTP 请求方案。本轮只恢复这一对照；浏览器方案继续暂停，不部署、不发信、不更换现有 Cookie，也不合并 `main`。目标是核对服务器是否仍要求验证码，不将账号预检查通过当作完整登录成功。
+
+使用 Python 标准库 `urllib.request` 和内存 `CookieJar`，从当前公开登录页取得应用参数和新的 `pt_login_sig`，按网页脚本构造 `GET /ssl/check`。Windows 本机与 `ssh aliyun_wlcb` 使用同一探针、同一 QQ 账号、相同请求头，各自新建会话；两端均未配置 HTTP 代理。不启动浏览器、不执行设备指纹 JavaScript；仅从已有私有配置提取账号，不访问密码字段、不提交密码。账号只在内存、SSH 传输及发往 QQ 的检查请求中使用；输出仅保留站点、HTTP 状态、数字结果和实验开关，不保存原始检查回调、账号、签名或 Cookie。
+
+| 入口 | Windows 本机 | 阿里云服务器 | 本轮结论 |
+| --- | --- | --- | --- |
+| QQ 邮箱 QQ 密码登录，`appid=522005705`、`daid=4` | HTTP 200，`CHECK 0` | HTTP 200，`CHECK 1` | 纯 HTTP 也能收到服务器要求验证码的响应；此要求不依赖启动 Playwright 或 Chromium。 |
+| 元宝 QQ OAuth 登录，`appid=716027609`、`daid=383`、`pt_3rd_aid=102115537` | HTTP 200，`CHECK 0` | HTTP 200，`CHECK 1` | 与邮箱一致；更换为 HTTP 请求没有消除本轮服务器上的验证要求。 |
+
+结果解释直接核对当前 [QQ 网页登录脚本](https://qq-web.cdn-go.cn/monorepo/3ea7b82c/ptlogin/js/c_login_2.js)：`getCheckUrl` 构造账号预检查；`ptui_checkVC` 对结果 `1` 设置 `needVc=true` 和 `needShowNewVc=true`。邮箱入口参数来自当前 QQ 邮箱登录页加载的 [公开脚本](https://res.wx.qq.com/t/webmail/webmail/res/js/loginpage-web.32fd92d262215121.js)，不是用任意 QQ 应用代替邮箱。
+
+元宝入口也从当前页面自身代码核实：[登录容器](https://static.yuanbao.tencent.com/_next/static/chunks/yb_v2_34399.32cee63cd292fde0.js)传入 QQ 应用 ID 与回调地址；[回调函数](https://static.yuanbao.tencent.com/_next/static/chunks/yb_v2_89912.4e5bfb3360cf7de7.js)返回 `https://yuanbao.tencent.com/scan`；[QQLogin 组件](https://static.yuanbao.tencent.com/_next/static/chunks/yb_v2_97592.ae0cf12e1444a08c.js)在回调追加 `nonce`、`state=qq_login`、`isMobile=0`，再构造 `graph.qq.com/oauth2.0/authorize`。该公开授权页给出的登录 iframe 使用表中的应用参数。最终对照使用与网页相同字符集的 16 位随机 nonce；早先 32 位 nonce 的预检查也得到相同的本机/服务器结果。账号检查尚未进入 OAuth 回跳。
+
+`CHECK 0` 仅表示本次账号预检查未要求图片验证码，密码提交及后续登录仍可能要求其他验证。本轮未实现密码加密、密码提交、OAuth 回跳或最终登录态验收。纯 HTTP 没有验证窗口，不等于没有验证码要求；继续认证仍须满足服务端验证流程，不能忽略该结果。
+
+本轮 HTTP 客户端与浏览器的 TLS/HTTP 特征、设备字段及脚本上报并不完全相同，不能据此断言网络 IP 是唯一原因，也不能保证以后每次均返回相同结果。现有证据支持“绕开浏览器并未消除阿里云上的验证要求”。[腾讯官方说明](https://cloud.tencent.com/document/product/1110/36827)也明确，免验证由环境、历史和设备等风险因素动态决定，无法保证始终免验证；通用产品说明不能替代 QQ 对本次请求的具体判定明细。
+
+探针保存在忽略目录 `.runtime/login-diagnostics/http_probe.py`；远端通过 SSH 标准输入运行同一脚本，没有落地探针文件或修改服务器配置。最小自检覆盖页面参数转义、回调数字提取及非法回调拒绝，已通过；没有修改生产登录代码。
+
 ## 探索暂停与分支隔离（2026-10-20）
 
 **状态：用户已明确暂停通过 Playwright 控制浏览器、仅用 QQ 账号和密码登录元宝与 QQ 邮箱的方案探索。** 后续内容均为历史实验与研究记录，不是继续测试的指令；只有用户明确要求恢复后，才重新确认范围并开展真实登录、验证码、发信或部署实验。
