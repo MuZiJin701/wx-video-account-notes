@@ -4,7 +4,7 @@ Download WeChat Channels videos or image posts from a share link, extract OCR/AS
 
 [中文 README](README.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
-> **Playwright login exploration paused (2026-10-20):** `codex/explore-qq-yuanbao-login` preserves experimental QQ password login code for Yuanbao and QQ Mail, diagnostics, and research. Full cloud login acceptance has not passed, and the work is not merged into `main`. In the [pure HTTP account prechecks](docs/research/yuanbao-qq-login.md#纯-http-账号预检查2026-10-21) added on 2026-10-21, both sites waived CAPTCHA locally but required it on Alibaba Cloud; no password was submitted or complete login verified. Resume browser exploration only at the user's explicit request. See [`main`](https://github.com/MuZiJin701/wx-video-account-notes/tree/main) for released behavior and deployment.
+> **Self-hosted login:** the operator runs a command that starts temporary headless Chromium through Playwright and obtains Yuanbao Cookie through WeChat QR login. Manual Cookie pasting remains available. Both paths validate full parsing before replacement and preserve the old file on failure. See the [self-hosting guide (Chinese)](docs/resolver-deployment.md).
 
 ## See it in action
 
@@ -49,9 +49,9 @@ To choose an output directory, include it in the request, for example, “Save t
 
 ### Want to use your own server?
 
-Use the [self-hosting guide on `main` (Chinese)](https://github.com/MuZiJin701/wx-video-account-notes/blob/main/docs/resolver-deployment.md), which uses manual Yuanbao Cookie maintenance. Password login, daily maintenance, and QQ Mail alerts on this branch are paused experiments. The [branch guide (Chinese)](docs/resolver-deployment.md) preserves historical checks and a deployment draft; do not execute them while exploration is paused.
+Follow the [self-hosting guide (Chinese)](docs/resolver-deployment.md) on a Linux x64 server with systemd. Run maintenance in an interactive SSH terminal: valid Cookie is reused, while missing or explicitly expired login opens a WeChat QR. The browser closes when the command ends. If scanning cannot complete, use the existing no-echo manual Cookie update command.
 
-At pause time, both direct Alibaba Cloud login checks required image-selection CAPTCHAs in headed and headless modes. Agent-guided browser clicks passed one Yuanbao challenge, but QQ Mail verification and full cloud login have not passed; general image recognition is not integrated. Network exit is the strongest observed factor, while Tencent's exact triggering rule remains unknown. Green CI and `BROWSER_SMOKE_OK` do not establish account login. See the [pause status and research record (Chinese)](docs/research/yuanbao-qq-login.md#探索暂停与分支隔离2026-10-20).
+WeChat scanning, full parsing, Cookie publication and subsequent reuse passed on an isolated server. Phone scanning of the ordinary SSH character QR, live expiry refresh, new-account registration and production systemd lifecycle still need separate validation. Additional verification may occur; there is no scheduled login or email alert. See the [acceptance record and limits (Chinese)](docs/research/yuanbao-manual-qr-login.md#微信手动维护改造与真实验收2026-10-21).
 
 ## Output files
 
@@ -74,7 +74,7 @@ Image posts have no video or audio. Vision-capable agents also read images in `f
 
 - The server only resolves share links. Media download, OCR, ASR, and note writing run locally; no GPU or system FFmpeg is required.
 - The default resolver uses public HTTP, so share links and results travel in plaintext. Its shared access key ships with the public Skill and is not secret. The service handles at most 30 requests per minute across all users.
-- The maintainer updates the default resolver's Yuanbao login. Self-hosting on this branch reuses valid Cookie and lets the operator refresh expired login through a WeChat QR in an SSH terminal. HTTPS can be configured; there is no scheduled login or email notification.
+- The maintainer updates the default resolver's Yuanbao login. Self-hosting reuses valid Cookie and lets the operator refresh expired login through a WeChat QR in an SSH terminal or manual Cookie pasting. HTTPS can be configured; there is no scheduled login or email notification.
 - ARM64, GPU inference, and offline first-time setup are not supported. The private Python version is 3.13.14; ASR uses faster-whisper tiny on CPU.
 
 ## Development
@@ -87,7 +87,7 @@ uv run --locked python -m unittest discover -s runtime/tests
 
 Run server tests from the repository root with `python3 -m unittest discover -s server` (standard library only). For real bootstrap and end-to-end checks, use the [manual acceptance checklist](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md).
 
-GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Personal credentials are not uploaded to CI. The [isolated branch checks (Chinese)](docs/resolver-deployment.md#0-独立检查开发分支) cover WeChat QR login and full parsing; offline tests and credential-free CI do not establish successful cloud authentication.
+GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Personal credentials are not uploaded to CI. The [isolated checks (Chinese)](docs/resolver-deployment.md#0-独立检查) cover WeChat QR login and full parsing; offline tests and credential-free CI do not establish successful cloud authentication.
 
 ## More documentation
 

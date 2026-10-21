@@ -4,7 +4,7 @@
 
 [English README](README.en.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
-> **Playwright 登录方案探索已暂停（2026-10-20）**：`codex/explore-qq-yuanbao-login` 保留 QQ 账号密码登录元宝和 QQ 邮箱的实验代码、诊断与研究记录，未通过完整云端登录验收，未合入 `main`。2026-10-21 补充的[纯 HTTP 账号预检查](docs/research/yuanbao-qq-login.md#纯-http-账号预检查2026-10-21)中，两个入口在本机免验证码、阿里云仍要求验证码，未提交密码或验证完整登录。恢复浏览器探索需用户明确要求；当前发布功能与部署方式以 [`main`](https://github.com/MuZiJin701/wx-video-account-notes/tree/main) 为准。
+> **自部署登录方式**：维护者主动运行命令，由 Playwright 启动临时无头 Chromium，通过微信扫码取得元宝 Cookie；也可继续手动粘贴 Cookie。两种方式均先完成解析校验再替换，失败保留原文件。操作见[自部署指南](docs/resolver-deployment.md)。
 
 ## 使用效果
 
@@ -49,9 +49,9 @@ https://weixin.qq.com/sph/your_share_id_here
 
 ### 想使用自己的服务器？
 
-当前请使用 [`main` 的自部署指南](https://github.com/MuZiJin701/wx-video-account-notes/blob/main/docs/resolver-deployment.md)，手动维护元宝 Cookie。本分支中的账号密码登录、每日维护和 QQ 邮箱告警均为已暂停的实验功能；[本分支指南](docs/resolver-deployment.md)保留历史检查和部署草案，暂停期间不执行。
+按[自部署指南](docs/resolver-deployment.md)在 Linux x64 + systemd 服务器安装。在交互式 SSH 终端运行维护命令：有效 Cookie 直接复用，缺失或明确失效才展示微信二维码；命令结束后关闭浏览器。扫码无法完成时，可使用原有的无回显手动 Cookie 更新入口。
 
-暂停时已知：阿里云直连下两项登录均要求图片点选验证码，有头/无头模式都触发；元宝单题已有 agent 识图、程序点击通过的样本，但邮箱验证码和完整云端登录均未通过，通用识图未集成。网络出口是证据最强的影响因素，腾讯具体命中规则仍未知。CI 和 `BROWSER_SMOKE_OK` 不代表真实登录成功。详见[暂停状态与研究记录](docs/research/yuanbao-qq-login.md#探索暂停与分支隔离2026-10-20)。
+微信扫码、完整解析和 Cookie 更新后复用已在隔离服务器验收；普通 SSH 字符二维码实扫、真实过期刷新、新账号注册和生产 systemd 生命周期仍需单独验证。扫码可能触发额外验证，没有定时登录或邮件告警。详见[验收记录与限制](docs/research/yuanbao-manual-qr-login.md#微信手动维护改造与真实验收2026-10-21)。
 
 ## 生成的文件
 
@@ -74,7 +74,7 @@ https://weixin.qq.com/sph/your_share_id_here
 
 - 服务器只解析分享链接；下载媒体、OCR、ASR 和写笔记在本机完成，不需要 GPU 或系统 FFmpeg。
 - 默认服务使用公网 HTTP，分享链接和解析结果明文传输；公开 Skill 内的共用访问凭证不是秘密。服务对所有用户合计每分钟最多处理 30 次请求。
-- 默认服务的元宝登录态由维护者更新；本分支自部署使用手动 Cookie 维护：有效时复用，失效后由维护者在 SSH 终端通过微信扫码更新，可配置 HTTPS 入口；没有定时登录或邮箱通知。
+- 默认服务的元宝登录态由维护者更新；自部署使用手动 Cookie 维护：有效时复用，失效后由维护者在 SSH 终端通过微信扫码或手动粘贴更新，可配置 HTTPS 入口；没有定时登录或邮箱通知。
 - 目前不支持 ARM64、GPU 推理或离线首次初始化。项目私有 Python 版本为 3.13.14，ASR 使用 CPU 上的 faster-whisper tiny。
 
 ## 本地开发
@@ -87,7 +87,7 @@ uv run --locked python -m unittest discover -s runtime/tests
 
 服务端单测从仓库根目录运行 `python3 -m unittest discover -s server`（仅用标准库）；真实初始化和端到端处理见[手动验收清单](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)。
 
-GitHub Actions 同时执行三平台单测及无凭据的 Linux Chromium 启动、JavaScript 与资料持久化检查，支持手动触发，不向 CI 上传个人凭据。[独立验收步骤](docs/resolver-deployment.md#0-独立检查开发分支)提供微信扫码和完整解析检查；离线回归和无凭据 CI 不代表云端登录验收通过。
+GitHub Actions 同时执行三平台单测及无凭据的 Linux Chromium 启动、JavaScript 与资料持久化检查，支持手动触发，不向 CI 上传个人凭据。[独立验收步骤](docs/resolver-deployment.md#0-独立检查)提供微信扫码和完整解析检查；离线回归和无凭据 CI 不代表云端登录验收通过。
 
 ## 更多文档
 

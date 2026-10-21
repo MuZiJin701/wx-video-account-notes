@@ -4,7 +4,7 @@ Status: Superseded by [ADR 0005](0005-manual-wechat-cookie-maintenance.md) (2026
 
 The following is the historical password-login experiment, paused on 2026-10-20. The user replaced it with manually invoked WeChat QR login on 2026-10-21; password login, QQ Mail notification and scheduled maintenance are removed from the implementation. Historical evidence below is retained, not a current operating procedure.
 
-The user paused Playwright-based QQ account-and-password login exploration for both Yuanbao and QQ Mail. Preserve the experimental implementation, diagnostics, and findings on `codex/explore-qq-yuanbao-login`; do not continue real-login tests, CAPTCHA experiments, mail delivery, or deployment without an explicit request to resume. The design below is an experimental record, not an accepted production capability. `main` retains manual Cookie maintenance.
+At the pause, the experimental implementation, diagnostics, and findings were preserved on `codex/explore-qq-yuanbao-login`. The implementation was subsequently replaced under ADR 0005; earlier revisions and research retain the password/mail experiment. The design below describes that historical experiment. Current operation uses operator-initiated WeChat QR login with manual Cookie pasting as recovery; see the [deployment guide](../resolver-deployment.md).
 
 Keep the self-deployed service on Linux x64 with systemd, retaining the Go resolver and gateway. Add Playwright-controlled headless Chromium to obtain Yuanbao Cookie through QQ login, with QQ login credentials supplied in a server-side configuration file during deployment. This keeps browser authentication separate from share-link resolution and avoids replacing the working resolver.
 

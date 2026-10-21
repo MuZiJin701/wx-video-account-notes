@@ -1,17 +1,17 @@
 # 自部署指南
 
-本分支采用 **手动检查 Cookie + Playwright/Chromium 微信扫码登录**。QQ 账号密码登录、QQ 邮箱通知和定时维护已移除。维护者定期 SSH 到服务器运行命令；命令结束后浏览器退出，不持续监控。设计见 [ADR 0005](adr/0005-manual-wechat-cookie-maintenance.md)，实验见[扫码记录](research/yuanbao-manual-qr-login.md)。
+自部署采用 **手动检查 Cookie + Playwright/Chromium 微信扫码登录**，同时保留原有的无回显手动 Cookie 更新入口。QQ 账号密码登录、QQ 邮箱通知和定时维护已移除。维护者按需 SSH 到服务器运行命令；Playwright 启动临时无头 Chromium，命令结束后退出，不持续监控，也不连接常驻浏览器的远程调试端口。设计见 [ADR 0005](adr/0005-manual-wechat-cookie-maintenance.md)，实验见[扫码记录](research/yuanbao-manual-qr-login.md)。
 
 服务器只解析视频号分享链接；媒体下载、OCR、ASR 和笔记仍在客户端完成。普通使用无需自部署，见 [README](../README.md)。
 
 支持 Linux x64 + systemd。准备 Git、`/usr/bin/python3`、curl、tar 和可用网络，以 root 安装到固定目录 `/root/projects/wx-video-account-notes`。选择 Playwright 支持的 Linux 发行版。网关默认监听 80 端口；Go 解析器的 17879 端口仅监听回环。
 
-## 0. 独立检查开发分支
+## 0. 独立检查
 
 在独立检出目录准备锁定的服务端运行环境，不安装项目服务：
 
 ```sh
-git clone --branch codex/explore-qq-yuanbao-login --single-branch \
+git clone --branch main --single-branch \
   https://github.com/MuZiJin701/wx-video-account-notes.git ~/wx-notes-branch-check
 cd ~/wx-notes-branch-check
 uv_command=$(sh plugins/wx-video-account-notes/skills/wx-video-account-notes/scripts/ensure_uv.sh)
@@ -53,7 +53,7 @@ chmod 600 .runtime/server/login-check.json
 ```sh
 umask 077
 mkdir -p /root/projects
-git clone --branch codex/explore-qq-yuanbao-login --single-branch \
+git clone --branch main --single-branch \
   https://github.com/MuZiJin701/wx-video-account-notes.git /root/projects/wx-video-account-notes
 cd /root/projects/wx-video-account-notes
 sh server/install.sh
