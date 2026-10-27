@@ -1,6 +1,6 @@
 # wx-video-account-notes
 
-从微信视频号分享链接下载视频或图文图片，提取 OCR/ASR 笔记材料，并由 agent 生成 Markdown 笔记。
+从微信视频号分享链接下载视频、图文图片及可用的封面和背景音乐，生成离线归档，提取 OCR/ASR 笔记材料，并由 agent 整理 Markdown 笔记。
 
 [English README](README.en.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 

@@ -1,6 +1,6 @@
 # wx-video-account-notes
 
-Download WeChat Channels videos or image posts from a share link, extract OCR/ASR note materials, and have an agent write a Markdown note.
+Download WeChat Channels videos, images, and available covers and background music from a share link; create an offline archive, extract OCR/ASR materials, and have an agent write Markdown notes.
 
 [中文 README](README.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
