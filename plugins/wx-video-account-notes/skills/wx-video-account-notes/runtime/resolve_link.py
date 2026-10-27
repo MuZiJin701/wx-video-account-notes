@@ -7,18 +7,18 @@ from pathlib import Path
 _CONFIG = json.loads(Path(__file__).with_name("resolver_config.json").read_text(encoding="utf-8"))
 
 
-def _pick_video_url(payload: dict) -> str:
+def _video_urls(payload: dict) -> list[str]:
     feed_info = payload.get("data", {}).get("feedInfo", {})
-    for path in (("h264VideoInfo", "videoUrl"), ("h265VideoInfo", "videoUrl"), ("videoUrl",)):
-        cursor = feed_info
-        for key in path:
-            if not isinstance(cursor, dict) or key not in cursor:
-                cursor = None
-                break
-            cursor = cursor[key]
-        if cursor:
-            return cursor
-    raise RuntimeError("No downloadable video URL found in resolver response")
+    urls = []
+    for key in ("h264VideoInfo", "h265VideoInfo"):
+        info = feed_info.get(key)
+        url = info.get("videoUrl") if isinstance(info, dict) else None
+        if isinstance(url, str) and url and url not in urls:
+            urls.append(url)
+    url = feed_info.get("videoUrl")
+    if isinstance(url, str) and url and url not in urls:
+        urls.append(url)
+    return urls
 
 
 def _pick_image_urls(payload: dict) -> list[str]:
@@ -27,9 +27,6 @@ def _pick_image_urls(payload: dict) -> list[str]:
     for item in feed_info.get("picInfo") or []:
         if isinstance(item, dict) and item.get("url"):
             urls.append(item["url"])
-    cover_url = feed_info.get("coverUrl")
-    if cover_url and cover_url not in urls:
-        urls.append(cover_url)
     return urls
 
 
@@ -37,17 +34,20 @@ def parse_worker_payload(payload: dict) -> dict:
     author_info = payload.get("data", {}).get("authorInfo", {})
     feed_info = payload.get("data", {}).get("feedInfo", {})
     image_urls = _pick_image_urls(payload)
-    try:
-        video_url = _pick_video_url(payload)
-        media_type = "video"
-    except RuntimeError:
-        if not image_urls:
-            raise
-        video_url = ""
-        media_type = "image"
+    bgm = feed_info.get("bgmInfo")
+    bgm = bgm if isinstance(bgm, dict) else {}
+    video_urls = _video_urls(payload)
+    if not video_urls and not image_urls and not feed_info.get("coverUrl"):
+        raise RuntimeError("No downloadable media URL found in resolver response")
+    video_url = video_urls[0] if video_urls else ""
+    media_type = "video" if video_urls else "image"
     return {
         "video_url": video_url,
+        "video_urls": video_urls,
         "image_urls": image_urls,
+        "cover_url": feed_info.get("coverUrl") or "",
+        "bgm_urls": [url for url in dict.fromkeys(bgm.get(key) for key in ("bgmUrl", "mediaStreamingUrl")) if url],
+        "feed_info": feed_info,
         "media_type": media_type,
         "author": author_info.get("nickname") or feed_info.get("nickname") or feed_info.get("authorName") or "",
         "title": feed_info.get("description") or feed_info.get("desc") or feed_info.get("title") or "",

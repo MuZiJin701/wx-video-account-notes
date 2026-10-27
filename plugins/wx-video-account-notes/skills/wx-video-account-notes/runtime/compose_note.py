@@ -147,6 +147,7 @@ def synthesize_markdown(materials: dict) -> str:
     rewritten_copy = _join_markdown_lines(reusable_lines)
     ocr_status = status.get("ocr", "成功")
     asr_status = status.get("asr", "成功")
+    download_status = status.get("download", "成功")
 
     return f"""# {title}
 
@@ -171,6 +172,7 @@ def synthesize_markdown(materials: dict) -> str:
 
 ## 提取状态
 
+- 下载：{download_status}
 - OCR：{ocr_status}
 - ASR：{asr_status}
 """

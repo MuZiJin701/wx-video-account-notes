@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-from pathlib import Path
 import json
-import time
+import subprocess
+from pathlib import Path
 from typing import Sequence
 
+from runtime.archive import write_archive
 from runtime.resolve_link import resolve_share_link
-from runtime.download_video import download_video, download_images
+from runtime.download_video import download_file
 from runtime.media_extract import extract_ocr_frames, extract_visual_frames, extract_audio
 from runtime.ocr_runner import run_ocr
 from runtime.asr_runner import resolve_asr_model_dir, run_asr
@@ -22,6 +23,8 @@ def slugify(value: str) -> str:
     if len(cleaned) > 80:
         suffix = hashlib.sha1(cleaned.encode("utf-8")).hexdigest()[:8]
         cleaned = f"{cleaned[:71].rstrip('_')}_{suffix}"
+    if cleaned.upper() in {"CON", "PRN", "AUX", "NUL", *(f"{p}{n}" for p in ("COM", "LPT") for n in range(1, 10))}:
+        cleaned = "_" + cleaned
     return cleaned or "wx_channels_video"
 
 
@@ -31,128 +34,139 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--share-url", required=True)
     parser.add_argument("--output-dir")
     args = parser.parse_args(argv)
-
     skill_root = Path(args.skill_root).resolve()
     runtime_path = runtime_root(skill_root)
-
     resolved = resolve_share_link(args.share_url)
-    title = resolved.get("title") or resolved.get("author") or "wx_channels_video"
-    slug = slugify(title)
-
-    output_dir = Path(args.output_dir).resolve() if args.output_dir else (Path.cwd() / slug).resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "frames").mkdir(exist_ok=True)
-    (output_dir / "ocr_frames").mkdir(exist_ok=True)
-    (output_dir / "audio").mkdir(exist_ok=True)
-
-    raw_json_path = output_dir / "raw.json"
-    raw_json_path.write_text(resolved["raw_text"], encoding="utf-8")
-
-    media_type = resolved.get("media_type") or "video"
-    video_path = output_dir / f"{slug}.mp4"
-    if media_type == "video":
-        print("[pipeline] [1/5] downloading video ...")
-        t0 = time.time()
-        download_video(resolved["video_url"], video_path)
-        print(f"[pipeline] [1/5] download done  ({time.time()-t0:.1f}s)")
-    elif media_type == "image":
-        print("[pipeline] [1/5] downloading images ...")
-        t0 = time.time()
-        visual_frame_paths = download_images(resolved.get("image_urls") or [], output_dir / "frames")
-        print(f"[pipeline] [1/5] images done  ({time.time()-t0:.1f}s, {len(visual_frame_paths)} images)")
+    slug = slugify(resolved.get("title") or resolved.get("author") or "wx_channels_video")
+    parent = Path(args.output_dir).resolve() if args.output_dir else Path.cwd().resolve()
+    parent.mkdir(parents=True, exist_ok=True)
+    for number in range(1, 1_000_000):
+        output_dir = parent / (slug if number == 1 else f"{slug}_{number}")
+        try:
+            output_dir.mkdir()
+            break
+        except FileExistsError:
+            continue
     else:
-        raise RuntimeError(f"Unsupported media type: {media_type}")
+        raise RuntimeError("无法创建独立输出目录")
+    print(f"[pipeline] output: {output_dir}")
+    for name in ("images", "frames", "ocr_frames", "audio"):
+        (output_dir / name).mkdir()
+    (output_dir / "raw.json").write_text(resolved["raw_text"], encoding="utf-8")
 
-    ocr_frames_error = ""
-    if media_type == "video":
-        ffmpeg_path, ffprobe_path = find_ffmpeg_tools(runtime_path)
+    media: list[dict] = []
+    errors: list[str] = []
+    def save(label: str, kind: str, url: str, destination: Path) -> Path | None:
+        item = {"label": label, "kind": kind, "path": None}
+        media.append(item)
+        try:
+            path = download_file(url, destination, kind=kind)
+            if kind in ("video", "audio"):
+                try:
+                    _, probe = find_ffmpeg_tools(runtime_path)
+                    stream = "v:0" if kind == "video" else "a:0"
+                    result = subprocess.run([str(probe), "-v", "error", "-select_streams", stream, "-show_entries", "stream=codec_name", "-of", "csv=p=0", str(path)], capture_output=True, text=True, timeout=60)
+                    if result.returncode or not result.stdout.strip():
+                        raise ValueError("媒体流无法识别")
+                except Exception:
+                    path.unlink(missing_ok=True)
+                    raise
+            item["path"] = path
+            return path
+        except Exception as exc:
+            cause = exc.__cause__ or exc
+            known_errors = {"媒体地址不是受支持的腾讯 HTTPS 地址", "媒体文件不完整", "媒体格式不受支持或无法识别", "媒体重定向次数过多", "媒体流无法识别"}
+            reason = str(cause) if isinstance(cause, ValueError) and str(cause) in known_errors else "网络请求或媒体校验失败"
+            errors.append(f"{label}下载失败：{reason}")
+            print(f"[pipeline] {label}下载失败：{reason}")
+            return None
 
-        print("[pipeline] [2/5] extracting OCR and visual frames ...")
-        t0 = time.time()
+    video_path = None
+    ffmpeg_path = ffprobe_path = None
+    video_urls = resolved.get("video_urls") or ([resolved["video_url"]] if resolved.get("video_url") else [])
+    for index, url in enumerate(video_urls):
+        video_path = save("视频", "video", url, output_dir / slug)
+        if video_path:
+            ffmpeg_path, ffprobe_path = find_ffmpeg_tools(runtime_path)
+            break
+        if index + 1 < len(video_urls):
+            media.pop()
+            errors.pop()
+    image_paths = []
+    for index, url in enumerate(resolved.get("image_urls") or [], 1):
+        path = save(f"图片 {index:03d}", "image", url, output_dir / "images" / f"{index:03d}")
+        if path:
+            image_paths.append(path)
+    if resolved.get("cover_url"):
+        cover_path = save("封面", "image", resolved["cover_url"], output_dir / "cover")
+        if cover_path and not resolved.get("video_url") and not image_paths:
+            image_paths.append(cover_path)
+    bgm_urls = resolved.get("bgm_urls") or []
+    if bgm_urls:
+        # Alternative URLs describe the same background music; try each until one works.
+        for url in bgm_urls:
+            path = save("背景音乐", "audio", url, output_dir / "background_music")
+            if path:
+                break
+            if url != bgm_urls[-1]:
+                media.pop()
+                errors.pop()
+
+    is_video = resolved.get("media_type", "video") == "video"
+    visual_frame_paths = list(image_paths)
+    ocr_frame_paths = list(image_paths)
+    ocr_error = ""
+    audio_error = "图文动态无音频" if not is_video else "视频下载失败"
+    if is_video and video_path:
         try:
             ocr_frame_paths = extract_ocr_frames(ffmpeg_path, ffprobe_path, video_path, output_dir / "ocr_frames")
-            print(f"[pipeline] [2/5] OCR frames done  ({time.time()-t0:.1f}s, {len(ocr_frame_paths)} frames)")
         except Exception as exc:
-            ocr_frame_paths = []
-            ocr_frames_error = str(exc)
-            print(f"[pipeline] [2/5] OCR frames FAILED: {exc}")
-
+            ocr_error = str(exc)
         try:
-            visual_frame_paths = extract_visual_frames(ffmpeg_path, ffprobe_path, video_path, output_dir / "frames")
-            print(f"[pipeline] [2/5] visual frames done  ({time.time()-t0:.1f}s, {len(visual_frame_paths)} frames)")
+            visual_frame_paths = extract_visual_frames(ffmpeg_path, ffprobe_path, video_path, output_dir / "frames") + image_paths
         except Exception as exc:
-            visual_frame_paths = []
-            print(f"[pipeline] [2/5] visual frames FAILED: {exc}")
-    else:
-        print(f"[pipeline] [2/5] using {len(visual_frame_paths)} downloaded images as OCR/visual frames ...")
-        ocr_frame_paths = visual_frame_paths
-
-    audio_error = ""
-    if media_type == "video":
-        print("[pipeline] [3/5] extracting audio ...")
-        t0 = time.time()
+            errors.append("视频参考帧提取失败")
         try:
             audio_path = extract_audio(ffmpeg_path, video_path, output_dir / "audio")
-            print(f"[pipeline] [3/5] audio done  ({time.time()-t0:.1f}s)")
+            audio_error = ""
         except Exception as exc:
-            audio_path = output_dir / "audio" / "speech.wav"
             audio_error = str(exc)
-            print(f"[pipeline] [3/5] audio FAILED: {exc}")
-    else:
-        audio_path = output_dir / "audio" / "speech.wav"
-        audio_error = "图文动态无音频"
-        print("[pipeline] [3/5] skipping audio for image feed")
+    elif is_video:
+        ocr_error = "视频下载失败"
 
-    ocr_error = ocr_frames_error
     ocr_text = ""
-    if not ocr_frames_error:
-        ocr_input_label = "subtitle frames" if media_type == "video" else "images"
-        print(f"[pipeline] [4/5] running OCR on {len(ocr_frame_paths)} {ocr_input_label} ...")
-        t0 = time.time()
+    if ocr_frame_paths and not ocr_error:
         try:
-            ocr_text = run_ocr(ocr_frame_paths, frames_are_subtitle_crops=(media_type == "video"))
+            ocr_text = run_ocr(ocr_frame_paths, frames_are_subtitle_crops=is_video and bool(video_path))
             if not ocr_text.strip():
                 ocr_error = "OCR produced no text"
-            print(f"[pipeline] [4/5] OCR done  ({time.time()-t0:.1f}s)")
         except Exception as exc:
-            ocr_text = ""
             ocr_error = str(exc)
-            print(f"[pipeline] [4/5] OCR FAILED: {exc}")
-    (output_dir / "ocr.txt").write_text(ocr_text, encoding="utf-8")
-
-    asr_error = audio_error
+    elif not ocr_error:
+        ocr_error = "没有可用图片"
+    if is_video and image_paths:
+        try:
+            image_text = run_ocr(image_paths, frames_are_subtitle_crops=False)
+            ocr_text = "\n".join(text for text in (ocr_text, image_text) if text)
+        except Exception:
+            errors.append("正文配图 OCR 失败")
     asr_text = ""
     if not audio_error:
-        print("[pipeline] [5/5] running ASR ...")
-        t0 = time.time()
         try:
-            model_path = resolve_asr_model_dir(runtime_path, "faster-whisper")
-            asr_text = run_asr(audio_path, model_path)
+            asr_text = run_asr(audio_path, resolve_asr_model_dir(runtime_path, "faster-whisper"))
             if not asr_text.strip():
-                asr_error = "ASR produced no text"
-            print(f"[pipeline] [5/5] ASR done  ({time.time()-t0:.1f}s)")
+                audio_error = "ASR produced no text"
         except Exception as exc:
-            asr_text = ""
-            asr_error = str(exc)
-            print(f"[pipeline] [5/5] ASR FAILED: {exc}")
+            audio_error = str(exc)
+    (output_dir / "ocr.txt").write_text(ocr_text, encoding="utf-8")
     (output_dir / "asr.txt").write_text(asr_text, encoding="utf-8")
-
-    materials = build_note_materials(
-        share_url=args.share_url,
-        slug=slug,
-        metadata=resolved,
-        ocr_text=ocr_text,
-        asr_text=asr_text,
-        ocr_error=ocr_error,
-        asr_error=asr_error,
-        frame_paths=visual_frame_paths,
-    )
-    (output_dir / "note_materials.json").write_text(
-        json.dumps(materials, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
-    return 0
+    materials = build_note_materials(share_url=args.share_url, slug=slug, metadata=resolved, ocr_text=ocr_text,
+                                     asr_text=asr_text, ocr_error=ocr_error, asr_error=audio_error,
+                                     frame_paths=visual_frame_paths)
+    materials["status"]["download"] = "; ".join(errors) if errors else "成功"
+    (output_dir / "note_materials.json").write_text(json.dumps(materials, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_archive(output_dir, resolved, media, errors)
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":

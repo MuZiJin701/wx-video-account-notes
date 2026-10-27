@@ -11,24 +11,28 @@ description: 根据微信视频号分享链接下载视频或图文图片，提�
 
 1. Windows 运行 `pwsh -File "scripts/bootstrap.ps1"`；macOS/Linux 运行 `sh scripts/bootstrap.sh`。
 2. Windows 运行 `pwsh -File "scripts/invoke_pipeline.ps1" -ShareUrl "https://weixin.qq.com/sph/..."`；macOS/Linux 运行 `sh scripts/invoke_pipeline.sh --share-url "https://weixin.qq.com/sph/..."`。
-3. 检查 pipeline 生成的 `note_materials.json` 及处理状态；下载、抽帧、OCR、ASR 由脚本和 Python 完成。
+3. 从 pipeline 输出的 `output:` 路径检查 `note_materials.json` 和 `index.html`；即使命令因部分下载失败返回非零，也检查已生成的归档及处理状态。
 4. 根据下述成稿规则写同目录 `<slug>.md`；用户明确不要笔记时跳过。
 
 ## 输出约定
 
 ```text
-<output-dir>/
-  <slug>.mp4        # 仅视频动态
+<output-dir>/<slug>[_N]/
+  <slug>.<格式>      # 视频动态
+  images/            # 原始图片
+  cover.<格式>       # 可用时
+  background_music.<格式> # 可用时
+  index.html         # 离线归档及失败状态
   note_materials.json
   raw.json
   ocr.txt
   asr.txt
   ocr_frames/
-  frames/
+  frames/            # 视频参考帧
   audio/
 ```
 
-视频动态包含视频、音频和字幕裁切图；图文动态把原始图片写入 `frames/`，跳过 ASR，`asr.txt` 为空。
+每次创建独立目录；指定输出目录时也在其下创建子目录。图文动态的原图供 OCR 和识图使用；图文无语音转写。原始响应可能含临时媒体访问参数，分享前应检查。
 
 ## 成稿规则
 
@@ -39,7 +43,7 @@ description: 根据微信视频号分享链接下载视频或图文图片，提�
 
 - 如果自举失败，停止并明确说明失败的资产或命令。
 - 如果解析失败，按凭证不匹配、登录态问题、服务不可达或媒体动态不可用的错误提示处理；需要所选服务的维护者操作时明确告知。
-- OCR/ASR 失败在材料和最终 Markdown 中明确标记，不得伪装成功。
+- 下载、OCR 或 ASR 失败在材料和最终 Markdown 中明确标记；保留已成功的媒体并说明不完整。
 
 ## 实施要求
 

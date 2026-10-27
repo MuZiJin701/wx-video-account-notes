@@ -97,6 +97,15 @@ class ResolveLinkTests(unittest.TestCase):
         self.assertEqual(parsed["video_url"], "https://example.invalid/video.mp4")
         self.assertEqual(parsed["media_type"], "video")
 
+    def test_mixed_media_and_music_are_preserved(self) -> None:
+        feed = {"data": {"feedInfo": {"h264VideoInfo": {"videoUrl": "h264"}, "videoUrl": "other", "picInfo": [{"url": "one"}, {"url": "two"}], "coverUrl": "cover", "bgmInfo": {"bgmUrl": "music", "mediaStreamingUrl": "backup"}}}}
+        parsed = parse_worker_payload(feed)
+        self.assertEqual(parsed["video_url"], "h264")
+        self.assertEqual(parsed["video_urls"], ["h264", "other"])
+        self.assertEqual(parsed["image_urls"], ["one", "two"])
+        self.assertEqual(parsed["cover_url"], "cover")
+        self.assertEqual(parsed["bgm_urls"], ["music", "backup"])
+
     def test_parse_worker_payload_supports_image_feed_without_video_url(self) -> None:
         payload = {
             "data": {

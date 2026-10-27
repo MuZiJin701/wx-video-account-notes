@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Archive available videos, images, covers, and background music in separate directories with an offline page and partial-failure status. Document how to update the installed Skill.
+
+- Changed the default resolver URL from Alibaba Cloud to `http://14.103.98.50/api/channels/parse_sph`, preserving the distributed access key. Existing Skill installations need an endpoint update; Volcengine deployment and acceptance remain separate pending work.
 - Added operator-initiated Yuanbao Cookie maintenance through Playwright and temporary headless Chromium with WeChat QR login. Reuse valid Cookie without a browser; start scanning only for missing or explicitly expired login. Retain the no-echo manual Cookie update command, full parsing validation, and atomic replacement that preserves the old file on failure.
 - Removed QQ password login, QQ Mail notifications, and scheduled Cookie maintenance. Installation prepares the locked browser runtime without logging in or starting services; upgrades remove legacy maintenance units and active QQ/schedule configuration while preserving the access key, Cookie, and unrelated private state.
 - Added terminal QR rendering, explicit agreement/registration confirmation, a bounded scan deadline, native refresh, and cleanup on exit. Extra verification, cancellation, timeout, or failed validation stops the command. A standalone WeChat login/parse checker does not publish Cookie.

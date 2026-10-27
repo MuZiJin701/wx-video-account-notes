@@ -36,6 +36,16 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 
 使用 `cc-switch` 时，直接输入仓库地址。
 
+### 更新 Skill
+
+通过上面的 `skills add ... -g` 安装后，运行以下命令只更新这个全局 Skill：
+
+```sh
+skills update wx-video-account-notes -g
+```
+
+更新前请备份已安装 Skill 中自行修改的配置。此命令适用于 `skills` CLI 管理的安装；通过 Codex 插件市场或 `cc-switch` 安装时，请使用对应工具的更新方式。
+
 ### 2. 发送分享链接
 
 默认使用项目维护者的解析服务，无需配置服务器或凭证。把真实链接交给 agent：
@@ -44,6 +54,8 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 下载这个视频号分享链接的内容并生成笔记：
 https://weixin.qq.com/sph/your_share_id_here
 ```
+
+默认解析地址已改为 `http://14.103.98.50/api/channels/parse_sph`。旧版 Skill 需更新安装，或修改已安装副本的 `runtime/resolver_config.json` 中的 `api_url`，保留原 `access_key`。火山云服务尚待部署验收，地址修改完成不代表服务已经可用。
 
 想指定输出目录，可在请求中写明，例如“把这个链接整理到 D:\notes\wx”。
 
@@ -56,19 +68,20 @@ https://weixin.qq.com/sph/your_share_id_here
 ## 生成的文件
 
 ```text
-<output-dir>/
-  <slug>.mp4          # 仅视频动态
-  note_materials.json # 结构化材料和处理状态
-  raw.json            # 原始解析响应
-  ocr.txt             # 识别出的画面文字
-  asr.txt             # 语音转文字；图文动态为空
-  ocr_frames/         # 视频字幕裁切图
-  frames/             # 视频参考帧或原始图片
-  audio/              # 视频音频
+<output-dir>/<slug>[_N]/
+  <slug>.<格式>       # 视频动态，优先 H.264
+  images/             # 按顺序保存的原始图片
+  cover.<格式>        # 可用时
+  background_music.<格式> # 可用时
+  index.html          # 离线归档和失败信息
+  note_materials.json # 笔记材料及下载、OCR、ASR 状态
+  raw.json            # 原始解析响应，可能包含临时访问参数
+  ocr.txt, asr.txt
+  ocr_frames/, frames/, audio/
   <slug>.md           # 最终笔记
 ```
 
-图文动态不生成视频和音频；有识图能力的 agent 还会读取 `frames/` 中的图片辅助写笔记。处理失败会记录在材料中，不会伪装成成功。
+每次处理在输出目录下创建独立子目录，避免覆盖已有内容；指定输出目录时也一样。图文原图用于 OCR 和识图，视频参考帧保存在 `frames/`。单项下载失败时保留成功内容、记录失败并返回非零状态；归档仍可查看。媒体内容取决于解析服务提供的信息，不保证私密、不可访问或加密内容可下载。
 
 ## 运行方式与限制
 

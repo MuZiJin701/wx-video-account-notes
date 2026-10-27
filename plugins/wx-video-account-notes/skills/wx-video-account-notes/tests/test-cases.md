@@ -20,8 +20,8 @@ Run from the Skill directory; replace the sample link with a valid share link:
 
 ## Cases
 
-1. **Video post, default output**: use `https://weixin.qq.com/sph/AybwTXRwkt`. Confirm the output contains `<slug>.mp4`, `note_materials.json`, `raw.json`, `ocr.txt`, `asr.txt`, `ocr_frames/`, `frames/`, and `audio/`; confirm that `note_materials.json` contains `visual_frames`.
-2. **Image post, default output**: use `https://weixin.qq.com/sph/AeGgo9k3KL`. Confirm images are written to `frames/`, video/audio/ASR are skipped, `asr.txt` is empty, and the result records that the image post has no audio.
+1. **Video post, default output**: use `https://weixin.qq.com/sph/AybwTXRwkt`. Confirm the output contains `<slug>.mp4`, `note_materials.json`, `raw.json`, `ocr.txt`, `asr.txt`, `ocr_frames/`, `frames/`, `audio/`, and `index.html`; confirm that `note_materials.json` contains `visual_frames`.
+2. **Image post, default output**: use `https://weixin.qq.com/sph/AeGgo9k3KL`. Confirm images are written to `images/`, video/audio/ASR are skipped, `asr.txt` is empty, and the result records that the image post has no audio.
 3. **Custom output directory**: confirm all note materials are written to the requested directory and the agent can create the final `<slug>.md` beside them.
 4. **First bootstrap**: confirm creation of `.runtime/<os>-<arch>/`, reuse of compatible PATH uv (>=0.11.25) or download and verification of pinned private uv when missing/incompatible, then private Python, FFmpeg, model, and locked dependency sync. Check missing, old, broken, and compatible PATH uv separately; preserve the system installation.
 5. **Repeat bootstrap**: confirm verified assets are reused rather than downloaded again and different platform directories are not reused.
