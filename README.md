@@ -44,7 +44,18 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 skills update wx-video-account-notes -g
 ```
 
-更新前请备份已安装 Skill 中自行修改的配置。此命令适用于 `skills` CLI 管理的安装；通过 Codex 插件市场或 `cc-switch` 安装时，请使用对应工具的更新方式。
+通过 Codex 插件市场安装后，刷新本项目的市场快照：
+
+```sh
+codex plugin marketplace upgrade wx-video-account-notes-dev
+codex plugin list --marketplace wx-video-account-notes-dev
+```
+
+刷新后检查已安装的插件是否已更新，并在新会话中使用。市场刷新命令更新的是市场快照，不保证当前会话立即加载新内容。
+
+更新前请备份已安装 Skill 中自行修改的配置。通过 `cc-switch` 安装时，请使用该工具的更新方式。
+
+默认解析服务已更新，旧版 Skill 请按上述方式更新。配置位于实际安装的 Skill 的 `runtime/resolver_config.json`，包含服务地址 `api_url` 和访问凭证 `access_key`；默认服务使用项目当前默认的访问凭证。自部署配置及环境变量说明见[自部署指南](docs/resolver-deployment.md#4-连接客户端)。
 
 ### 2. 发送分享链接
 
@@ -54,8 +65,6 @@ skills update wx-video-account-notes -g
 下载这个视频号分享链接的内容并生成笔记：
 https://weixin.qq.com/sph/your_share_id_here
 ```
-
-默认解析地址已改为 `http://14.103.98.50/api/channels/parse_sph`。旧版 Skill 需更新安装，或修改已安装副本的 `runtime/resolver_config.json` 中的 `api_url`，保留原 `access_key`。火山云服务尚待部署验收，地址修改完成不代表服务已经可用。
 
 想指定输出目录，可在请求中写明，例如“把这个链接整理到 D:\notes\wx”。
 

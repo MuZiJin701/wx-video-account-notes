@@ -44,7 +44,18 @@ After installing with `skills add ... -g`, update only this global Skill with:
 skills update wx-video-account-notes -g
 ```
 
-Back up any configuration you changed in the installed Skill before updating. This command applies to installations managed by the `skills` CLI; for Codex plugin marketplace or `cc-switch` installations, use the corresponding tool's update method.
+For installations through the Codex plugin marketplace, refresh this project's marketplace snapshot:
+
+```sh
+codex plugin marketplace upgrade wx-video-account-notes-dev
+codex plugin list --marketplace wx-video-account-notes-dev
+```
+
+After refreshing, check whether the installed plugin has updated and use it in a new session. The refresh command updates the marketplace snapshot; it does not guarantee the current session immediately loads the new content.
+
+Back up any configuration you changed in the installed Skill before updating. For `cc-switch` installations, use its update method.
+
+The default resolver has changed; update older Skill installations as described above. The installed Skill's `runtime/resolver_config.json` contains the service URL `api_url` and access credential `access_key`; the default service uses the project's current default credential. See the [self-hosting guide](docs/resolver-deployment.md#4-连接客户端) for custom configuration and environment variables.
 
 ### 2. Send a share link
 
@@ -54,8 +65,6 @@ By default, the Skill uses the maintainer's resolver. You do not need a server o
 Download the content from this WeChat Channels share link and write a note:
 https://weixin.qq.com/sph/your_share_id_here
 ```
-
-The default resolver URL is now `http://14.103.98.50/api/channels/parse_sph`. Update older Skill installations or change `api_url` in the installed copy's `runtime/resolver_config.json`, keeping the existing `access_key`. Deployment and acceptance on Volcengine are still pending; changing the URL alone does not make the service available.
 
 To choose an output directory, include it in the request, for example, “Save this note under D:\notes\wx.”
 
