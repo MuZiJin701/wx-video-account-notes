@@ -44,14 +44,14 @@ After installing with `skills add ... -g`, update only this global Skill with:
 skills update wx-video-account-notes -g
 ```
 
-For installations through the Codex plugin marketplace, refresh this project's marketplace snapshot:
+For installations through the Codex plugin marketplace, Codex attempts to refresh configured Git marketplaces in the background at startup and refreshes plugin caches when updates are found. You can also refresh this project's marketplace and inspect the plugin manually:
 
 ```sh
 codex plugin marketplace upgrade wx-video-account-notes-dev
 codex plugin list --marketplace wx-video-account-notes-dev
 ```
 
-After refreshing, check whether the installed plugin has updated and use it in a new session. The refresh command updates the marketplace snapshot; it does not guarantee the current session immediately loads the new content.
+Automatic refresh depends on network access and marketplace configuration; refresh manually if it fails. Check the plugin in a new session, as the current session may not immediately load the new content.
 
 Back up any configuration you changed in the installed Skill before updating. For `cc-switch` installations, use its update method.
 

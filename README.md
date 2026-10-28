@@ -44,14 +44,14 @@ codex plugin add wx-video-account-notes@wx-video-account-notes-dev
 skills update wx-video-account-notes -g
 ```
 
-通过 Codex 插件市场安装后，刷新本项目的市场快照：
+通过 Codex 插件市场安装后，Codex 启动时会在后台尝试刷新已配置的 Git 市场，并在发现更新时刷新插件缓存。也可以手动刷新本项目的市场并检查插件：
 
 ```sh
 codex plugin marketplace upgrade wx-video-account-notes-dev
 codex plugin list --marketplace wx-video-account-notes-dev
 ```
 
-刷新后检查已安装的插件是否已更新，并在新会话中使用。市场刷新命令更新的是市场快照，不保证当前会话立即加载新内容。
+自动刷新依赖网络和市场配置，失败时可手动刷新；请在新会话中检查插件是否已更新。当前会话不保证立即加载新内容。
 
 更新前请备份已安装 Skill 中自行修改的配置。通过 `cc-switch` 安装时，请使用该工具的更新方式。
 
