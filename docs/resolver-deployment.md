@@ -1,20 +1,20 @@
 # 自部署指南
 
-按下面 4 步部署：安装程序 → 微信扫码 → 启动服务 → 连接客户端。
+按下面 4 步搭建你自己的解析服务器：**安装程序 → 微信扫码登录 → 启动服务 → 连接客户端**。
 
-服务器只负责解析视频号分享链接。下载媒体、OCR、ASR 和生成笔记仍在运行 agent 的电脑上完成。
+服务器只负责把视频号分享链接解析成媒体下载地址；下载视频/图片、OCR 识字、语音转写和整理笔记仍在你运行 Agent 的电脑上完成。
 
 ## 部署前准备
 
-- 一台 Linux x64 服务器，使用 systemd 管理服务，能联网下载依赖。
-- 用 root 账号通过 SSH 登录，确认已有 Git、Python 3（`/usr/bin/python3`）、curl 和 tar。
-- 确认 80 端口没有被其他程序占用，并在云服务器安全组和防火墙中允许客户端访问。内部解析端口 17879 不需要对外开放。
+- 一台 **Linux x64** 服务器（支持 `systemd`），可以访问公网下载依赖。
+- 以 `root` 用户通过 SSH 登录，服务器上已安装 `git`、`python3`（`/usr/bin/python3`）、`curl` 和 `tar`。
+- 确认 **80 端口**未被占用，并在云服务器安全组与防火墙中放行 80 端口（内部解析端口 `17879` 仅限本机访问，不要对外开放）。
 
-下面第 1～3 步的命令都在服务器上执行。安装目录固定为 `/root/projects/wx-video-account-notes`。
+以下第 1～3 步均在服务器上执行，安装目录固定为 `/root/projects/wx-video-account-notes`。
 
 ## 1. 安装程序
 
-首次安装时运行；已有部署请看文末的“更新程序”。
+首次部署运行以下命令：
 
 ```sh
 mkdir -p /root/projects
@@ -23,39 +23,36 @@ cd /root/projects/wx-video-account-notes
 sh server/install.sh
 ```
 
-安装脚本会下载项目使用的 Python、Playwright 和 Chromium，并安装所需的系统库，首次运行可能较慢。安装完成后会生成 `config.json` 和服务配置，但还不会启动服务或登录元宝。
+脚本会自动准备服务端所需的 Python、Playwright 和 Chromium 环境，并生成配置文件 `config.json` 与两个 systemd 服务单元（首次安装可能需要几分钟，此时暂不启动服务也不登录）。
 
-`config.json` 中的 `access_key` 会自动生成，稍后填写到客户端；`verify_link` 是用来检查 Cookie 的视频号分享链接，通常先保留默认值。
+`config.json` 会自动生成一个随机 `access_key`（客户端连接凭证），第 4 步会用到；`verify_link` 用于检测登录态是否有效，初次使用保持默认即可。
 
 ## 2. 微信扫码获取 Cookie
 
-在同一个 SSH 终端运行：
+在同一个 SSH 终端中运行：
 
 ```sh
 .runtime/server/.venv/bin/python maintain_cookie.py
 ```
 
-阅读协议提示后输入 `yes`，用微信扫描终端二维码，并在手机上确认。若提示确认注册，请按提示决定是否继续；扫码可能创建新的元宝账号。
+1. 终端会先显示服务与隐私协议提示，确认后输入 `yes`。
+2. 终端会打印二维码，用手机微信扫码并在手机上确认。如果页面提示首次注册元宝账号，按提示确认是否继续。
+3. 等待大约几秒，看到下面任一提示即可进入下一步：
+   - `COOKIE_UPDATED`：扫码成功，且已用一条测试链接验证通过并保存。
+   - `COOKIE_REUSED`：原有 Cookie 仍然有效，无需重新扫码。
 
-看到以下任一结果即可继续：
-
-- `COOKIE_UPDATED`：扫码成功，新 Cookie 已通过解析检查并保存。
-- `COOKIE_REUSED`：原 Cookie 仍然有效，无需扫码。
-
-二维码最多等待 3 分钟。终端显示不完整时先拉宽窗口；也可在命令结束前查看提示中的临时图片。超时、取消、额外验证或检查失败会退出，保留原 Cookie；处理后重新运行即可。
-
-扫码无法完成时，可以使用下面的“手动更新 Cookie”。
+> 二维码有效期为 3 分钟。如果终端显示不全或变形，请拉宽 SSH 窗口；扫码遇到困难时，也可改用文末的“手动更新 Cookie”。
 
 ## 3. 启动服务并检查
+
+运行以下命令启用开机自启并启动服务：
 
 ```sh
 systemctl enable --now wx-notes-resolver wx-notes-gateway
 systemctl status wx-notes-resolver wx-notes-gateway --no-pager
 ```
 
-两个服务都显示 `active (running)`，说明已启动，也会在开机时自动启动。接着完成第 4 步，用一条真实分享链接确认解析可用，无需先运行开发测试。
-
-启动失败时查看最近日志：
+当 `wx-notes-resolver` 和 `wx-notes-gateway` 都显示 `active (running)` 时，说明服务已正常运行。如果启动失败，用下面命令查看报错日志：
 
 ```sh
 journalctl -u wx-notes-resolver -u wx-notes-gateway -n 50 --no-pager
@@ -63,56 +60,77 @@ journalctl -u wx-notes-resolver -u wx-notes-gateway -n 50 --no-pager
 
 ## 4. 连接客户端
 
-在服务器查看配置，找到 `access_key`：
+先在服务器上查看自动生成的 `access_key`：
 
 ```sh
 cat config.json
 ```
 
-在**运行 agent 的电脑**上，备份并编辑实际安装的 Skill 中的 `runtime/resolver_config.json`：
+接着回到**运行 Agent 的电脑**，将 Skill 指向你的服务器（推荐直接修改配置文件，也可用环境变量覆盖）。
+
+### 首选方式：修改已安装 Skill 的 `runtime/resolver_config.json`
+
+找到你电脑上实际安装的 `wx-video-account-notes` 目录下的 `runtime/resolver_config.json`（修改仓库源码不会对已安装的插件生效）：
+
+| 安装方式 | 常见配置文件路径 |
+| --- | --- |
+| `skills` CLI 全局安装 | `~/.agents/skills/wx-video-account-notes/runtime/resolver_config.json` |
+| Antigravity 插件安装 | `~/.gemini/config/plugins/wx-video-account-notes/skills/wx-video-account-notes/runtime/resolver_config.json` |
+| Codex 插件安装 | `~/.codex/plugins/cache/wx-video-account-notes-dev/wx-video-account-notes/<版本号>/skills/wx-video-account-notes/runtime/resolver_config.json` |
+| Claude Code 插件安装 | `~/.claude/plugins/` 下对应插件目录中的 `skills/wx-video-account-notes/runtime/resolver_config.json` |
+| Grok Build / Copilot CLI | 各自插件安装目录中的 `skills/wx-video-account-notes/runtime/resolver_config.json` |
+
+先备份原文件，再将内容改为你自己的服务器地址和凭证：
 
 ```json
 {
   "api_url": "http://你的服务器IP/api/channels/parse_sph",
-  "access_key": "填写服务器config.json中的access_key"
+  "access_key": "填写服务器 config.json 中的 access_key"
 }
 ```
 
-修改安装副本中的文件；只改源码仓库不会影响已经安装的 Skill。若设置过 `WX_VIDEO_ACCOUNT_RESOLVE_API` 和 `WX_VIDEO_ACCOUNT_RESOLVE_KEY`，它们会覆盖文件配置，须同时更新或同时取消。更新、重装 Skill 前也请备份这份配置。
+> 以后更新或重装 Skill / 插件时，安装目录可能会被新文件覆盖；更新前请记得备份此文件，更新后再重新填入。
 
-给 agent 一条真实的视频号分享链接，确认能下载内容并生成笔记，部署就完成了。自部署失败时不会自动切换到默认服务。
+### 备选方式：设置环境变量
 
-HTTP 会明文传输访问凭证、分享链接和结果；需要加密时，请通过 HTTPS 反向代理访问网关。元宝 Cookie 和服务器配置不要提交到 Git 或贴到公开日志。
+如果不想在每次更新插件后重新修改文件，也可以在你本机或启动 Agent 的环境中同时配置以下两个环境变量（会优先覆盖 `resolver_config.json` 中的设置，必须成对配置）：
+
+- `WX_VIDEO_ACCOUNT_RESOLVE_API`：`http://你的服务器IP/api/channels/parse_sph`
+- `WX_VIDEO_ACCOUNT_RESOLVE_KEY`：服务器 `config.json` 中的 `access_key`
+
+配置完成后，给 Agent 发送一条真实的视频号分享链接测试：能正常下载并生成笔记即部署完成。
+
+> **安全提示**：自部署失败时**不会**悄悄切回默认公网服务。如果通过 HTTP 访问，凭证、链接和解析结果会明文传输；建议生产使用时在前面配置 HTTPS 反向代理。切勿把 `cookie` 或 `config.json` 提交到 Git。
 
 ## 日常维护
 
 ### Cookie 失效后重新扫码
 
-本方案没有定时登录或邮件通知。解析提示登录失效时，在服务器运行：
+服务端没有定时自动登录或邮件提醒。当客户端提示“登录态失效”时，SSH 登录服务器运行：
 
 ```sh
 cd /root/projects/wx-video-account-notes
 .runtime/server/.venv/bin/python maintain_cookie.py
 ```
 
-更新 Cookie 后不用重启服务。网络故障或登录状态不明时，程序不会直接重登；请先检查网络和 `config.json` 中的 `verify_link` 是否仍然有效。
+更新成功后立即生效，无需重启服务。如果只是网络波动导致检查异常，程序会保留原 Cookie，不会直接触发重新扫码。
 
-### 手动更新 Cookie
+### 手动更新 Cookie（扫码不可用时）
 
-在正常浏览器中登录元宝，打开开发者工具的“网络”，从发往元宝 API 的请求头中复制完整 `Cookie` 值。不要使用 `document.cookie`，它可能缺少必要凭证。
-
-回到服务器运行，按提示粘贴（输入不回显）：
+1. 在电脑浏览器正常登录元宝网页版，按 `F12` 打开“网络（Network）”面板。
+2. 随便触发一次解析或刷新，找到发往元宝接口的请求，从**请求头（Request Headers）**里复制完整的 `Cookie` 字符串（不要使用控制台的 `document.cookie`，它缺少必要凭证）。
+3. 回到服务器执行以下命令并按提示粘贴（输入内容不会回显在屏幕上）：
 
 ```sh
 cd /root/projects/wx-video-account-notes
 python3 update_cookie.py
 ```
 
-看到“Cookie 已更新；解析验证通过”即成功。此方式同样先检查再替换，失败保留原文件。
+看到 `Cookie 已更新；解析验证通过` 即表示成功；如果验证失败，程序会保留原来的 Cookie。
 
-### 更新程序
+### 更新服务端程序
 
-先备份 `config.json`、`cookie` 和 `.runtime/`，保留自己的源码修改，再运行：
+先备份 `config.json`、`cookie` 和 `.runtime/`，然后运行：
 
 ```sh
 cd /root/projects/wx-video-account-notes
@@ -121,7 +139,7 @@ sh server/install.sh
 systemctl restart wx-notes-resolver wx-notes-gateway
 ```
 
-若 Git 提示有本地修改或分支分歧，先处理提示，不要强制覆盖。安装脚本保留访问凭证和 Cookie；从旧版升级时，会停用旧 Cookie 定时任务，移除活动配置中的 QQ 密码和维护周期，不再使用旧浏览器资料。
+安装脚本会自动保留原有的 `access_key` 和 `cookie`。
 
 ### 停止服务
 
@@ -129,18 +147,18 @@ systemctl restart wx-notes-resolver wx-notes-gateway
 systemctl stop wx-notes-gateway wx-notes-resolver
 ```
 
-如需同时取消开机启动，运行 `systemctl disable wx-notes-gateway wx-notes-resolver`。恢复时重新执行第 3 步的启动命令。
+如需取消开机自启，运行 `systemctl disable wx-notes-gateway wx-notes-resolver`。恢复时重新执行第 3 步的启动命令即可。
 
 ## 遇到问题
 
-| 情况 | 先这样处理 |
+| 情况 | 处理方法 |
 | --- | --- |
-| 终端太窄、字符乱码 | 拉宽窗口、使用支持 UTF-8 的 SSH 终端后重试。 |
-| 扫码超时或取消 | 重新运行维护命令，再次扫码。 |
-| 要求额外验证，或网页流程发生变化 | 在正常网页处理，或改用手动更新 Cookie。程序不会自动解验证码。 |
-| 提示 `LOGIN_TERMS_CHANGED` | 网页协议已变化，需要先核对并更新程序中的协议链接。 |
-| 提示已有维护命令运行 | 等前一条命令退出，不要同时运行多个维护命令。 |
-| Cookie 检查失败、网络或上游不可用 | 检查服务器网络，并将 `verify_link` 换成有效分享链接；不要只凭解析失败判断 Cookie 过期。 |
-| 本机能访问，客户端连不上 | 检查服务器 IP、安全组、防火墙、80 端口及客户端访问凭证。 |
+| 终端太窄、二维码变形扫不出来 | 拉宽终端窗口、换用支持 UTF-8 的终端，或改用“手动更新 Cookie”。 |
+| 扫码超时或不小心取消 | 重新运行 `maintain_cookie.py` 再扫一次。 |
+| 提示额外安全验证或网页流程变化 | 在自己电脑浏览器完成登录后，用“手动更新 Cookie”导入。 |
+| 提示 `LOGIN_TERMS_CHANGED` | 元宝协议页面有更新，需先核对并更新程序中的协议链接。 |
+| 提示已有维护命令在运行 | 等待前一条 `maintain_cookie.py` 退出后再执行，不要同时开两个。 |
+| 服务器本机正常，客户端连不上 | 检查云服务器安全组/防火墙是否放行 80 端口，以及 `api_url` 与 `access_key` 是否填写正确。 |
+| 提示 Cookie 检查失败但不确定是否真过期 | 先确认服务器公网正常，并检查 `config.json` 中的 `verify_link` 是否仍然有效。 |
 
-需要开发测试时，再看[独立扫码检查与完整验收清单](test-cases.md#standalone-wechat-login-check)。方案依据和已知限制见 [ADR 0005](adr/0005-manual-wechat-cookie-maintenance.md) 与[扫码验收记录](research/yuanbao-manual-qr-login.md)。
+开发调试与完整验收步骤见[独立扫码检查与验收清单](test-cases.md#standalone-wechat-login-check)，技术背景见 [ADR 0005](adr/0005-manual-wechat-cookie-maintenance.md) 与[扫码验收记录](research/yuanbao-manual-qr-login.md)。

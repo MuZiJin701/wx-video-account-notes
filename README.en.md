@@ -1,10 +1,8 @@
 # wx-video-account-notes
 
-Download WeChat Channels videos, images, and available covers and background music from a share link; create an offline archive, extract OCR/ASR materials, and have an agent write Markdown notes.
+Turn a WeChat Channels share link into downloaded videos or images, offline archives, OCR/ASR note materials, and a structured Markdown note written by your AI agent.
 
-[中文 README](README.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
-
-> **Self-hosted login:** the operator runs a command that starts temporary headless Chromium through Playwright and obtains Yuanbao Cookie through WeChat QR login. Manual Cookie pasting remains available. Both paths validate full parsing before replacement and preserve the old file on failure. See the [self-hosting guide (Chinese)](docs/resolver-deployment.md).
+[简体中文](README.md) · [![Tests](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml/badge.svg)](https://github.com/MuZiJin701/wx-video-account-notes/actions/workflows/tests.yml)
 
 ## See it in action
 
@@ -12,114 +10,104 @@ Download WeChat Channels videos, images, and available covers and background mus
 
 ![Locally saved video, Markdown notes, reference frames, and OCR/ASR note materials](docs/images/产物.png)
 
-OCR succeeded in this example; ASR recognized no speech. Notes flag failures and uncertainty.
+In this example, OCR succeeded while ASR found no speech; the final note flags any missing or uncertain parts.
 
 ## Get started
 
-Supports Windows x64, Intel macOS x64, and Linux x64. The first run downloads a private Python runtime, dependencies, FFmpeg, and models from sources including GitHub Releases and Hugging Face. It needs network access and disk space; later runs reuse them.
+- **Supported platforms**: Windows x64, Intel macOS x64, and Linux x64.
+- **Ready out of the box**: Uses the maintainer's default resolver by default — no server setup or API key required.
+- **First run**: Automatically downloads a private local runtime (Python, FFmpeg, and OCR/ASR models). Network access and disk space are required on the first run and reused afterward.
 
-An available system uv (0.11.25 or newer) is preferred. Missing or incompatible installations fall back to the existing pinned, checksum-verified project-private uv.
+### 1. Install and update
 
-### 1. Install the Skill
+Pick one installation method per host (`skills` CLI is recommended for most users).
 
-Use the Vercel Labs Skills CLI and select Codex, Claude Code, Grok Build, Cursor, or GitHub Copilot CLI. Choose one installation method per host.
+#### Option 1: Using the `skills` CLI (recommended)
+
+Run the command below and select your host (Codex, Claude Code, Antigravity, Grok Build, or GitHub Copilot CLI):
 
 ```sh
 npm install -g skills
 skills add https://github.com/MuZiJin701/wx-video-account-notes.git -g
 ```
 
-With `cc-switch`, enter the repository URL.
-
-#### Native plugin installation
-
-| Host | Install |
-| --- | --- |
-| Codex | `codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git`<br>`codex plugin add wx-video-account-notes@wx-video-account-notes-dev` |
-| Claude Code | `claude plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`claude plugin install wx-video-account-notes@wx-video-account-notes-dev` |
-| Grok Build | `grok plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`grok plugin install wx-video-account-notes --trust` |
-| GitHub Copilot CLI | `copilot plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`copilot plugin install wx-video-account-notes@wx-video-account-notes-dev` |
-| Cursor | Import `https://github.com/MuZiJin701/wx-video-account-notes.git` from **Dashboard → Plugins & MCPs → Team Marketplaces**. For a local checkout, follow [Cursor’s local plugin instructions](https://cursor.com/docs/plugins#test-plugins-locally) with `plugin/`. |
-
-### Update the Skill
-
-After installing with `skills add ... -g`, update only this global Skill with:
+Update later:
 
 ```sh
 skills update wx-video-account-notes -g
 ```
 
-For installations through the Codex plugin marketplace, Codex attempts to refresh configured Git marketplaces in the background at startup and refreshes plugin caches when updates are found. You can also refresh this project's marketplace and inspect the plugin manually:
+If you use `cc-switch`, add `https://github.com/MuZiJin701/wx-video-account-notes.git` directly.
 
-```sh
-codex plugin marketplace upgrade wx-video-account-notes-dev
-codex plugin list --marketplace wx-video-account-notes-dev
-```
+#### Option 2: Native plugin CLI commands
 
-Automatic refresh depends on network access and marketplace configuration; refresh manually if it fails. Check the plugin in a new session, as the current session may not immediately load the new content.
+| Host | Install command |
+| --- | --- |
+| Codex | `codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git`<br>`codex plugin add wx-video-account-notes@wx-video-account-notes-dev` |
+| Claude Code | `claude plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`claude plugin install wx-video-account-notes@wx-video-account-notes-dev` |
+| Antigravity | `agy plugin install https://github.com/MuZiJin701/wx-video-account-notes` |
+| Grok Build | `grok plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`grok plugin install wx-video-account-notes --trust` |
+| GitHub Copilot CLI | `copilot plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`copilot plugin install wx-video-account-notes@wx-video-account-notes-dev` |
 
-Back up any configuration you changed in the installed Skill before updating. For `cc-switch` installations, use its update method.
+To update a native plugin installation, run your host's update command (for example, `codex plugin marketplace upgrade wx-video-account-notes-dev` or `claude plugin update wx-video-account-notes@wx-video-account-notes-dev`) or re-run the install command, then open a new session.
 
-The default resolver has changed; update older Skill installations as described above. The installed Skill's `runtime/resolver_config.json` contains the service URL `api_url` and access credential `access_key`; the default service uses the project's current default credential. See the [self-hosting guide](docs/resolver-deployment.md#4-连接客户端) for custom configuration and environment variables.
+### 2. Send a share link to generate notes
 
-### 2. Select the Skill and send a share link
+To prevent accidental triggers during normal chat, this Skill is **explicit-invocation only**. Select it explicitly before sending your link:
 
-In Codex, type `$` and select `wx-video-account-notes`. In Claude Code, use `/wx-video-account-notes` for the standalone Skill or `/wx-video-account-notes:wx-video-account-notes` for the plugin. In Grok Build, Cursor, or Copilot CLI, select the Skill from the slash menu. The Skill uses the maintainer's resolver by default and requires no server setup or credentials.
+- **Codex**: Type `$` and select `wx-video-account-notes`
+- **Claude Code**: Use `/wx-video-account-notes` (standalone Skill) or `/wx-video-account-notes:wx-video-account-notes` (plugin)
+- **Antigravity / Grok Build / Copilot CLI**: Invoke `/wx-video-account-notes` or choose it from the slash menu
+
+Then send your WeChat Channels share link:
 
 ```text
 Use $wx-video-account-notes to download the content from this WeChat Channels share link and write a note:
 https://weixin.qq.com/sph/your_share_id_here
 ```
 
-To choose an output directory, include it in the request, for example, “Save this note under D:\notes\wx.”
-
-### Want to use your own server?
-
-Follow the [self-hosting guide (Chinese)](docs/resolver-deployment.md) on a Linux x64 server with systemd. Run maintenance in an interactive SSH terminal: valid Cookie is reused, while missing or explicitly expired login opens a WeChat QR. The browser closes when the command ends. If scanning cannot complete, use the existing no-echo manual Cookie update command.
-
-WeChat scanning, full parsing, Cookie publication and subsequent reuse passed on an isolated server. Phone scanning of the ordinary SSH character QR, live expiry refresh, new-account registration and production systemd lifecycle still need separate validation. Additional verification may occur; there is no scheduled login or email alert. See the [acceptance record and limits (Chinese)](docs/research/yuanbao-manual-qr-login.md#微信手动维护改造与真实验收2026-10-21).
+To save into a specific folder, just mention it in your message (for example, “Save this note under `D:\notes\wx`”).
 
 ## Output files
 
+Each run creates a new subfolder under the output directory so existing notes are never overwritten:
+
 ```text
 <output-dir>/<slug>[_N]/
-  <slug>.<format>      # video posts, H.264 preferred
-  images/              # original images in order
-  cover.<format>       # when available
-  background_music.<format> # when available
-  index.html           # offline archive and failures
-  note_materials.json  # notes and download, OCR, ASR status
-  raw.json             # raw response; may contain temporary access parameters
-  ocr.txt, asr.txt
-  ocr_frames/, frames/, audio/
-  <slug>.md            # final note
+  <slug>.mp4 / .mov        # downloaded video (when available)
+  images/                  # original images for image posts (when available)
+  cover.*                  # cover image (when available)
+  background_music.*       # background music (when available)
+  index.html               # offline archive viewer and error details
+  note_materials.json      # structured materials for the agent
+  raw.json                 # raw resolver response
+  ocr.txt / asr.txt        # extracted on-screen text and speech transcript
+  ocr_frames/ frames/ audio/
+  <slug>.md                # final Markdown note
 ```
 
-Each run creates a separate child directory, including when an output directory is specified. Original images support OCR and visual analysis; video reference frames are in `frames/`. A failed media download preserves successful files, records the failure, and returns a nonzero status while keeping the archive available. Availability depends on the resolver response; private, inaccessible or encrypted media is not guaranteed.
+If an individual media file fails to download, everything else and the offline archive are still preserved and the failure is recorded.
 
-## How it works and current limits
+## Notes and self-hosting
 
-- The server only resolves share links. Media download, OCR, ASR, and note writing run locally; no GPU or system FFmpeg is required.
-- The default resolver uses public HTTP, so share links and results travel in plaintext. Its shared access key ships with the public Skill and is not secret. The service handles at most 30 requests per minute across all users.
-- The maintainer updates the default resolver's Yuanbao login. Self-hosting reuses valid Cookie and lets the operator refresh expired login through a WeChat QR in an SSH terminal or manual Cookie pasting. HTTPS can be configured; there is no scheduled login or email notification.
-- ARM64, GPU inference, and offline first-time setup are not supported. The private Python version is 3.13.14; ASR uses faster-whisper tiny on CPU.
+- **Runs locally without a GPU**: The server only resolves the share link. Downloading media, running OCR/ASR (CPU `faster-whisper tiny`), and writing the Markdown note all happen on your computer.
+- **Default resolver limits**: The maintainer's default resolver runs over public HTTP and shares a 30 requests/minute limit across all users. Do not use it for private or sensitive links.
+- **Self-hosted resolver (optional)**: To run your own private resolver, follow the [self-hosting guide (Chinese)](docs/resolver-deployment.md) on a Linux x64 server and maintain login cookies via WeChat QR scan or manual Cookie pasting.
+- **Unsupported setups**: ARM64 (such as Apple Silicon Macs), GPU acceleration, and offline first-time setup are not supported.
 
 ## Development
 
+Run the client and server unit test suites from the repository root:
+
 ```sh
 uv run --locked --isolated --directory plugin/skills/wx-video-account-notes python -B -m unittest discover -s ../../../tests
+python3 -m unittest discover -s server
 ```
 
-Run server tests from the repository root with `python3 -m unittest discover -s server` (standard library only). For real bootstrap and end-to-end checks, use the [manual acceptance checklist](docs/test-cases.md).
+More documentation:
 
-GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Personal credentials are not uploaded to CI. The [isolated checks](docs/test-cases.md#standalone-wechat-login-check) cover WeChat QR login and full parsing; offline tests and credential-free CI do not establish successful cloud authentication.
+- [Self-hosting guide and troubleshooting (Chinese)](docs/resolver-deployment.md)
+- [Manual smoke test checklist](docs/test-cases.md) · [Skill execution guide (Chinese)](plugin/skills/wx-video-account-notes/SKILL.md)
+- [Repository map (Chinese)](目录说明.md) · [Domain glossary (Chinese)](GLOSSARY.md) · [Architecture decisions](docs/adr/) · [Resolver architecture (Chinese)](docs/research/wx-channels-architecture.md) · [Changelog](CHANGELOG.md)
 
-## More documentation
-
-- [Self-hosting and troubleshooting (Chinese)](docs/resolver-deployment.md)
-- [WeChat QR and manual Cookie checks (Chinese)](docs/research/yuanbao-manual-qr-login.md) · [Historical QQ password and mail experiments (Chinese)](docs/research/yuanbao-qq-login.md)
-- [Skill execution guide (Chinese)](plugin/skills/wx-video-account-notes/SKILL.md)
-- [Repository map (Chinese)](目录说明.md) · [Domain glossary (Chinese)](GLOSSARY.md) · [Architecture decisions](docs/adr/)
-- [Resolver architecture (Chinese)](docs/research/wx-channels-architecture.md) · [Tests and evaluation](docs/test-cases.md) · [Changelog](CHANGELOG.md)
-
-Read [AGENTS.md](AGENTS.md) before contributing. Use GitHub Issues for requests and bugs. Licensed under [MIT](LICENSE).
+Read [AGENTS.md](AGENTS.md) before contributing, and use GitHub Issues for bug reports or requests. Licensed under [MIT](LICENSE).

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add native plugin installation for Claude Code, Grok Build, Cursor and GitHub Copilot CLI. Codex and Copilot CLI share the Agent Plugins manifest. Recommend `skills` for standalone installation.
+- Add native CLI plugin installation for Claude Code, Antigravity, Grok Build and GitHub Copilot CLI alongside Codex, sharing `.claude-plugin/marketplace.json` and `plugin/plugin.json`. Recommend `skills` for standalone installation.
 - Use `plugin/` for the Codex package and keep client tests and acceptance materials in the repository's development tree.
 - Require explicit Skill selection in Codex and Claude Code.
 - Archive available videos, images, covers, and background music in separate directories with an offline page and partial-failure status. Document how to update the installed Skill.
