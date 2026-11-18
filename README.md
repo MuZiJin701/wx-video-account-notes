@@ -22,19 +22,24 @@
 
 ### 1. 安装 Skill
 
+首选 Vercel Labs Skills CLI。运行后选择 Codex、Claude Code、Grok Build、Cursor 或 GitHub Copilot CLI。同一宿主选择一种安装方式。
+
 ```sh
 npm install -g skills
-skills add https://github.com/MuZiJin701/wx-video-account-notes.git -g -y
-```
-
-Codex 用户也可通过插件市场安装：
-
-```sh
-codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git
-codex plugin add wx-video-account-notes@wx-video-account-notes-dev
+skills add https://github.com/MuZiJin701/wx-video-account-notes.git -g
 ```
 
 使用 `cc-switch` 时，直接输入仓库地址。
+
+#### 原生插件安装
+
+| 宿主 | 安装方式 |
+| --- | --- |
+| Codex | `codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git`<br>`codex plugin add wx-video-account-notes@wx-video-account-notes-dev` |
+| Claude Code | `claude plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`claude plugin install wx-video-account-notes@wx-video-account-notes-dev` |
+| Grok Build | `grok plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`grok plugin install wx-video-account-notes --trust` |
+| GitHub Copilot CLI | `copilot plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`copilot plugin install wx-video-account-notes@wx-video-account-notes-dev` |
+| Cursor | 在 **Dashboard → Plugins & MCPs → Team Marketplaces** 导入 `https://github.com/MuZiJin701/wx-video-account-notes.git`。本地检出后，也可按 [Cursor 本地插件说明](https://cursor.com/docs/plugins#test-plugins-locally) 加载 `plugin/`。 |
 
 ### 更新 Skill
 
@@ -59,7 +64,7 @@ codex plugin list --marketplace wx-video-account-notes-dev
 
 ### 2. 显式调用 Skill 并发送分享链接
 
-在 Codex 中输入 `$` 并选中 `wx-video-account-notes`，在 Claude Code 中使用 `/wx-video-account-notes`。默认使用项目维护者的解析服务，无需配置服务器或凭证。
+在 Codex 中输入 `$` 并选中 `wx-video-account-notes`。在 Claude Code 中，独立安装用 `/wx-video-account-notes`，插件安装用 `/wx-video-account-notes:wx-video-account-notes`。Grok Build、Cursor 和 Copilot CLI 用户从斜杠菜单选中该 Skill。默认使用项目维护者的解析服务，无需配置服务器或凭证。
 
 ```text
 使用 $wx-video-account-notes 下载这个视频号分享链接的内容并生成笔记：

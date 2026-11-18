@@ -22,19 +22,24 @@ An available system uv (0.11.25 or newer) is preferred. Missing or incompatible 
 
 ### 1. Install the Skill
 
+Use the Vercel Labs Skills CLI and select Codex, Claude Code, Grok Build, Cursor, or GitHub Copilot CLI. Choose one installation method per host.
+
 ```sh
 npm install -g skills
-skills add https://github.com/MuZiJin701/wx-video-account-notes.git -g -y
-```
-
-Codex users can also install the plugin:
-
-```sh
-codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git
-codex plugin add wx-video-account-notes@wx-video-account-notes-dev
+skills add https://github.com/MuZiJin701/wx-video-account-notes.git -g
 ```
 
 With `cc-switch`, enter the repository URL.
+
+#### Native plugin installation
+
+| Host | Install |
+| --- | --- |
+| Codex | `codex plugin marketplace add https://github.com/MuZiJin701/wx-video-account-notes.git`<br>`codex plugin add wx-video-account-notes@wx-video-account-notes-dev` |
+| Claude Code | `claude plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`claude plugin install wx-video-account-notes@wx-video-account-notes-dev` |
+| Grok Build | `grok plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`grok plugin install wx-video-account-notes --trust` |
+| GitHub Copilot CLI | `copilot plugin marketplace add MuZiJin701/wx-video-account-notes`<br>`copilot plugin install wx-video-account-notes@wx-video-account-notes-dev` |
+| Cursor | Import `https://github.com/MuZiJin701/wx-video-account-notes.git` from **Dashboard → Plugins & MCPs → Team Marketplaces**. For a local checkout, follow [Cursor’s local plugin instructions](https://cursor.com/docs/plugins#test-plugins-locally) with `plugin/`. |
 
 ### Update the Skill
 
@@ -59,7 +64,7 @@ The default resolver has changed; update older Skill installations as described 
 
 ### 2. Select the Skill and send a share link
 
-In Codex, type `$` and select `wx-video-account-notes`. In Claude Code, use `/wx-video-account-notes`. The Skill uses the maintainer's resolver by default and requires no server setup or credentials.
+In Codex, type `$` and select `wx-video-account-notes`. In Claude Code, use `/wx-video-account-notes` for the standalone Skill or `/wx-video-account-notes:wx-video-account-notes` for the plugin. In Grok Build, Cursor, or Copilot CLI, select the Skill from the slash menu. The Skill uses the maintainer's resolver by default and requires no server setup or credentials.
 
 ```text
 Use $wx-video-account-notes to download the content from this WeChat Channels share link and write a note:

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "wx-video-account-notes",
+  "version": "0.2.3",
+  "description": "下载微信视频号视频和图文内容，提取 OCR/ASR 笔记材料并生成 Markdown 笔记。 Download WeChat Channels videos and image posts, extract OCR/ASR note materials, and create Markdown notes.",
+  "author": {
+    "name": "chenjinchi",
+    "email": "muzijin702@gmail.com",
+    "url": "https://github.com/MuZiJin701"
+  },
+  "homepage": "https://github.com/MuZiJin701/wx-video-account-notes",
+  "repository": "https://github.com/MuZiJin701/wx-video-account-notes",
+  "license": "MIT",
+  "keywords": [
+    "wechat-channels",
+    "video-downloader",
+    "ocr",
+    "asr",
+    "markdown-notes",
+    "agent-skill",
+    "codex-plugin"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "wx-video-account-notes",
+        "shortDescription": "下载视频号视频或图文图片并生成笔记。 Download WeChat Channels videos or images and create notes.",
+        "longDescription": "根据分享链接下载视频或图文图片，提取 OCR、ASR 和视觉材料，生成结构化笔记输入。 Download WeChat Channels videos or image posts from share links, extract OCR, ASR, and visual materials, and prepare structured note inputs.",
+        "developerName": "chenjinchi",
+        "category": "Productivity",
+        "capabilities": [
+          "Write",
+          "Automation"
+        ],
+        "websiteURL": "https://github.com/MuZiJin701/wx-video-account-notes",
+        "defaultPrompt": [
+          "使用 $wx-video-account-notes 下载并整理这个视频号链接：https://weixin.qq.com/sph/...",
+          "使用 $wx-video-account-notes 下载这个视频号链接并输出 OCR 与 ASR 材料：https://weixin.qq.com/sph/...",
+          "使用 $wx-video-account-notes 把这个视频号链接整理到指定目录：https://weixin.qq.com/sph/..."
+        ],
+        "brandColor": "#2F855A"
+      }
+    }
+  }
+}
