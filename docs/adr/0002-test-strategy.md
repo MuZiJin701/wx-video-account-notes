@@ -28,7 +28,7 @@ QQ password-login exploration was paused on 2026-10-20, then replaced at the use
 ## Rules
 
 - Keep the standard-library `unittest`; do not add a test framework.
-- Run tests with `uv run --locked python -m unittest discover -s runtime/tests`.
+- Run client tests from the repository root with `uv run --locked --isolated --directory plugin/skills/wx-video-account-notes python -B -m unittest discover -s ../../../tests`.
 - Do not commit real video, audio, model, or FFmpeg binaries. Use synthetic inputs, temporary directories, mocks, and small in-memory images.
 - Test bootstrap downloads, SHA256 checks, resume behavior, and extraction with local fixtures or mocks; do not contact GitHub, Hugging Face, or evermeet.
 - CI covers Windows x64, Intel macOS x64, and Linux x64. ARM and real model inference are not promised.
@@ -38,5 +38,5 @@ QQ password-login exploration was paused on 2026-10-20, then replaced at the use
 ## Consequences
 
 - Tests that assert PowerShell-only paths or the old single-directory `.runtime/` layout are obsolete and must use platform-neutral contracts.
-- `tests/test-cases.md` is the manual smoke checklist, not the automated test entry point.
+- [Manual smoke checks](../test-cases.md) cover real bootstrap and end-to-end processing.
 - If system Python lacks project dependencies, a direct `python -m unittest` run is not valid acceptance; use the locked uv environment.

@@ -1,5 +1,6 @@
 # auto-generated private runtime
-plugins/wx-video-account-notes/skills/wx-video-account-notes/.runtime/
+.runtime/
+.venv/
 
 # python cache
 __pycache__/
@@ -14,8 +15,6 @@ assets/
 # private resolver state and installed server programs
 /client.json
 /config.json
-/.runtime/
-/server/.venv/
 /cookie
 /resolver
 /resolver.new

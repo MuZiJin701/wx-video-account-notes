@@ -7,6 +7,8 @@ on:
 
 jobs:
   unit:
+    env:
+      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/.runtime/client/.venv
     strategy:
       fail-fast: false
       matrix:
@@ -14,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: plugins/wx-video-account-notes/skills/wx-video-account-notes
+        working-directory: plugin/skills/wx-video-account-notes
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -22,9 +24,9 @@ jobs:
           version: 0.11.25
       - run: uv python install 3.13.14
       - run: uv sync --locked --python 3.13.14
-      - run: uv run --locked python -m unittest discover -s runtime/tests
+      - run: uv run --locked python -B -m unittest discover -s ../../../tests
       - if: runner.os == 'Linux'
-        run: uv run --locked python -m unittest discover -s ../../../../server -p 'test_*.py'
+        run: uv run --locked python -B -m unittest discover -s ../../../server -p 'test_*.py'
 
   browser-smoke:
     runs-on: ubuntu-24.04

@@ -102,21 +102,19 @@ Each run creates a separate child directory, including when an output directory 
 ## Development
 
 ```sh
-cd plugins/wx-video-account-notes/skills/wx-video-account-notes
-uv sync --locked
-uv run --locked python -m unittest discover -s runtime/tests
+uv run --locked --isolated --directory plugin/skills/wx-video-account-notes python -B -m unittest discover -s ../../../tests
 ```
 
-Run server tests from the repository root with `python3 -m unittest discover -s server` (standard library only). For real bootstrap and end-to-end checks, use the [manual acceptance checklist](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md).
+Run server tests from the repository root with `python3 -m unittest discover -s server` (standard library only). For real bootstrap and end-to-end checks, use the [manual acceptance checklist](docs/test-cases.md).
 
-GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Personal credentials are not uploaded to CI. The [isolated checks](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md#standalone-wechat-login-check) cover WeChat QR login and full parsing; offline tests and credential-free CI do not establish successful cloud authentication.
+GitHub Actions runs three-platform unit tests and a credential-free Linux Chromium launch, JavaScript, and profile-persistence smoke check, with manual dispatch support. Personal credentials are not uploaded to CI. The [isolated checks](docs/test-cases.md#standalone-wechat-login-check) cover WeChat QR login and full parsing; offline tests and credential-free CI do not establish successful cloud authentication.
 
 ## More documentation
 
 - [Self-hosting and troubleshooting (Chinese)](docs/resolver-deployment.md)
 - [WeChat QR and manual Cookie checks (Chinese)](docs/research/yuanbao-manual-qr-login.md) · [Historical QQ password and mail experiments (Chinese)](docs/research/yuanbao-qq-login.md)
-- [Skill execution guide (Chinese)](plugins/wx-video-account-notes/skills/wx-video-account-notes/SKILL.md)
+- [Skill execution guide (Chinese)](plugin/skills/wx-video-account-notes/SKILL.md)
 - [Repository map (Chinese)](目录说明.md) · [Domain glossary (Chinese)](GLOSSARY.md) · [Architecture decisions](docs/adr/)
-- [Resolver architecture (Chinese)](docs/research/wx-channels-architecture.md) · [Tests and evaluation](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md) · [Changelog](CHANGELOG.md)
+- [Resolver architecture (Chinese)](docs/research/wx-channels-architecture.md) · [Tests and evaluation](docs/test-cases.md) · [Changelog](CHANGELOG.md)
 
 Read [AGENTS.md](AGENTS.md) before contributing. Use GitHub Issues for requests and bugs. Licensed under [MIT](LICENSE).

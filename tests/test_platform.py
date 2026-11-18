@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from runtime import platform
 from runtime.platform import detect_platform, find_ffmpeg_tools, runtime_root
 
 
@@ -17,7 +18,7 @@ class PlatformContractTests(unittest.TestCase):
         self.assertEqual(detect_platform("Linux", "x86_64").id, "linux-x64")
 
     def test_detects_host_when_runtime_directory_is_on_script_path(self) -> None:
-        runtime_dir = Path(__file__).resolve().parents[1]
+        runtime_dir = Path(platform.__file__).resolve().parent
         skill_root = runtime_dir.parent
         environment = os.environ.copy()
         environment["PYTHONPATH"] = str(skill_root)

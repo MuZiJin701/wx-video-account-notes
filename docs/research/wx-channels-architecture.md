@@ -40,4 +40,4 @@ flowchart LR
 
 ## 与本项目 Skill 的关系
 
-本项目使用服务器上的 Go 解析函数，本机完成媒体处理与成稿。默认/自部署边界见 [ADR 0003](../adr/0003-resolver-ownership.md)，服务维护见[部署指南](../resolver-deployment.md)，2026-09-29 验收见[记录](../../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md#record)。此前 Worker 无凭证 `401` 的定位保留在[实现调查](wx-channels-upstream.md)。
+本项目使用服务器上的 Go 解析函数，本机完成媒体处理与成稿。默认/自部署边界见 [ADR 0003](../adr/0003-resolver-ownership.md)，服务维护见[部署指南](../resolver-deployment.md)，2026-09-29 验收见[记录](../test-cases.md#record)。此前 Worker 无凭证 `401` 的定位保留在[实现调查](wx-channels-upstream.md)。

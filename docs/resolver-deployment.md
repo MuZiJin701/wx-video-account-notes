@@ -143,4 +143,4 @@ systemctl stop wx-notes-gateway wx-notes-resolver
 | Cookie 检查失败、网络或上游不可用 | 检查服务器网络，并将 `verify_link` 换成有效分享链接；不要只凭解析失败判断 Cookie 过期。 |
 | 本机能访问，客户端连不上 | 检查服务器 IP、安全组、防火墙、80 端口及客户端访问凭证。 |
 
-需要开发测试时，再看[独立扫码检查与完整验收清单](../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md#standalone-wechat-login-check)。方案依据和已知限制见 [ADR 0005](adr/0005-manual-wechat-cookie-maintenance.md) 与[扫码验收记录](research/yuanbao-manual-qr-login.md)。
+需要开发测试时，再看[独立扫码检查与完整验收清单](test-cases.md#standalone-wechat-login-check)。方案依据和已知限制见 [ADR 0005](adr/0005-manual-wechat-cookie-maintenance.md) 与[扫码验收记录](research/yuanbao-manual-qr-login.md)。

@@ -9,7 +9,10 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from runtime import platform
 from runtime.platform import detect_platform, find_uv
+
+SKILL_ROOT = Path(platform.__file__).resolve().parents[1]
 
 
 class UvTests(unittest.TestCase):
@@ -30,7 +33,7 @@ class UvTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "posix", "POSIX launcher")
     def test_shell_prefers_system_and_reuses_private_for_missing_old_or_broken_system(self):
-        scripts = Path(__file__).resolve().parents[2] / "scripts"
+        scripts = SKILL_ROOT / "scripts"
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "scripts").mkdir()
@@ -56,7 +59,7 @@ class UvTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "nt", "Windows launcher")
     def test_powershell_prefers_system_and_falls_back_without_overwriting_it(self):
-        common = Path(__file__).resolve().parents[2] / "scripts/common.ps1"
+        common = SKILL_ROOT / "scripts/common.ps1"
         powershell = shutil.which("pwsh") or shutil.which("powershell")
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

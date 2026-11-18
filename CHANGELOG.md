@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Use `plugin/` for the Codex package and keep client tests and acceptance materials in the repository's development tree.
 - Require explicit Skill selection in Codex and Claude Code.
 - Archive available videos, images, covers, and background music in separate directories with an offline page and partial-failure status. Document how to update the installed Skill.
 

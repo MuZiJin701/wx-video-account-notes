@@ -1,6 +1,6 @@
 # OCR / ASR evaluation
 
-June 2026 evaluation record: stack choices, optimizations, and sample observations. These results do not guarantee transcription quality for other media; see the [later acceptance record](../../plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md#record).
+June 2026 evaluation record: stack choices, optimizations, and sample observations. These results do not guarantee transcription quality for other media; see the [later acceptance record](../test-cases.md#record).
 
 ## Evaluated stack
 

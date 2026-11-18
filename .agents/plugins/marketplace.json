@@ -8,7 +8,7 @@
       "name": "wx-video-account-notes",
       "source": {
         "source": "local",
-        "path": "./plugins/wx-video-account-notes"
+        "path": "./plugin"
       },
       "policy": {
         "installation": "AVAILABLE",

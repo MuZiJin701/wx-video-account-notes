@@ -102,21 +102,19 @@ https://weixin.qq.com/sph/your_share_id_here
 ## 本地开发
 
 ```sh
-cd plugins/wx-video-account-notes/skills/wx-video-account-notes
-uv sync --locked
-uv run --locked python -m unittest discover -s runtime/tests
+uv run --locked --isolated --directory plugin/skills/wx-video-account-notes python -B -m unittest discover -s ../../../tests
 ```
 
-服务端单测从仓库根目录运行 `python3 -m unittest discover -s server`（仅用标准库）；真实初始化和端到端处理见[手动验收清单](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md)。
+服务端单测从仓库根目录运行 `python3 -m unittest discover -s server`（仅用标准库）；真实初始化和端到端处理见[手动验收清单](docs/test-cases.md)。
 
-GitHub Actions 同时执行三平台单测及无凭据的 Linux Chromium 启动、JavaScript 与资料持久化检查，支持手动触发，不向 CI 上传个人凭据。[独立验收步骤](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md#standalone-wechat-login-check)提供微信扫码和完整解析检查；离线回归和无凭据 CI 不代表云端登录验收通过。
+GitHub Actions 同时执行三平台单测及无凭据的 Linux Chromium 启动、JavaScript 与资料持久化检查，支持手动触发，不向 CI 上传个人凭据。[独立验收步骤](docs/test-cases.md#standalone-wechat-login-check)提供微信扫码和完整解析检查；离线回归和无凭据 CI 不代表云端登录验收通过。
 
 ## 更多文档
 
 - [自部署与故障排查](docs/resolver-deployment.md)
 - [微信扫码与手动 Cookie 维护验证](docs/research/yuanbao-manual-qr-login.md) · [历史 QQ 密码与邮件实验](docs/research/yuanbao-qq-login.md)
-- [Skill 执行说明](plugins/wx-video-account-notes/skills/wx-video-account-notes/SKILL.md)
+- [Skill 执行说明](plugin/skills/wx-video-account-notes/SKILL.md)
 - [仓库目录](目录说明.md) · [领域术语](GLOSSARY.md) · [架构决策](docs/adr/)
-- [解析原理](docs/research/wx-channels-architecture.md) · [测试与评估](plugins/wx-video-account-notes/skills/wx-video-account-notes/tests/test-cases.md) · [变更日志](CHANGELOG.md)
+- [解析原理](docs/research/wx-channels-architecture.md) · [测试与评估](docs/test-cases.md) · [变更日志](CHANGELOG.md)
 
 贡献前请阅读 [AGENTS.md](AGENTS.md)；需求与问题请提交 GitHub Issues。项目采用 [MIT 许可证](LICENSE)。

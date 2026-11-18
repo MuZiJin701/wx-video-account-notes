@@ -32,7 +32,7 @@ class InstallTests(unittest.TestCase):
             for name in ("wx-notes-cookie.timer", "wx-notes-cookie.service"):
                 (root / "units" / name).write_text("legacy maintenance")
             (root / "mail_notification.py").write_text("legacy mail")
-            scripts = root / "plugins/wx-video-account-notes/skills/wx-video-account-notes/scripts"
+            scripts = root / "plugin/skills/wx-video-account-notes/scripts"
             scripts.mkdir(parents=True)
             (scripts / "ensure_uv.sh").write_text('printf "%s\\n" "' + str(root / "bin/uv") + '"\n')
             # Isolate fixed deployment paths and privileged commands from the real host.

@@ -13,7 +13,7 @@ from urllib.request import Request, urlopen
 
 os.environ["WX_NOTES_RESOLVER_CONFIG"] = str(
     Path(__file__).resolve().parents[1]
-    / "plugins/wx-video-account-notes/skills/wx-video-account-notes/runtime/resolver_config.json"
+    / "plugin/skills/wx-video-account-notes/runtime/resolver_config.json"
 )
 import gateway  # noqa: E402
 

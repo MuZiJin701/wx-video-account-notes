@@ -17,7 +17,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: plugins/wx-video-account-notes/skills/wx-video-account-notes
+        working-directory: plugin/skills/wx-video-account-notes
     steps:
       - uses: actions/checkout@v4
       - name: Bootstrap Windows runtime

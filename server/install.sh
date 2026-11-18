@@ -35,7 +35,7 @@ if [ -f cookie ]; then
   chown root:root cookie
   chmod 0600 cookie
 fi
-uv_command=$(sh plugins/wx-video-account-notes/skills/wx-video-account-notes/scripts/ensure_uv.sh)
+uv_command=$(sh plugin/skills/wx-video-account-notes/scripts/ensure_uv.sh)
 export UV_PROJECT_ENVIRONMENT="$root/.runtime/server/.venv"
 export UV_PYTHON_INSTALL_DIR="$root/.runtime/server/python"
 export PLAYWRIGHT_BROWSERS_PATH="$root/.runtime/server/browsers"

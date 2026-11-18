@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 
+from runtime import compose_note
 from runtime.compose_note import build_note_materials, synthesize_markdown
 
 
@@ -76,7 +77,7 @@ class ComposeMarkdownNoteTests(unittest.TestCase):
     def test_model_prompt_template_exists_for_final_note_stage(self) -> None:
         from pathlib import Path
 
-        template_path = Path(__file__).resolve().parents[2] / "resources" / "model-note-template.md"
+        template_path = Path(compose_note.__file__).resolve().parents[1] / "resources/model-note-template.md"
         self.assertTrue(template_path.exists())
 
     def test_builds_structured_note_with_source_labels_and_limits(self) -> None:

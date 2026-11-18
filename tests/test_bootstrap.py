@@ -9,12 +9,15 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from runtime import bootstrap
 from runtime.bootstrap import (
     download_file,
     prune_runtime_cache,
     select_platform_asset,
     select_assets,
 )
+
+SKILL_ROOT = Path(bootstrap.__file__).resolve().parents[1]
 
 
 class BootstrapTests(unittest.TestCase):
@@ -143,7 +146,7 @@ class BootstrapTests(unittest.TestCase):
             )
 
     def test_whisper_manifest_requires_model_weights_for_each_platform(self) -> None:
-        manifest_path = Path(__file__).resolve().parents[1] / "assets_manifest.json"
+        manifest_path = SKILL_ROOT / "runtime/assets_manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         whisper_asset = next(asset for asset in manifest["assets"] if asset["name"] == "whisper-tiny")
 
@@ -152,7 +155,7 @@ class BootstrapTests(unittest.TestCase):
             self.assertRegex(platform_asset["file_sha256"], r"^[0-9a-f]{64}$")
 
     def test_manifest_archives_have_sha256_pins(self) -> None:
-        manifest_path = Path(__file__).resolve().parents[1] / "assets_manifest.json"
+        manifest_path = SKILL_ROOT / "runtime/assets_manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         ffmpeg_asset = next(asset for asset in manifest["assets"] if asset["name"] == "ffmpeg")
 
@@ -161,7 +164,7 @@ class BootstrapTests(unittest.TestCase):
                 self.assertRegex(archive["sha256"], r"^[0-9a-f]{64}$")
 
     def test_script_contracts_are_thin_forwarders(self) -> None:
-        scripts_root = Path(__file__).resolve().parents[2] / "scripts"
+        scripts_root = SKILL_ROOT / "scripts"
         for script_name in ("bootstrap.ps1", "bootstrap.sh", "invoke_pipeline.ps1", "invoke_pipeline.sh"):
             script_text = (scripts_root / script_name).read_text(encoding="utf-8")
             self.assertIn("runtime", script_text)
@@ -172,7 +175,7 @@ class BootstrapTests(unittest.TestCase):
         if not powershell:
             self.skipTest("PowerShell is not installed")
 
-        common_script = Path(__file__).resolve().parents[2] / "scripts" / "common.ps1"
+        common_script = SKILL_ROOT / "scripts/common.ps1"
         result = subprocess.run(
             [
                 powershell,
@@ -190,7 +193,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertTrue("bootstrap progress" in result.stdout or "bootstrap progress" in result.stderr)
 
     def test_skill_tells_vision_models_to_read_visual_frames(self) -> None:
-        skill_root = Path(__file__).resolve().parents[2]
+        skill_root = SKILL_ROOT
         skill_text = (skill_root / "SKILL.md").read_text(encoding="utf-8")
 
         self.assertIn("如果当前模型有识图能力", skill_text)
