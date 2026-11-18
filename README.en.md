@@ -57,12 +57,12 @@ Back up any configuration you changed in the installed Skill before updating. Fo
 
 The default resolver has changed; update older Skill installations as described above. The installed Skill's `runtime/resolver_config.json` contains the service URL `api_url` and access credential `access_key`; the default service uses the project's current default credential. See the [self-hosting guide](docs/resolver-deployment.md#4-连接客户端) for custom configuration and environment variables.
 
-### 2. Send a share link
+### 2. Select the Skill and send a share link
 
-By default, the Skill uses the maintainer's resolver. You do not need a server or credentials. Send a real link to your agent:
+In Codex, type `$` and select `wx-video-account-notes`. In Claude Code, use `/wx-video-account-notes`. The Skill uses the maintainer's resolver by default and requires no server setup or credentials.
 
 ```text
-Download the content from this WeChat Channels share link and write a note:
+Use $wx-video-account-notes to download the content from this WeChat Channels share link and write a note:
 https://weixin.qq.com/sph/your_share_id_here
 ```
 

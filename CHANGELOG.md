@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Require explicit Skill selection in Codex and Claude Code.
 - Archive available videos, images, covers, and background music in separate directories with an offline page and partial-failure status. Document how to update the installed Skill.
 
 - Changed the default resolver; older Skill installations should be updated to use the current address and access credential.

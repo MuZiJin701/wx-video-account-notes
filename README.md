@@ -57,12 +57,12 @@ codex plugin list --marketplace wx-video-account-notes-dev
 
 默认解析服务已更新，旧版 Skill 请按上述方式更新。配置位于实际安装的 Skill 的 `runtime/resolver_config.json`，包含服务地址 `api_url` 和访问凭证 `access_key`；默认服务使用项目当前默认的访问凭证。自部署配置及环境变量说明见[自部署指南](docs/resolver-deployment.md#4-连接客户端)。
 
-### 2. 发送分享链接
+### 2. 显式调用 Skill 并发送分享链接
 
-默认使用项目维护者的解析服务，无需配置服务器或凭证。把真实链接交给 agent：
+在 Codex 中输入 `$` 并选中 `wx-video-account-notes`，在 Claude Code 中使用 `/wx-video-account-notes`。默认使用项目维护者的解析服务，无需配置服务器或凭证。
 
 ```text
-下载这个视频号分享链接的内容并生成笔记：
+使用 $wx-video-account-notes 下载这个视频号分享链接的内容并生成笔记：
 https://weixin.qq.com/sph/your_share_id_here
 ```
 

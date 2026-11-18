@@ -1,6 +1,7 @@
 ---
 name: wx-video-account-notes
 description: 根据微信视频号分享链接下载视频或图文图片，提取 OCR/ASR 笔记材料并生成 Markdown 笔记。 Download WeChat Channels videos or image posts from share links, extract OCR/ASR note materials, and write Markdown notes.
+disable-model-invocation: true
 ---
 
 # 微信视频号下载与笔记整理

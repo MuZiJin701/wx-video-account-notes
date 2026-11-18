@@ -1,0 +1,5 @@
+interface:
+  display_name: "微信视频号笔记"
+  short_description: "下载微信视频号动态并整理 OCR、ASR 和 Markdown 笔记"
+policy:
+  allow_implicit_invocation: false

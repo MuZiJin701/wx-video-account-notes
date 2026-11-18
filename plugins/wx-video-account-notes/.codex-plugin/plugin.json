@@ -32,9 +32,9 @@
     ],
     "websiteURL": "https://github.com/MuZiJin701/wx-video-account-notes",
     "defaultPrompt": [
-      "下载并整理这个视频号链接：https://weixin.qq.com/sph/...",
-      "下载这个视频号链接并输出 OCR 与 ASR 材料：https://weixin.qq.com/sph/...",
-      "把这个视频号链接整理到指定目录：https://weixin.qq.com/sph/..."
+      "使用 $wx-video-account-notes 下载并整理这个视频号链接：https://weixin.qq.com/sph/...",
+      "使用 $wx-video-account-notes 下载这个视频号链接并输出 OCR 与 ASR 材料：https://weixin.qq.com/sph/...",
+      "使用 $wx-video-account-notes 把这个视频号链接整理到指定目录：https://weixin.qq.com/sph/..."
     ],
     "brandColor": "#2F855A"
   }
